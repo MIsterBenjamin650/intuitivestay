@@ -23,6 +23,7 @@ build
 *.swo
 *~
 .DS_Store
+.claude/settings.local.json
 
 # Logs
 logs
