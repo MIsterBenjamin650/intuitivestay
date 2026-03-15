@@ -227,7 +227,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  apps/server:
+  apps/portal-server:
     dependencies:
       '@hono/node-server':
         specifier: ^1.14.4
@@ -279,7 +279,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  apps/web:
+  apps/portal-web:
     dependencies:
       '@intuitive-stay/api':
         specifier: workspace:*

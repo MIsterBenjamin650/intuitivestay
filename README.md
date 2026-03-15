@@ -32,7 +32,7 @@ pnpm install
 This project uses PostgreSQL with Drizzle ORM.
 
 1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+2. Update your `apps/portal-server/.env` file with your PostgreSQL connection details.
 
 3. Apply the schema to your database:
 
@@ -46,9 +46,9 @@ Then, run the development server:
 pnpm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
+Open [http://localhost:5173](http://localhost:5173) in your browser to see the web application.
 Use the Expo Go app to run the mobile application.
-The API is running at [http://localhost:3000](http://localhost:3000).
+The API is running at [http://localhost:5174](http://localhost:5174).
 
 ## UI Customization
 
@@ -56,7 +56,7 @@ React web apps in this stack share shadcn/ui primitives through `packages/ui`.
 
 - Change design tokens and global styles in `packages/ui/src/styles/globals.css`
 - Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
+- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/portal-web/components.json`
 
 ### Add more shared components
 
@@ -74,7 +74,7 @@ import { Button } from "@intuitive-stay/ui/components/button";
 
 ### Add app-specific blocks
 
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
+If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/portal-web`.
 
 ## Git Hooks and Formatting
 
@@ -85,9 +85,9 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 ```
 intuitive-stay/
 ├── apps/
-│   ├── web/         # Frontend application (React + TanStack Start)
+│   ├── portal-web/  # Frontend application (React + TanStack Start)
 │   ├── native/      # Mobile application (React Native, Expo)
-│   └── server/      # Backend API (Hono, TRPC)
+│   └── portal-server/ # Backend API (Hono, TRPC)
 ├── packages/
 │   ├── ui/          # Shared shadcn/ui components and styles
 │   ├── api/         # API layer / business logic
@@ -99,8 +99,8 @@ intuitive-stay/
 
 - `pnpm run dev`: Start all applications in development mode
 - `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
+- `pnpm run dev:portal-web`: Start only the web application
+- `pnpm run dev:portal-server`: Start only the server
 - `pnpm run check-types`: Check TypeScript types across all apps
 - `pnpm run dev:native`: Start the React Native/Expo development server
 - `pnpm run db:push`: Push schema changes to database
