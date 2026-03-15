@@ -1,0 +1,25 @@
+{
+  "name": "@intuitive-stay/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@better-auth/expo": "catalog:",
+    "@intuitive-stay/db": "workspace:*",
+    "@intuitive-stay/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@intuitive-stay/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

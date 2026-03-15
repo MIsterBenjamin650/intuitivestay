@@ -1,0 +1,3 @@
+{
+  "extends": "@intuitive-stay/config/tsconfig.base.json"
+}
