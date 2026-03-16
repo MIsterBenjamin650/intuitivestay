@@ -8,6 +8,12 @@ import {
 } from "@/lib/portal-access"
 
 export type NavScope = "org" | "property"
+export type NavBadgeVariant =
+  | "count"
+  | "upgrade"
+  | "plan-essentialist"
+  | "plan-growth-pro"
+  | "plan-elite-mastery"
 
 export type NavItem = {
   id: string
@@ -19,7 +25,7 @@ export type NavItem = {
   lockedFeatureKey?: LockedFeatureKey
   badgeCount?: number
   badgeLabel?: string
-  badgeVariant?: "count" | "upgrade"
+  badgeVariant?: NavBadgeVariant
   children?: NavItem[]
 }
 
@@ -37,7 +43,7 @@ export type ResolvedNavItem = Omit<NavItem, "children"> & {
   locked: boolean
   badgeCount?: number
   badgeLabel?: string
-  badgeVariant?: "count" | "upgrade"
+  badgeVariant?: NavBadgeVariant
   children?: ResolvedNavItem[]
 }
 
@@ -65,6 +71,26 @@ const SEEDED_PROPERTY_ALERT_COUNTS: Record<string, number> = {
   "ben-hostels-london": 5,
   "ben-hostels-york": 4,
   "ben-hostels-edinburgh": 3,
+}
+const PLAN_BADGE: Record<
+  PlanTier,
+  {
+    label: string
+    variant: NavBadgeVariant
+  }
+> = {
+  essentialist: {
+    label: "Essentialist",
+    variant: "plan-essentialist",
+  },
+  "growth-pro": {
+    label: "Growth Pro",
+    variant: "plan-growth-pro",
+  },
+  "elite-mastery": {
+    label: "Elite Mastery",
+    variant: "plan-elite-mastery",
+  },
 }
 
 function getSeededPropertyAlertCount(propertyId: string) {
@@ -140,7 +166,7 @@ export const NAV_ITEMS: NavItem[] = [
       },
       {
         id: "property-qr-form",
-        label: "QR Form",
+        label: "QR Codes",
         to: "/properties/:propertyId/qr-form",
         scope: "property",
         permission: "view_qr_form",
@@ -198,8 +224,6 @@ export const NAV_ITEMS: NavItem[] = [
         to: "/organisation/billing",
         scope: "org",
         permission: "manage_billing",
-        badgeLabel: "Upgrade",
-        badgeVariant: "upgrade",
       },
     ],
   },
@@ -239,6 +263,20 @@ function resolveItem(item: NavItem, options: ResolveNavOptions): ResolvedNavItem
       ? getSeededPropertyAlertCount(options.activePropertyId)
       : item.badgeCount
 
+  let badgeLabel = item.badgeLabel
+  let badgeVariant = item.badgeVariant
+
+  if (item.id === "property-local-market" && locked) {
+    badgeLabel = "Upgrade"
+    badgeVariant = "upgrade"
+  }
+
+  if (item.id === "organisation-billing") {
+    const planBadge = PLAN_BADGE[options.access.plan]
+    badgeLabel = planBadge.label
+    badgeVariant = planBadge.variant
+  }
+
   const children =
     item.children
       ?.map((child) => resolveItem(child, options))
@@ -254,6 +292,8 @@ function resolveItem(item: NavItem, options: ResolveNavOptions): ResolvedNavItem
     destination,
     locked,
     badgeCount: seededBadgeCount,
+    badgeLabel,
+    badgeVariant,
     children,
   }
 }

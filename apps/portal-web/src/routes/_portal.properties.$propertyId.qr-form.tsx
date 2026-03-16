@@ -12,7 +12,7 @@ function RouteComponent() {
   return (
     <PropertyPage
       propertyId={propertyId}
-      title="QR Form"
+      title="Codes"
       description="Manage property-specific QR feedback form access and distribution."
     />
   )
