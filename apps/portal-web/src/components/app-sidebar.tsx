@@ -60,7 +60,7 @@ function SidebarBrand() {
         {SIDEBAR_WORDMARK}
       </span>
       <span
-        className="hidden size-8 items-center justify-center rounded-md border border-sidebar-primary bg-transparent text-xs font-semibold text-white group-data-[collapsible=icon]:inline-flex"
+        className="hidden size-8 items-center justify-center rounded-md border border-sidebar-primary bg-transparent text-xs font-semibold text-sidebar-foreground dark:text-white group-data-[collapsible=icon]:inline-flex"
         aria-label={SIDEBAR_WORDMARK}
         title={SIDEBAR_WORDMARK}
       >

@@ -71,7 +71,7 @@ function RouteComponent() {
     <SidebarProvider>
       <ActivePropertyProvider initialProperties={sessionProperties}>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="overflow-x-hidden">
           <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b bg-background/90 backdrop-blur-md">
             <div className="flex w-full items-center justify-between gap-3 px-3 md:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -96,7 +96,7 @@ function RouteComponent() {
               </div>
             </div>
           </header>
-          <div className="flex flex-1 flex-col pt-3">
+          <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden pt-3">
             <Outlet />
           </div>
         </SidebarInset>
