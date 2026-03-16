@@ -1,9 +1,10 @@
 import * as React from "react"
 import { PropertySwitcher } from "@/components/property-switcher"
 import { useActiveProperty } from "@/lib/active-property-context"
-import { isRouteActive, resolveNavigation, type ResolvedNavItem } from "@/lib/navigation"
-import { resolvePortalAccess } from "@/lib/portal-access"
+import { buildPropertyPath } from "@/lib/property-routes"
 import { cn } from "@intuitive-stay/ui/lib/utils"
+import { Badge } from "@intuitive-stay/ui/components/badge"
+import { PlanBadge } from "@intuitive-stay/ui/components/plan-badge"
 import {
   Sidebar,
   SidebarContent,
@@ -16,7 +17,12 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@intuitive-stay/ui/components/sidebar"
-import { useLocation, useNavigate, useRouter } from "@tanstack/react-router"
+import { UpgradeBadge } from "@intuitive-stay/ui/components/upgrade-badge"
+import {
+  createLink,
+  type LinkComponent,
+  useLocation,
+} from "@tanstack/react-router"
 import {
   BarChart3Icon,
   BellIcon,
@@ -24,30 +30,28 @@ import {
   BuildingIcon,
   CreditCardIcon,
   LayoutDashboardIcon,
-  LockIcon,
   QrCodeIcon,
   TrendingUpIcon,
   UserCogIcon,
   UsersIcon,
 } from "lucide-react"
 
-const ICONS: Record<string, React.ReactNode> = {
-  dashboard: <LayoutDashboardIcon />,
-  properties: <Building2Icon />,
-  "property-dashboard": <LayoutDashboardIcon />,
-  "property-alerts": <BellIcon />,
-  "property-feedback": <UsersIcon />,
-  "property-insights": <BarChart3Icon />,
-  "property-advanced-insights": <TrendingUpIcon />,
-  "property-qr-form": <QrCodeIcon />,
-  "property-local-market": <BuildingIcon />,
-  "organisation-members": <UsersIcon />,
-  "organisation-roles": <UserCogIcon />,
-  "organisation-alerts": <BellIcon />,
-  "organisation-billing": <CreditCardIcon />,
-}
-
 const SIDEBAR_WORDMARK = "Intuitive Stay"
+
+const SidebarAnchor = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, ...props }, ref) => {
+  return <a ref={ref} className={className} {...props} />
+})
+
+SidebarAnchor.displayName = "SidebarAnchor"
+
+const CreatedSidebarLink = createLink(SidebarAnchor)
+
+const AppSidebarLink: LinkComponent<typeof SidebarAnchor> = (props) => {
+  return <CreatedSidebarLink preload="intent" {...props} />
+}
 
 function SidebarBrand() {
   return (
@@ -66,112 +70,76 @@ function SidebarBrand() {
   )
 }
 
-function SidebarEntry({
-  item,
-  pathname,
+function isRouteActive(pathname: string, to: string) {
+  if (to === "/") {
+    return pathname === "/"
+  }
+
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
+
+function SidebarLinkItem({
+  label,
+  icon,
+  link,
+  isActive,
   muted,
+  badge,
+  disabled,
 }: {
-  item: ResolvedNavItem
-  pathname: string
+  label: string
+  icon: React.ReactNode
+  link: React.ReactElement
+  isActive: boolean
   muted?: boolean
+  badge?: React.ReactNode
+  disabled?: boolean
 }) {
-  const router = useRouter()
-  const navigate = useNavigate()
-  const hasCountBadge = typeof item.badgeCount === "number" && item.badgeCount > 0
-  const hasTextBadge = Boolean(item.badgeLabel)
-  const isLocalMarketUpgrade =
-    item.id === "property-local-market" && item.locked && item.badgeVariant === "upgrade"
-
-  const textBadgeClassName = cn(
-    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
-    item.badgeVariant === "upgrade"
-      ? "text-white bg-gradient-to-r from-orange-500 via-fuchsia-500 to-violet-500"
-      : undefined,
-    item.badgeVariant === "plan-essentialist"
-      ? "bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-200"
-      : undefined,
-    item.badgeVariant === "plan-growth-pro"
-      ? "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"
-      : undefined,
-    item.badgeVariant === "plan-elite-mastery"
-      ? "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
-      : undefined,
-    hasCountBadge ? "ml-1" : "ml-auto"
-  )
-
-  const preloadRoute = React.useCallback(() => {
-    void router.preloadRoute({
-      to: item.destination.to as never,
-      search: item.destination.search as never,
-    })
-  }, [item.destination.search, item.destination.to, router])
-
-  const navigateToRoute = React.useCallback(() => {
-    void navigate({
-      to: item.destination.to as never,
-      search: item.destination.search as never,
-    })
-  }, [item.destination.search, item.destination.to, navigate])
-
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        tooltip={item.label}
-        isActive={isRouteActive(pathname, item.to)}
-        className={cn(muted ? "text-sidebar-foreground/80" : undefined)}
-        onMouseEnter={preloadRoute}
-        onFocus={preloadRoute}
-        onClick={navigateToRoute}
+        render={disabled ? undefined : link}
+        tooltip={label}
+        isActive={disabled ? false : isActive}
+        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? -1 : undefined}
+        className={cn(
+          !disabled && muted ? "text-sidebar-foreground/80" : undefined,
+          disabled
+            ? "cursor-default aria-disabled:opacity-100 hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground focus-visible:ring-0 focus-visible:ring-transparent"
+            : undefined
+        )}
       >
-        {ICONS[item.id]}
-        <span>{item.label}</span>
-        {hasCountBadge ? (
-          <span className="ml-auto inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
-            {item.badgeCount}
-          </span>
-        ) : null}
-        {hasTextBadge ? (
-          <span className={textBadgeClassName}>
-            {item.badgeLabel}
-          </span>
-        ) : null}
-        {item.locked && !isLocalMarketUpgrade ? (
-          <span
-            className={cn(
-              "inline-flex items-center text-primary",
-              hasCountBadge || hasTextBadge ? "ml-1" : "ml-auto"
-            )}
-          >
-            <LockIcon />
-          </span>
-        ) : null}
+        <span className={cn(disabled ? "text-sidebar-foreground/50" : undefined)}>
+          {icon}
+        </span>
+        <span className={cn(disabled ? "text-sidebar-foreground/50" : undefined)}>
+          {label}
+        </span>
+        {badge}
       </SidebarMenuButton>
     </SidebarMenuItem>
   )
 }
 
 export function AppSidebar({
-  session,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { session: unknown }) {
+}: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const { activePropertyId, properties } = useActiveProperty()
 
-  const access = React.useMemo(() => resolvePortalAccess(session), [session])
-  const navigation = React.useMemo(
-    () =>
-      resolveNavigation({
-        access,
-        activePropertyId,
-        currentPath: location.pathname,
-      }),
-    [access, activePropertyId, location.pathname]
+  const hasProperties = properties.length > 0 && Boolean(activePropertyId)
+  const propertyParams = { propertyId: activePropertyId }
+  const propertyDashboardPath = buildPropertyPath(activePropertyId, "dashboard")
+  const propertyFeedbackPath = buildPropertyPath(activePropertyId, "feedback")
+  const propertyInsightsPath = buildPropertyPath(activePropertyId, "insights")
+  const propertyAdvancedInsightsPath = buildPropertyPath(
+    activePropertyId,
+    "advanced-insights"
   )
-
-  const currentPropertySection = navigation.find((item) => item.id === "current-property")
-  const organisationSection = navigation.find((item) => item.id === "organisation")
-  const dashboardItem = navigation.find((item) => item.id === "dashboard")
-  const propertiesItem = navigation.find((item) => item.id === "properties")
+  const propertyQrFormPath = buildPropertyPath(activePropertyId, "qr-form")
+  const propertyAlertsPath = buildPropertyPath(activePropertyId, "alerts")
+  const propertyLocalMarketPath = buildPropertyPath(activePropertyId, "local-market")
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -183,43 +151,166 @@ export function AppSidebar({
           <PropertySwitcher />
         </div>
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {dashboardItem ? <SidebarEntry item={dashboardItem} pathname={location.pathname} /> : null}
-              {propertiesItem ? <SidebarEntry item={propertiesItem} pathname={location.pathname} /> : null}
+              <SidebarLinkItem
+                label="Dashboard"
+                icon={<LayoutDashboardIcon />}
+                link={<AppSidebarLink to="/" />}
+                isActive={isRouteActive(location.pathname, "/")}
+              />
+              <SidebarLinkItem
+                label="Properties"
+                icon={<Building2Icon />}
+                link={<AppSidebarLink to="/properties" />}
+                isActive={isRouteActive(location.pathname, "/properties")}
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {properties.length > 0 && currentPropertySection?.children?.length ? (
+        {hasProperties ? (
           <SidebarGroup>
-            <SidebarGroupLabel>{currentPropertySection.label}</SidebarGroupLabel>
+            <SidebarGroupLabel>Current Property</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {currentPropertySection.children.map((item) => (
-                  <SidebarEntry key={item.id} item={item} pathname={location.pathname} muted />
-                ))}
+                <SidebarLinkItem
+                  label="Dashboard"
+                  icon={<LayoutDashboardIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/dashboard"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyDashboardPath)}
+                  muted
+                />
+                <SidebarLinkItem
+                  label="Feedback"
+                  icon={<UsersIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/feedback"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyFeedbackPath)}
+                  muted
+                />
+                <SidebarLinkItem
+                  label="Insights"
+                  icon={<BarChart3Icon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/insights"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyInsightsPath)}
+                  muted
+                />
+                <SidebarLinkItem
+                  label="Advanced Insights"
+                  icon={<TrendingUpIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/advanced-insights"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyAdvancedInsightsPath)}
+                  muted
+                />
+                <SidebarLinkItem
+                  label="QR Codes"
+                  icon={<QrCodeIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/qr-form"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyQrFormPath)}
+                  muted
+                />
+                <SidebarLinkItem
+                  label="Alerts"
+                  icon={<BellIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/alerts"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyAlertsPath)}
+                  muted
+                  badge={<Badge className="ml-auto">3</Badge>}
+                />
+                <SidebarLinkItem
+                  label="Local Market"
+                  icon={<BuildingIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/local-market"
+                      params={propertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, propertyLocalMarketPath)}
+                  disabled
+                  badge={<UpgradeBadge className="ml-auto">Upgrade</UpgradeBadge>}
+                />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
 
-        {organisationSection?.children?.length ? (
-          <SidebarGroup>
-            <SidebarGroupLabel>{organisationSection.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {organisationSection.children.map((item) => (
-                  <SidebarEntry key={item.id} item={item} pathname={location.pathname} muted />
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : null}
+        <SidebarGroup>
+          <SidebarGroupLabel>Organisation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarLinkItem
+                label="Members"
+                icon={<UsersIcon />}
+                link={<AppSidebarLink to="/organisation/members" />}
+                isActive={isRouteActive(location.pathname, "/organisation/members")}
+                muted
+              />
+              <SidebarLinkItem
+                label="Roles & Permissions"
+                icon={<UserCogIcon />}
+                link={<AppSidebarLink to="/organisation/roles-permissions" />}
+                isActive={isRouteActive(
+                  location.pathname,
+                  "/organisation/roles-permissions"
+                )}
+                muted
+              />
+              <SidebarLinkItem
+                label="Alerts"
+                icon={<BellIcon />}
+                link={<AppSidebarLink to="/organisation/alerts" />}
+                isActive={isRouteActive(location.pathname, "/organisation/alerts")}
+                muted
+                badge={<Badge className="ml-auto">12</Badge>}
+              />
+              <SidebarLinkItem
+                label="Plans & Billing"
+                icon={<CreditCardIcon />}
+                link={<AppSidebarLink to="/organisation/billing" />}
+                isActive={isRouteActive(location.pathname, "/organisation/billing")}
+                muted
+                badge={<PlanBadge variant="essentialist" className="ml-auto" />}
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+
       <SidebarRail />
     </Sidebar>
   )

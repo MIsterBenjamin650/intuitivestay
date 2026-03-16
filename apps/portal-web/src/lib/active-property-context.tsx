@@ -5,7 +5,7 @@ import {
   buildPropertyPath,
   getPropertyIdFromPath,
   isPropertyPath,
-} from "@/lib/navigation"
+} from "@/lib/property-routes"
 
 export type PropertySummary = {
   id: string

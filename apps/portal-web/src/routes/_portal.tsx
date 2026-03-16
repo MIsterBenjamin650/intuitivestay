@@ -70,7 +70,7 @@ function RouteComponent() {
   return (
     <SidebarProvider>
       <ActivePropertyProvider initialProperties={sessionProperties}>
-        <AppSidebar session={session} />
+        <AppSidebar />
         <SidebarInset>
           <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b bg-background/90 backdrop-blur-md">
             <div className="flex w-full items-center justify-between gap-3 px-3 md:px-4">
