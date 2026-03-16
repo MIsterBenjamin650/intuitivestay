@@ -12,6 +12,18 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PortalRouteImport } from './routes/_portal'
 import { Route as PortalIndexRouteImport } from './routes/_portal.index'
+import { Route as PortalPropertiesRouteImport } from './routes/_portal.properties'
+import { Route as PortalOrganisationRolesPermissionsRouteImport } from './routes/_portal.organisation.roles-permissions'
+import { Route as PortalOrganisationMembersRouteImport } from './routes/_portal.organisation.members'
+import { Route as PortalOrganisationBillingRouteImport } from './routes/_portal.organisation.billing'
+import { Route as PortalOrganisationAlertsRouteImport } from './routes/_portal.organisation.alerts'
+import { Route as PortalPropertiesPropertyIdQrFormRouteImport } from './routes/_portal.properties.$propertyId.qr-form'
+import { Route as PortalPropertiesPropertyIdLocalMarketRouteImport } from './routes/_portal.properties.$propertyId.local-market'
+import { Route as PortalPropertiesPropertyIdInsightsRouteImport } from './routes/_portal.properties.$propertyId.insights'
+import { Route as PortalPropertiesPropertyIdFeedbackRouteImport } from './routes/_portal.properties.$propertyId.feedback'
+import { Route as PortalPropertiesPropertyIdDashboardRouteImport } from './routes/_portal.properties.$propertyId.dashboard'
+import { Route as PortalPropertiesPropertyIdAlertsRouteImport } from './routes/_portal.properties.$propertyId.alerts'
+import { Route as PortalPropertiesPropertyIdAdvancedInsightsRouteImport } from './routes/_portal.properties.$propertyId.advanced-insights'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -27,27 +39,178 @@ const PortalIndexRoute = PortalIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalPropertiesRoute = PortalPropertiesRouteImport.update({
+  id: '/properties',
+  path: '/properties',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalOrganisationRolesPermissionsRoute =
+  PortalOrganisationRolesPermissionsRouteImport.update({
+    id: '/organisation/roles-permissions',
+    path: '/organisation/roles-permissions',
+    getParentRoute: () => PortalRoute,
+  } as any)
+const PortalOrganisationMembersRoute =
+  PortalOrganisationMembersRouteImport.update({
+    id: '/organisation/members',
+    path: '/organisation/members',
+    getParentRoute: () => PortalRoute,
+  } as any)
+const PortalOrganisationBillingRoute =
+  PortalOrganisationBillingRouteImport.update({
+    id: '/organisation/billing',
+    path: '/organisation/billing',
+    getParentRoute: () => PortalRoute,
+  } as any)
+const PortalOrganisationAlertsRoute =
+  PortalOrganisationAlertsRouteImport.update({
+    id: '/organisation/alerts',
+    path: '/organisation/alerts',
+    getParentRoute: () => PortalRoute,
+  } as any)
+const PortalPropertiesPropertyIdQrFormRoute =
+  PortalPropertiesPropertyIdQrFormRouteImport.update({
+    id: '/$propertyId/qr-form',
+    path: '/$propertyId/qr-form',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
+const PortalPropertiesPropertyIdLocalMarketRoute =
+  PortalPropertiesPropertyIdLocalMarketRouteImport.update({
+    id: '/$propertyId/local-market',
+    path: '/$propertyId/local-market',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
+const PortalPropertiesPropertyIdInsightsRoute =
+  PortalPropertiesPropertyIdInsightsRouteImport.update({
+    id: '/$propertyId/insights',
+    path: '/$propertyId/insights',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
+const PortalPropertiesPropertyIdFeedbackRoute =
+  PortalPropertiesPropertyIdFeedbackRouteImport.update({
+    id: '/$propertyId/feedback',
+    path: '/$propertyId/feedback',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
+const PortalPropertiesPropertyIdDashboardRoute =
+  PortalPropertiesPropertyIdDashboardRouteImport.update({
+    id: '/$propertyId/dashboard',
+    path: '/$propertyId/dashboard',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
+const PortalPropertiesPropertyIdAlertsRoute =
+  PortalPropertiesPropertyIdAlertsRouteImport.update({
+    id: '/$propertyId/alerts',
+    path: '/$propertyId/alerts',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
+const PortalPropertiesPropertyIdAdvancedInsightsRoute =
+  PortalPropertiesPropertyIdAdvancedInsightsRouteImport.update({
+    id: '/$propertyId/advanced-insights',
+    path: '/$propertyId/advanced-insights',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PortalIndexRoute
   '/login': typeof LoginRoute
+  '/properties': typeof PortalPropertiesRouteWithChildren
+  '/organisation/alerts': typeof PortalOrganisationAlertsRoute
+  '/organisation/billing': typeof PortalOrganisationBillingRoute
+  '/organisation/members': typeof PortalOrganisationMembersRoute
+  '/organisation/roles-permissions': typeof PortalOrganisationRolesPermissionsRoute
+  '/properties/$propertyId/advanced-insights': typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
+  '/properties/$propertyId/alerts': typeof PortalPropertiesPropertyIdAlertsRoute
+  '/properties/$propertyId/dashboard': typeof PortalPropertiesPropertyIdDashboardRoute
+  '/properties/$propertyId/feedback': typeof PortalPropertiesPropertyIdFeedbackRoute
+  '/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
+  '/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
+  '/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/properties': typeof PortalPropertiesRouteWithChildren
   '/': typeof PortalIndexRoute
+  '/organisation/alerts': typeof PortalOrganisationAlertsRoute
+  '/organisation/billing': typeof PortalOrganisationBillingRoute
+  '/organisation/members': typeof PortalOrganisationMembersRoute
+  '/organisation/roles-permissions': typeof PortalOrganisationRolesPermissionsRoute
+  '/properties/$propertyId/advanced-insights': typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
+  '/properties/$propertyId/alerts': typeof PortalPropertiesPropertyIdAlertsRoute
+  '/properties/$propertyId/dashboard': typeof PortalPropertiesPropertyIdDashboardRoute
+  '/properties/$propertyId/feedback': typeof PortalPropertiesPropertyIdFeedbackRoute
+  '/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
+  '/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
+  '/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_portal': typeof PortalRouteWithChildren
   '/login': typeof LoginRoute
+  '/_portal/properties': typeof PortalPropertiesRouteWithChildren
   '/_portal/': typeof PortalIndexRoute
+  '/_portal/organisation/alerts': typeof PortalOrganisationAlertsRoute
+  '/_portal/organisation/billing': typeof PortalOrganisationBillingRoute
+  '/_portal/organisation/members': typeof PortalOrganisationMembersRoute
+  '/_portal/organisation/roles-permissions': typeof PortalOrganisationRolesPermissionsRoute
+  '/_portal/properties/$propertyId/advanced-insights': typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
+  '/_portal/properties/$propertyId/alerts': typeof PortalPropertiesPropertyIdAlertsRoute
+  '/_portal/properties/$propertyId/dashboard': typeof PortalPropertiesPropertyIdDashboardRoute
+  '/_portal/properties/$propertyId/feedback': typeof PortalPropertiesPropertyIdFeedbackRoute
+  '/_portal/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
+  '/_portal/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
+  '/_portal/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/properties'
+    | '/organisation/alerts'
+    | '/organisation/billing'
+    | '/organisation/members'
+    | '/organisation/roles-permissions'
+    | '/properties/$propertyId/advanced-insights'
+    | '/properties/$propertyId/alerts'
+    | '/properties/$propertyId/dashboard'
+    | '/properties/$propertyId/feedback'
+    | '/properties/$propertyId/insights'
+    | '/properties/$propertyId/local-market'
+    | '/properties/$propertyId/qr-form'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/'
-  id: '__root__' | '/_portal' | '/login' | '/_portal/'
+  to:
+    | '/login'
+    | '/properties'
+    | '/'
+    | '/organisation/alerts'
+    | '/organisation/billing'
+    | '/organisation/members'
+    | '/organisation/roles-permissions'
+    | '/properties/$propertyId/advanced-insights'
+    | '/properties/$propertyId/alerts'
+    | '/properties/$propertyId/dashboard'
+    | '/properties/$propertyId/feedback'
+    | '/properties/$propertyId/insights'
+    | '/properties/$propertyId/local-market'
+    | '/properties/$propertyId/qr-form'
+  id:
+    | '__root__'
+    | '/_portal'
+    | '/login'
+    | '/_portal/properties'
+    | '/_portal/'
+    | '/_portal/organisation/alerts'
+    | '/_portal/organisation/billing'
+    | '/_portal/organisation/members'
+    | '/_portal/organisation/roles-permissions'
+    | '/_portal/properties/$propertyId/advanced-insights'
+    | '/_portal/properties/$propertyId/alerts'
+    | '/_portal/properties/$propertyId/dashboard'
+    | '/_portal/properties/$propertyId/feedback'
+    | '/_portal/properties/$propertyId/insights'
+    | '/_portal/properties/$propertyId/local-market'
+    | '/_portal/properties/$propertyId/qr-form'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +241,138 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalIndexRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/_portal/properties': {
+      id: '/_portal/properties'
+      path: '/properties'
+      fullPath: '/properties'
+      preLoaderRoute: typeof PortalPropertiesRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/organisation/roles-permissions': {
+      id: '/_portal/organisation/roles-permissions'
+      path: '/organisation/roles-permissions'
+      fullPath: '/organisation/roles-permissions'
+      preLoaderRoute: typeof PortalOrganisationRolesPermissionsRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/organisation/members': {
+      id: '/_portal/organisation/members'
+      path: '/organisation/members'
+      fullPath: '/organisation/members'
+      preLoaderRoute: typeof PortalOrganisationMembersRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/organisation/billing': {
+      id: '/_portal/organisation/billing'
+      path: '/organisation/billing'
+      fullPath: '/organisation/billing'
+      preLoaderRoute: typeof PortalOrganisationBillingRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/organisation/alerts': {
+      id: '/_portal/organisation/alerts'
+      path: '/organisation/alerts'
+      fullPath: '/organisation/alerts'
+      preLoaderRoute: typeof PortalOrganisationAlertsRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/properties/$propertyId/qr-form': {
+      id: '/_portal/properties/$propertyId/qr-form'
+      path: '/$propertyId/qr-form'
+      fullPath: '/properties/$propertyId/qr-form'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdQrFormRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
+    '/_portal/properties/$propertyId/local-market': {
+      id: '/_portal/properties/$propertyId/local-market'
+      path: '/$propertyId/local-market'
+      fullPath: '/properties/$propertyId/local-market'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdLocalMarketRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
+    '/_portal/properties/$propertyId/insights': {
+      id: '/_portal/properties/$propertyId/insights'
+      path: '/$propertyId/insights'
+      fullPath: '/properties/$propertyId/insights'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdInsightsRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
+    '/_portal/properties/$propertyId/feedback': {
+      id: '/_portal/properties/$propertyId/feedback'
+      path: '/$propertyId/feedback'
+      fullPath: '/properties/$propertyId/feedback'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdFeedbackRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
+    '/_portal/properties/$propertyId/dashboard': {
+      id: '/_portal/properties/$propertyId/dashboard'
+      path: '/$propertyId/dashboard'
+      fullPath: '/properties/$propertyId/dashboard'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdDashboardRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
+    '/_portal/properties/$propertyId/alerts': {
+      id: '/_portal/properties/$propertyId/alerts'
+      path: '/$propertyId/alerts'
+      fullPath: '/properties/$propertyId/alerts'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdAlertsRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
+    '/_portal/properties/$propertyId/advanced-insights': {
+      id: '/_portal/properties/$propertyId/advanced-insights'
+      path: '/$propertyId/advanced-insights'
+      fullPath: '/properties/$propertyId/advanced-insights'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdAdvancedInsightsRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
   }
 }
 
+interface PortalPropertiesRouteChildren {
+  PortalPropertiesPropertyIdAdvancedInsightsRoute: typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
+  PortalPropertiesPropertyIdAlertsRoute: typeof PortalPropertiesPropertyIdAlertsRoute
+  PortalPropertiesPropertyIdDashboardRoute: typeof PortalPropertiesPropertyIdDashboardRoute
+  PortalPropertiesPropertyIdFeedbackRoute: typeof PortalPropertiesPropertyIdFeedbackRoute
+  PortalPropertiesPropertyIdInsightsRoute: typeof PortalPropertiesPropertyIdInsightsRoute
+  PortalPropertiesPropertyIdLocalMarketRoute: typeof PortalPropertiesPropertyIdLocalMarketRoute
+  PortalPropertiesPropertyIdQrFormRoute: typeof PortalPropertiesPropertyIdQrFormRoute
+}
+
+const PortalPropertiesRouteChildren: PortalPropertiesRouteChildren = {
+  PortalPropertiesPropertyIdAdvancedInsightsRoute:
+    PortalPropertiesPropertyIdAdvancedInsightsRoute,
+  PortalPropertiesPropertyIdAlertsRoute: PortalPropertiesPropertyIdAlertsRoute,
+  PortalPropertiesPropertyIdDashboardRoute:
+    PortalPropertiesPropertyIdDashboardRoute,
+  PortalPropertiesPropertyIdFeedbackRoute:
+    PortalPropertiesPropertyIdFeedbackRoute,
+  PortalPropertiesPropertyIdInsightsRoute:
+    PortalPropertiesPropertyIdInsightsRoute,
+  PortalPropertiesPropertyIdLocalMarketRoute:
+    PortalPropertiesPropertyIdLocalMarketRoute,
+  PortalPropertiesPropertyIdQrFormRoute: PortalPropertiesPropertyIdQrFormRoute,
+}
+
+const PortalPropertiesRouteWithChildren =
+  PortalPropertiesRoute._addFileChildren(PortalPropertiesRouteChildren)
+
 interface PortalRouteChildren {
+  PortalPropertiesRoute: typeof PortalPropertiesRouteWithChildren
   PortalIndexRoute: typeof PortalIndexRoute
+  PortalOrganisationAlertsRoute: typeof PortalOrganisationAlertsRoute
+  PortalOrganisationBillingRoute: typeof PortalOrganisationBillingRoute
+  PortalOrganisationMembersRoute: typeof PortalOrganisationMembersRoute
+  PortalOrganisationRolesPermissionsRoute: typeof PortalOrganisationRolesPermissionsRoute
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
+  PortalPropertiesRoute: PortalPropertiesRouteWithChildren,
   PortalIndexRoute: PortalIndexRoute,
+  PortalOrganisationAlertsRoute: PortalOrganisationAlertsRoute,
+  PortalOrganisationBillingRoute: PortalOrganisationBillingRoute,
+  PortalOrganisationMembersRoute: PortalOrganisationMembersRoute,
+  PortalOrganisationRolesPermissionsRoute:
+    PortalOrganisationRolesPermissionsRoute,
 }
 
 const PortalRouteWithChildren =
