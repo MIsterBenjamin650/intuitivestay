@@ -26,7 +26,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -91,7 +90,6 @@ type PropertyRow = {
 
 type AddPropertyFormValues = {
   propertyName: string
-  status: PropertyStatus
   propertyType: PropertyType
   ownerName: string
   ownerEmail: string
@@ -191,7 +189,6 @@ const MOCK_PROPERTIES: PropertyRow[] = [
 
 const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
   propertyName: "",
-  status: "awaiting-approval",
   propertyType: "Hotel",
   ownerName: "",
   ownerEmail: "",
@@ -202,6 +199,7 @@ const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
   addressPostalCode: "",
   addressCountry: "United Kingdom",
 }
+const NEW_PROPERTY_DEFAULT_STATUS: PropertyStatus = "awaiting-approval"
 
 const PROPERTY_TYPE_OPTIONS = [
   "Bar",
@@ -214,8 +212,6 @@ const PROPERTY_TYPE_OPTIONS = [
   "Restaurant",
   "Other",
 ] as const
-const PROPERTY_STATUS_VALUES = ["approved", "awaiting-approval"] as const
-
 const STATUS_FILTER_VALUES = ["all", "approved", "awaiting-approval"] as const
 const TYPE_FILTER_VALUES = ["all", ...PROPERTY_TYPE_OPTIONS] as const
 const SORT_KEY_VALUES = ["id", "name", "status", "type", "ownerName"] as const
@@ -280,13 +276,6 @@ function isTypeFilter(value: unknown): value is TypeFilter {
   return typeof value === "string" && TYPE_FILTER_VALUES.includes(value as TypeFilter)
 }
 
-function isPropertyStatus(value: unknown): value is PropertyStatus {
-  return (
-    typeof value === "string" &&
-    PROPERTY_STATUS_VALUES.includes(value as PropertyStatus)
-  )
-}
-
 function isPropertyType(value: unknown): value is PropertyType {
   return (
     typeof value === "string" &&
@@ -348,6 +337,14 @@ function toRoutePropertyId(propertyName: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
+}
+
+function RequiredMark() {
+  return (
+    <span className="text-destructive" aria-hidden>
+      *
+    </span>
+  )
 }
 
 function PropertyStatusBadge({ status }: { status: PropertyStatus }) {
@@ -495,7 +492,6 @@ function RouteComponent() {
 
       const nextValues = {
         propertyName: addFormValues.propertyName.trim(),
-        status: addFormValues.status,
         propertyType: addFormValues.propertyType,
         ownerName: addFormValues.ownerName.trim(),
         ownerEmail: addFormValues.ownerEmail.trim(),
@@ -536,7 +532,7 @@ function RouteComponent() {
         {
           propertyId: nextPropertyId,
           propertyName: nextValues.propertyName,
-          status: nextValues.status,
+          status: NEW_PROPERTY_DEFAULT_STATUS,
           propertyType: nextValues.propertyType,
           ownerName: nextValues.ownerName,
           ownerEmail: nextValues.ownerEmail,
@@ -781,7 +777,7 @@ function RouteComponent() {
                   updateSearch({ q: event.target.value, page: DEFAULT_SEARCH.page })
                 }
                 placeholder="Search properties"
-                className="h-8 w-full sm:w-64"
+                className="h-9 w-64"
                 aria-label="Search properties"
               />
 
@@ -794,7 +790,7 @@ function RouteComponent() {
                   })
                 }
               >
-                <SelectTrigger className="w-44" size="sm">
+                <SelectTrigger className="h-9 w-52">
                   <SelectValue>{STATUS_FILTER_LABELS[search.status]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent align="start">
@@ -813,7 +809,7 @@ function RouteComponent() {
                   })
                 }
               >
-                <SelectTrigger className="w-44" size="sm">
+                <SelectTrigger className="h-9 w-52">
                   <SelectValue>
                     {search.type === "all" ? "All types" : search.type}
                   </SelectValue>
@@ -829,8 +825,9 @@ function RouteComponent() {
               </Select>
 
               <Button
-                size="xs"
+                size="sm"
                 variant="outline"
+                className="h-9 whitespace-nowrap"
                 disabled={!hasActiveFilters}
                 onClick={() =>
                   updateSearch({
@@ -997,19 +994,19 @@ function RouteComponent() {
       </div>
 
       <Dialog open={isAddDialogOpen} onOpenChange={handleAddDialogOpenChange}>
-        <DialogContent className="w-full sm:max-w-lg">
+        <DialogContent className="w-full sm:max-w-3xl">
           <form className="flex min-h-0 flex-col" onSubmit={handleAddPropertySubmit}>
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-2">
               <DialogTitle>Add Property</DialogTitle>
-              <DialogDescription>
-                Add a mock property row to this dashboard.
-              </DialogDescription>
             </DialogHeader>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              <div className="grid gap-3 pb-4">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="property-name">Name *</Label>
+            <div className="min-h-0 flex-1 overflow-y-auto px-8">
+              <div className="grid gap-6 pb-8">
+                <div className="grid gap-2">
+                  <Label htmlFor="property-name">
+                    Name
+                    <RequiredMark />
+                  </Label>
                   <Input
                     id="property-name"
                     value={addFormValues.propertyName}
@@ -1017,64 +1014,43 @@ function RouteComponent() {
                       updateAddFormValue("propertyName", event.target.value)
                     }
                     placeholder="e.g. Riverside Hotel"
+                    className="h-10"
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="property-status">Status *</Label>
-                    <Select
-                      value={addFormValues.status}
-                      onValueChange={(value) => {
-                        if (value && isPropertyStatus(value)) {
-                          updateAddFormValue("status", value)
-                        }
-                      }}
-                    >
-                      <SelectTrigger id="property-status">
-                        <SelectValue>
-                          {addFormValues.status === "approved"
-                            ? "Approved"
-                            : "Awaiting approval"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent align="start">
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="awaiting-approval">
-                          Awaiting approval
+                <div className="grid gap-2">
+                  <Label htmlFor="property-type">
+                    Type
+                    <RequiredMark />
+                  </Label>
+                  <Select
+                    value={addFormValues.propertyType}
+                    onValueChange={(value) => {
+                      if (value && isPropertyType(value)) {
+                        updateAddFormValue("propertyType", value)
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="property-type" className="h-10">
+                      <SelectValue>{addFormValues.propertyType}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      {PROPERTY_TYPE_OPTIONS.map((propertyType) => (
+                        <SelectItem key={propertyType} value={propertyType}>
+                          {propertyType}
                         </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="property-type">Type *</Label>
-                    <Select
-                      value={addFormValues.propertyType}
-                      onValueChange={(value) => {
-                        if (value && isPropertyType(value)) {
-                          updateAddFormValue("propertyType", value)
-                        }
-                      }}
-                    >
-                      <SelectTrigger id="property-type">
-                        <SelectValue>{addFormValues.propertyType}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent align="start">
-                        {PROPERTY_TYPE_OPTIONS.map((propertyType) => (
-                          <SelectItem key={propertyType} value={propertyType}>
-                            {propertyType}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="owner-name">Owner Name *</Label>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="owner-name">
+                      Owner Name
+                      <RequiredMark />
+                    </Label>
                     <Input
                       id="owner-name"
                       value={addFormValues.ownerName}
@@ -1082,11 +1058,15 @@ function RouteComponent() {
                         updateAddFormValue("ownerName", event.target.value)
                       }
                       placeholder="e.g. Alex Johnson"
+                      className="h-10"
                       required
                     />
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="owner-email">Owner Email *</Label>
+                  <div className="grid gap-2">
+                    <Label htmlFor="owner-email">
+                      Owner Email
+                      <RequiredMark />
+                    </Label>
                     <Input
                       id="owner-email"
                       type="email"
@@ -1095,14 +1075,18 @@ function RouteComponent() {
                         updateAddFormValue("ownerEmail", event.target.value)
                       }
                       placeholder="owner@example.com"
+                      className="h-10"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="business-phone">Business Phone *</Label>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="business-phone">
+                      Business Phone
+                      <RequiredMark />
+                    </Label>
                     <Input
                       id="business-phone"
                       value={addFormValues.businessPhone}
@@ -1110,10 +1094,11 @@ function RouteComponent() {
                         updateAddFormValue("businessPhone", event.target.value)
                       }
                       placeholder="+44 20 0000 0000"
+                      className="h-10"
                       required
                     />
                   </div>
-                  <div className="grid gap-1.5">
+                  <div className="grid gap-2">
                     <Label htmlFor="business-website">Business Website</Label>
                     <Input
                       id="business-website"
@@ -1122,12 +1107,16 @@ function RouteComponent() {
                         updateAddFormValue("businessWebsite", event.target.value)
                       }
                       placeholder="https://example.com"
+                      className="h-10"
                     />
                   </div>
                 </div>
 
-                <div className="grid gap-1.5">
-                  <Label htmlFor="address-line">Address Line *</Label>
+                <div className="grid gap-2">
+                  <Label htmlFor="address-line">
+                    Address Line
+                    <RequiredMark />
+                  </Label>
                   <Input
                     id="address-line"
                     value={addFormValues.addressLine1}
@@ -1135,13 +1124,17 @@ function RouteComponent() {
                       updateAddFormValue("addressLine1", event.target.value)
                     }
                     placeholder="e.g. 10 River Road"
+                    className="h-10"
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="grid gap-1.5 sm:col-span-1">
-                    <Label htmlFor="address-city">City *</Label>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                  <div className="grid gap-2 sm:col-span-1">
+                    <Label htmlFor="address-city">
+                      City
+                      <RequiredMark />
+                    </Label>
                     <Input
                       id="address-city"
                       value={addFormValues.addressCity}
@@ -1149,11 +1142,15 @@ function RouteComponent() {
                         updateAddFormValue("addressCity", event.target.value)
                       }
                       placeholder="City"
+                      className="h-10"
                       required
                     />
                   </div>
-                  <div className="grid gap-1.5 sm:col-span-1">
-                    <Label htmlFor="address-postcode">Postal Code *</Label>
+                  <div className="grid gap-2 sm:col-span-1">
+                    <Label htmlFor="address-postcode">
+                      Postal Code
+                      <RequiredMark />
+                    </Label>
                     <Input
                       id="address-postcode"
                       value={addFormValues.addressPostalCode}
@@ -1161,11 +1158,15 @@ function RouteComponent() {
                         updateAddFormValue("addressPostalCode", event.target.value)
                       }
                       placeholder="Postal code"
+                      className="h-10"
                       required
                     />
                   </div>
-                  <div className="grid gap-1.5 sm:col-span-1">
-                    <Label htmlFor="address-country">Country *</Label>
+                  <div className="grid gap-2 sm:col-span-1">
+                    <Label htmlFor="address-country">
+                      Country
+                      <RequiredMark />
+                    </Label>
                     <Input
                       id="address-country"
                       value={addFormValues.addressCountry}
@@ -1173,6 +1174,7 @@ function RouteComponent() {
                         updateAddFormValue("addressCountry", event.target.value)
                       }
                       placeholder="Country"
+                      className="h-10"
                       required
                     />
                   </div>
@@ -1184,7 +1186,7 @@ function RouteComponent() {
               </div>
             </div>
 
-            <DialogFooter className="border-t border-border">
+            <DialogFooter className="border-t border-border flex-row justify-end px-8 py-5">
               <Button
                 type="button"
                 variant="outline"
@@ -1192,7 +1194,7 @@ function RouteComponent() {
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Mock Property</Button>
+              <Button type="submit">Save</Button>
             </DialogFooter>
           </form>
         </DialogContent>
