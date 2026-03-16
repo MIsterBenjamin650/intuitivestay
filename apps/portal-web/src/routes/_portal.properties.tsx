@@ -1,4 +1,15 @@
 import * as React from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@intuitive-stay/ui/components/alert-dialog"
 import { Badge } from "@intuitive-stay/ui/components/badge"
 import { Button, buttonVariants } from "@intuitive-stay/ui/components/button"
 import {
@@ -386,20 +397,25 @@ function ViewPropertyButton({ routePropertyId }: { routePropertyId?: string }) {
 
 function DeletePropertyButton({ propertyName }: { propertyName: string }) {
   return (
-    <Button
-      size="xs"
-      variant="destructive"
-      onClick={(event) => {
-        event.preventDefault()
-        if (typeof window !== "undefined") {
-          window.confirm(
-            `Delete \"${propertyName}\"? This is a placeholder and does not remove data yet.`
-          )
-        }
-      }}
-    >
-      Delete
-    </Button>
+    <AlertDialog>
+      <AlertDialogTrigger
+        render={<Button size="xs" variant="destructive" />}
+      >
+        Delete
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete property?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {`Delete "${propertyName}"? This action cannot be undone.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction variant="destructive">Confirm</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 
@@ -777,7 +793,7 @@ function RouteComponent() {
                   updateSearch({ q: event.target.value, page: DEFAULT_SEARCH.page })
                 }
                 placeholder="Search properties"
-                className="h-9 w-64"
+                className="h-8 w-64"
                 aria-label="Search properties"
               />
 
@@ -790,7 +806,7 @@ function RouteComponent() {
                   })
                 }
               >
-                <SelectTrigger className="h-9 w-52">
+                <SelectTrigger className="w-52">
                   <SelectValue>{STATUS_FILTER_LABELS[search.status]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent align="start">
@@ -809,7 +825,7 @@ function RouteComponent() {
                   })
                 }
               >
-                <SelectTrigger className="h-9 w-52">
+                <SelectTrigger className="w-52">
                   <SelectValue>
                     {search.type === "all" ? "All types" : search.type}
                   </SelectValue>
@@ -825,9 +841,9 @@ function RouteComponent() {
               </Select>
 
               <Button
-                size="sm"
+                size="default"
                 variant="outline"
-                className="h-9 whitespace-nowrap"
+                className="whitespace-nowrap"
                 disabled={!hasActiveFilters}
                 onClick={() =>
                   updateSearch({
