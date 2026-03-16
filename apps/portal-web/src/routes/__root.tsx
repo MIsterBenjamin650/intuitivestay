@@ -1,12 +1,13 @@
 import type { AppRouter } from "@intuitive-stay/api/routers/index";
 import { Toaster } from "@intuitive-stay/ui/components/sonner";
+import { TooltipProvider } from "@intuitive-stay/ui/components/tooltip";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
-import Header from "../components/header";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {
@@ -25,7 +26,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "Intuitive Stay",
       },
     ],
     links: [
@@ -41,19 +42,20 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <div className="grid h-svh grid-rows-[auto_1fr]">
-          <Header />
-          <Outlet />
-        </div>
-        <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-        <Scripts />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <TooltipProvider>
+            <Outlet />
+            <Toaster richColors />
+            <TanStackRouterDevtools position="bottom-left" />
+            <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+          </TooltipProvider>
+          <Scripts />
+        </ThemeProvider>
       </body>
     </html>
   );
