@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 
+import { env } from "@intuitive-stay/env/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -23,3 +24,24 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+export const adminProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.session) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
+    })
+  }
+  if (ctx.session.user.email !== env.ADMIN_EMAIL) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Admin access required",
+    })
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: ctx.session,
+    },
+  })
+})
