@@ -234,7 +234,7 @@ export const feedbackRouter = router({
       .where(
         and(
           inArray(feedback.propertyId, propertyIds),
-          sql`${feedback.gcs} <= 5`,
+          sql`${feedback.gcs}::numeric <= 5`,
         ),
       )
 

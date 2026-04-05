@@ -10,13 +10,21 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/qr-form")(
 function QrFormPage() {
   const { propertyId } = Route.useParams()
   const trpc = useTRPC()
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isError } = useQuery(
     trpc.properties.getPropertyQrData.queryOptions({ propertyId }),
   )
 
   if (isLoading) {
     return (
       <div className="p-6 text-sm text-muted-foreground">Loading QR data…</div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <p className="text-sm text-destructive">Failed to load QR data.</p>
+      </div>
     )
   }
 
