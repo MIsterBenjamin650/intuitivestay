@@ -31,24 +31,34 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
     })
   }
 
-  // 2. Create an organisation for this owner
-  const baseSlug = input.ownerName
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-  // Append random suffix to guarantee uniqueness
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`
-  const orgId = crypto.randomUUID()
+  // 2. Find or create an organisation for this owner
+  let orgId: string
 
-  await db.insert(organisations).values({
-    id: orgId,
-    name: `${input.ownerName}'s Organisation`,
-    slug,
-    plan: "host",
-    ownerId: userId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+  const existingOrg = await db.query.organisations.findFirst({
+    where: eq(organisations.ownerId, userId),
   })
+
+  if (existingOrg) {
+    orgId = existingOrg.id
+  } else {
+    const baseSlug = input.ownerName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+    // Append random suffix to guarantee uniqueness
+    const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`
+    orgId = crypto.randomUUID()
+
+    await db.insert(organisations).values({
+      id: orgId,
+      name: `${input.ownerName}'s Organisation`,
+      slug,
+      plan: "host",
+      ownerId: userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+  }
 
   // 3. Create the property (status: pending — awaiting admin approval)
   const propertyId = crypto.randomUUID()

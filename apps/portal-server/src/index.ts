@@ -33,6 +33,12 @@ app.use(
   }),
 );
 
+app.use("/api/properties/register", cors({
+  origin: "*",
+  allowMethods: ["POST", "OPTIONS"],
+  allowHeaders: ["Content-Type", "x-wixbridge-secret"],
+}))
+
 app.post("/api/properties/register", async (c) => {
   const secret = c.req.header("x-wixbridge-secret")
   if (!secret || secret !== env.WIXBRIDGE_SECRET) {
