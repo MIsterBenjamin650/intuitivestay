@@ -25,20 +25,20 @@ function RouteComponent() {
     <PropertyPage
       propertyId={propertyId}
       title="Local Market"
-      description="Elite-tier benchmarking and city leaderboard analysis."
+      description="Founder-tier benchmarking and city leaderboard analysis."
     >
       <Card size="sm">
         <CardHeader>
           <CardTitle className="text-sm">Local City Leaderboard</CardTitle>
           <CardDescription>
-            {enabled ? "Enabled for current plan." : "Elite plan required."}
+            {enabled ? "Enabled for current plan." : "Founder plan required."}
           </CardDescription>
         </CardHeader>
         {!enabled ? (
           <CardContent className="text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1">
               <LockIcon />
-              Upgrade to Elite
+              Upgrade to Founder
             </span>
           </CardContent>
         ) : null}
@@ -47,14 +47,14 @@ function RouteComponent() {
         <CardHeader>
           <CardTitle className="text-sm">Market Benchmarking</CardTitle>
           <CardDescription>
-            {enabled ? "Enabled for current plan." : "Elite plan required."}
+            {enabled ? "Enabled for current plan." : "Founder plan required."}
           </CardDescription>
         </CardHeader>
         {!enabled ? (
           <CardContent className="text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1">
               <LockIcon />
-              Upgrade to Elite
+              Upgrade to Founder
             </span>
           </CardContent>
         ) : null}

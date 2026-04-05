@@ -80,6 +80,7 @@ function normalizePlan(plan: unknown): PlanTier {
     return "partner"
   }
 
+  // "host" is the default — also covers legacy "essentialist" values
   return "host"
 }
 
