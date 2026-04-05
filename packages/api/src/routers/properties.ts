@@ -1,8 +1,8 @@
 import { db } from "@intuitive-stay/db"
-import { organisations, properties, qrCodes } from "@intuitive-stay/db/schema"
+import { feedback, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { eq } from "drizzle-orm"
+import { and, count, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
@@ -99,5 +99,71 @@ export const propertiesRouter = router({
       .select()
       .from(properties)
       .where(eq(properties.organisationId, org.id))
+  }),
+
+  getPortfolioDashboard: protectedProcedure.query(async ({ ctx }) => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+
+    if (!org) {
+      return { portfolioGcs: null, activeCount: 0, alertCount: 0, monthlyTrend: [] }
+    }
+
+    const orgProperties = await db
+      .select({ id: properties.id, status: properties.status })
+      .from(properties)
+      .where(eq(properties.organisationId, org.id))
+
+    const activeCount = orgProperties.filter((p) => p.status === "approved").length
+    const propertyIds = orgProperties.map((p) => p.id)
+
+    if (propertyIds.length === 0) {
+      return { portfolioGcs: null, activeCount, alertCount: 0, monthlyTrend: [] }
+    }
+
+    // Portfolio GCS = average of all properties' avgGcs
+    const scoreRows = await db
+      .select({ avgGcs: propertyScores.avgGcs })
+      .from(propertyScores)
+      .where(inArray(propertyScores.propertyId, propertyIds))
+
+    const validScores = scoreRows
+      .map((r) => Number(r.avgGcs))
+      .filter((n) => !isNaN(n) && n > 0)
+    const portfolioGcs =
+      validScores.length > 0
+        ? Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10
+        : null
+
+    // Alert count = feedback where GCS <= 5
+    const [alertResult] = await db
+      .select({ total: count() })
+      .from(feedback)
+      .where(and(inArray(feedback.propertyId, propertyIds), sql`${feedback.gcs}::numeric <= 5`))
+    const alertCount = alertResult?.total ?? 0
+
+    // Monthly trend: avg GCS per month (last 6 months)
+    const trendRows = await db
+      .select({
+        month: sql<string>`to_char(date_trunc('month', ${feedback.submittedAt}), 'Mon YYYY')`,
+        avgGcs: sql<string>`round(avg(${feedback.gcs}::numeric), 2)`,
+      })
+      .from(feedback)
+      .where(
+        and(
+          inArray(feedback.propertyId, propertyIds),
+          sql`${feedback.submittedAt} >= now() - interval '6 months'`,
+        ),
+      )
+      .groupBy(sql`date_trunc('month', ${feedback.submittedAt})`)
+      .orderBy(sql`date_trunc('month', ${feedback.submittedAt})`)
+
+    const monthlyTrend = trendRows.map((r) => ({
+      month: r.month,
+      score: Number(r.avgGcs),
+    }))
+
+    return { portfolioGcs, activeCount, alertCount, monthlyTrend }
   }),
 })
