@@ -7,34 +7,16 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@intuitive-stay/ui/components/popover"
+import { useQuery } from "@tanstack/react-query"
 import { BellIcon } from "lucide-react"
 
-const notifications = [
-  {
-    id: "n1",
-    title: "New booking received",
-    description: "Casa Verde - 2 nights - check-in tomorrow",
-    time: "2m ago",
-    unread: true,
-  },
-  {
-    id: "n2",
-    title: "Payment completed",
-    description: "Invoice #3482 has been successfully paid.",
-    time: "1h ago",
-    unread: true,
-  },
-  {
-    id: "n3",
-    title: "Payout scheduled",
-    description: "Weekly payout is scheduled for Monday.",
-    time: "Yesterday",
-    unread: false,
-  },
-]
+import { useTRPC } from "@/utils/trpc"
 
 export function TopbarNotifications() {
-  const unreadCount = notifications.filter((notification) => notification.unread).length
+  const trpc = useTRPC()
+  const { data: alertCount = 0 } = useQuery(
+    trpc.feedback.getRedAlertCount.queryOptions(),
+  )
 
   return (
     <Popover>
@@ -49,34 +31,33 @@ export function TopbarNotifications() {
         }
       >
         <BellIcon />
-        {unreadCount > 0 ? (
-          <span className="pointer-events-none absolute -top-1 -right-1 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
-            {unreadCount}
+        {alertCount > 0 ? (
+          <span className="pointer-events-none absolute -top-1 -right-1 flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-destructive-foreground">
+            {alertCount}
           </span>
         ) : null}
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={10} className="w-80">
         <PopoverHeader>
-          <PopoverTitle>Notifications</PopoverTitle>
-          <PopoverDescription>{unreadCount} unread updates</PopoverDescription>
+          <PopoverTitle>Alerts</PopoverTitle>
+          <PopoverDescription>
+            {alertCount > 0
+              ? `${alertCount} low-score ${alertCount === 1 ? "alert" : "alerts"} across your properties`
+              : "No low-score alerts"}
+          </PopoverDescription>
         </PopoverHeader>
-        <div className="flex flex-col gap-1">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className="rounded-md border border-border/70 bg-background/70 px-3 py-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium">{notification.title}</p>
-                {notification.unread ? (
-                  <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
-                ) : null}
-              </div>
-              <p className="text-xs text-muted-foreground">{notification.description}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">{notification.time}</p>
-            </div>
-          ))}
-        </div>
+        {alertCount > 0 ? (
+          <div className="px-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {alertCount} guest {alertCount === 1 ? "submission" : "submissions"} scored 5 or
+              below. Visit the Alerts page for each property to review details.
+            </p>
+          </div>
+        ) : (
+          <div className="px-3 py-2">
+            <p className="text-sm text-muted-foreground">All scores are looking good.</p>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   )
