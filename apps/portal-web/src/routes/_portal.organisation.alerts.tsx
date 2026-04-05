@@ -59,14 +59,14 @@ function RouteComponent() {
           <CardHeader>
             <CardTitle className="text-sm">Venting Box Red Alerts</CardTitle>
             <CardDescription>
-              {redAlertsEnabled ? "Enabled for current plan." : "Growth Pro or above required."}
+              {redAlertsEnabled ? "Enabled for current plan." : "Partner or above required."}
             </CardDescription>
           </CardHeader>
           {!redAlertsEnabled ? (
             <CardContent className="text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1">
                 <LockIcon />
-                Upgrade to Growth Pro
+                Upgrade to Partner
               </span>
             </CardContent>
           ) : null}

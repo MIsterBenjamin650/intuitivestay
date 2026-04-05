@@ -1,4 +1,4 @@
-export type PlanTier = "essentialist" | "growth-pro" | "elite-mastery"
+export type PlanTier = "host" | "partner" | "founder"
 
 export type PortalPermission =
   | "view_dashboard"
@@ -27,9 +27,9 @@ export type LockedFeatureKey =
   | "local-market"
 
 const PLAN_WEIGHT: Record<PlanTier, number> = {
-  essentialist: 1,
-  "growth-pro": 2,
-  "elite-mastery": 3,
+  host: 1,
+  partner: 2,
+  founder: 3,
 }
 
 export const ALL_PERMISSIONS: PortalPermission[] = [
@@ -49,15 +49,15 @@ export const ALL_PERMISSIONS: PortalPermission[] = [
 ]
 
 export const FEATURE_MIN_PLAN: Record<LockedFeatureKey, PlanTier> = {
-  "advanced-yearly-trends": "elite-mastery",
-  "sentiment-vibe-maps": "growth-pro",
-  "day-of-week-consistency": "growth-pro",
-  "venting-box-red-alerts": "growth-pro",
-  "reputation-gap-analysis": "elite-mastery",
-  "local-city-leaderboard": "elite-mastery",
-  "market-benchmarking": "elite-mastery",
-  "multi-site-management": "elite-mastery",
-  "local-market": "elite-mastery",
+  "advanced-yearly-trends": "founder",
+  "sentiment-vibe-maps": "partner",
+  "day-of-week-consistency": "partner",
+  "venting-box-red-alerts": "partner",
+  "reputation-gap-analysis": "founder",
+  "local-city-leaderboard": "founder",
+  "market-benchmarking": "founder",
+  "multi-site-management": "founder",
+  "local-market": "founder",
 }
 
 export type PortalAccess = {
@@ -67,20 +67,20 @@ export type PortalAccess = {
 
 function normalizePlan(plan: unknown): PlanTier {
   if (typeof plan !== "string") {
-    return "essentialist"
+    return "host"
   }
 
   const normalized = plan.toLowerCase().trim()
 
-  if (normalized.includes("elite")) {
-    return "elite-mastery"
+  if (normalized.includes("founder") || normalized.includes("elite")) {
+    return "founder"
   }
 
-  if (normalized.includes("growth")) {
-    return "growth-pro"
+  if (normalized.includes("partner") || normalized.includes("growth")) {
+    return "partner"
   }
 
-  return "essentialist"
+  return "host"
 }
 
 function normalizePermissions(input: unknown): Set<PortalPermission> {
@@ -117,7 +117,7 @@ export function resolvePortalAccess(session: unknown): PortalAccess {
     user?.plan ??
     user?.subscriptionPlan ??
     user?.tier ??
-    "essentialist"
+    "host"
 
   const permissions =
     user?.permissions ??

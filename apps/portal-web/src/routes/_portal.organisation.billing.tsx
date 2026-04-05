@@ -48,7 +48,7 @@ function RouteComponent() {
         <Card size="sm">
           <CardHeader>
             <CardTitle className="text-sm">Current Plan</CardTitle>
-            <CardDescription>Essentialist</CardDescription>
+            <CardDescription>Host</CardDescription>
           </CardHeader>
         </Card>
         <Card size="sm">

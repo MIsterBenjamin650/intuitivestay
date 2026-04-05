@@ -304,7 +304,7 @@ export function AppSidebar({
                 link={<AppSidebarLink to="/organisation/billing" />}
                 isActive={isRouteActive(location.pathname, "/organisation/billing")}
                 muted
-                badge={<PlanBadge variant="essentialist" className="ml-auto" />}
+                badge={<PlanBadge variant="host" className="ml-auto" />}
               />
             </SidebarMenu>
           </SidebarGroupContent>

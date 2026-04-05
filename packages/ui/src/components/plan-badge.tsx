@@ -9,15 +9,13 @@ const planBadgeVariants = cva(
   {
     variants: {
       variant: {
-        essentialist:
-          "bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-200",
-        "growth-pro": "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200",
-        "elite-mastery":
-          "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+        host: "bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-200",
+        partner: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200",
+        founder: "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
       },
     },
     defaultVariants: {
-      variant: "essentialist",
+      variant: "host",
     },
   }
 )
@@ -25,9 +23,9 @@ const planBadgeVariants = cva(
 type PlanBadgeVariant = NonNullable<VariantProps<typeof planBadgeVariants>["variant"]>
 
 const PLAN_BADGE_LABELS: Record<PlanBadgeVariant, string> = {
-  essentialist: "Essentialist",
-  "growth-pro": "Growth Pro",
-  "elite-mastery": "Elite Mastery",
+  host: "Host",
+  partner: "Partner",
+  founder: "Founder",
 }
 
 type PlanBadgeProps = Omit<useRender.ComponentProps<"span">, "children"> &
@@ -35,11 +33,11 @@ type PlanBadgeProps = Omit<useRender.ComponentProps<"span">, "children"> &
 
 function PlanBadge({
   className,
-  variant = "essentialist",
+  variant = "host",
   render,
   ...props
 }: PlanBadgeProps) {
-  const resolvedVariant = variant ?? "essentialist"
+  const resolvedVariant = variant ?? "host"
 
   return useRender({
     defaultTagName: "span",
