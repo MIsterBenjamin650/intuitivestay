@@ -1,17 +1,6 @@
 import * as React from "react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@intuitive-stay/ui/components/alert-dialog"
 import { Badge } from "@intuitive-stay/ui/components/badge"
-import { Button, buttonVariants } from "@intuitive-stay/ui/components/button"
+import { Button } from "@intuitive-stay/ui/components/button"
 import {
   Card,
   CardAction,
@@ -22,11 +11,6 @@ import {
 } from "@intuitive-stay/ui/components/card"
 import { Input } from "@intuitive-stay/ui/components/input"
 import { Label } from "@intuitive-stay/ui/components/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@intuitive-stay/ui/components/popover"
 import {
   Select,
   SelectContent,
@@ -61,7 +45,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useTRPC } from "@/utils/trpc"
 import {
   ArrowUpDownIcon,
   ChevronDownIcon,
@@ -69,7 +55,6 @@ import {
   PlusIcon,
 } from "lucide-react"
 
-type PropertyStatus = "approved" | "awaiting-approval"
 type PropertyType =
   | "Bar"
   | "Cafe"
@@ -82,21 +67,14 @@ type PropertyType =
   | "Other"
 
 type PropertyRow = {
-  propertyId: number
-  propertyName: string
-  status: PropertyStatus
-  propertyType: PropertyType
+  id: string
+  name: string
+  status: "pending" | "approved" | "rejected"
+  type: string | null
   ownerName: string
   ownerEmail: string
-  businessPhone: string
-  businessWebsite: string
-  address: {
-    line1: string
-    city: string
-    postalCode: string
-    country: string
-  }
-  routePropertyId?: string
+  city: string
+  country: string
 }
 
 type AddPropertyFormValues = {
@@ -112,91 +90,6 @@ type AddPropertyFormValues = {
   addressCountry: string
 }
 
-const MOCK_PROPERTIES: PropertyRow[] = [
-  {
-    propertyId: 1001,
-    propertyName: "Ben Hostels London",
-    status: "approved",
-    propertyType: "Hostel",
-    ownerName: "Ben Clarke",
-    ownerEmail: "ben.london@intuitivestay.test",
-    businessPhone: "+44 20 7946 1201",
-    businessWebsite: "https://benhostels-london.test",
-    address: {
-      line1: "12 Camden High Street",
-      city: "London",
-      postalCode: "NW1 0JH",
-      country: "United Kingdom",
-    },
-    routePropertyId: "ben-hostels-london",
-  },
-  {
-    propertyId: 1002,
-    propertyName: "Ben Hostels York",
-    status: "awaiting-approval",
-    propertyType: "Hostel",
-    ownerName: "Ben Clarke",
-    ownerEmail: "ben.york@intuitivestay.test",
-    businessPhone: "+44 1904 555 102",
-    businessWebsite: "https://benhostels-york.test",
-    address: {
-      line1: "8 Stonegate",
-      city: "York",
-      postalCode: "YO1 8AS",
-      country: "United Kingdom",
-    },
-    routePropertyId: "ben-hostels-york",
-  },
-  {
-    propertyId: 1003,
-    propertyName: "Ben Hostels Edinburgh",
-    status: "approved",
-    propertyType: "Hostel",
-    ownerName: "Ben Clarke",
-    ownerEmail: "ben.edinburgh@intuitivestay.test",
-    businessPhone: "+44 131 555 0103",
-    businessWebsite: "https://benhostels-edinburgh.test",
-    address: {
-      line1: "34 Cowgate",
-      city: "Edinburgh",
-      postalCode: "EH1 1JR",
-      country: "United Kingdom",
-    },
-    routePropertyId: "ben-hostels-edinburgh",
-  },
-  {
-    propertyId: 1048,
-    propertyName: "Oak & Ember",
-    status: "awaiting-approval",
-    propertyType: "Restaurant",
-    ownerName: "Maya Patel",
-    ownerEmail: "maya@oakember.test",
-    businessPhone: "+44 161 555 2848",
-    businessWebsite: "https://oakember.test",
-    address: {
-      line1: "19 Deansgate",
-      city: "Manchester",
-      postalCode: "M3 2BA",
-      country: "United Kingdom",
-    },
-  },
-  {
-    propertyId: 1057,
-    propertyName: "Harborlight Retreat",
-    status: "approved",
-    propertyType: "Resort",
-    ownerName: "Noah Ellis",
-    ownerEmail: "noah@harborlight.test",
-    businessPhone: "+44 117 555 3057",
-    businessWebsite: "https://harborlightretreat.test",
-    address: {
-      line1: "2 Lighthouse Way",
-      city: "Bristol",
-      postalCode: "BS1 5TY",
-      country: "United Kingdom",
-    },
-  },
-]
 
 const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
   propertyName: "",
@@ -210,8 +103,6 @@ const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
   addressPostalCode: "",
   addressCountry: "United Kingdom",
 }
-const NEW_PROPERTY_DEFAULT_STATUS: PropertyStatus = "awaiting-approval"
-
 const PROPERTY_TYPE_OPTIONS = [
   "Bar",
   "Cafe",
@@ -338,112 +229,11 @@ function validateSearch(search: Record<string, unknown>): PropertiesSearch {
   }
 }
 
-function formatAddressInline(address: PropertyRow["address"]) {
-  return `${address.line1}, ${address.city} ${address.postalCode}, ${address.country}`
-}
-
-function toRoutePropertyId(propertyName: string) {
-  return propertyName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-}
-
 function RequiredMark() {
   return (
     <span className="text-destructive" aria-hidden>
       *
     </span>
-  )
-}
-
-function PropertyStatusBadge({ status }: { status: PropertyStatus }) {
-  if (status === "approved") {
-    return (
-      <Badge className="h-5 bg-emerald-100 px-2 text-[11px] text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
-        Approved
-      </Badge>
-    )
-  }
-
-  return (
-    <Badge className="h-5 bg-blue-100 px-2 text-[11px] text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
-      Awaiting Approval
-    </Badge>
-  )
-}
-
-function ViewPropertyButton({ routePropertyId }: { routePropertyId?: string }) {
-  if (!routePropertyId) {
-    return (
-      <Button size="xs" variant="outline" disabled>
-        View
-      </Button>
-    )
-  }
-
-  return (
-    <Link
-      to="/properties/$propertyId/dashboard"
-      params={{ propertyId: routePropertyId }}
-      preload="intent"
-      className={buttonVariants({ variant: "outline", size: "xs" })}
-    >
-      View
-    </Link>
-  )
-}
-
-function DeletePropertyButton({ propertyName }: { propertyName: string }) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger
-        render={<Button size="xs" variant="destructive" />}
-      >
-        Delete
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete property?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {`Delete "${propertyName}"? This action cannot be undone.`}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction variant="destructive">Confirm</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
-}
-
-function PropertyAddressPopover({ address }: { address: PropertyRow["address"] }) {
-  return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button
-            size="xs"
-            variant="ghost"
-            className="h-6 px-1.5 text-xs text-muted-foreground"
-            aria-label={`View full address for ${address.line1}`}
-          />
-        }
-      >
-        <span className="max-w-[220px] truncate">{formatAddressInline(address)}</span>
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={6} className="w-72">
-        <div className="text-sm leading-relaxed">
-          <p>{address.line1}</p>
-          <p>
-            {address.city} {address.postalCode}
-          </p>
-          <p>{address.country}</p>
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
 
@@ -455,7 +245,20 @@ export const Route = createFileRoute("/_portal/properties")({
 function RouteComponent() {
   const rawSearch = Route.useSearch()
   const navigate = useNavigate()
-  const [properties, setProperties] = React.useState<PropertyRow[]>(MOCK_PROPERTIES)
+  const trpc = useTRPC()
+  const { data: rawProperties = [], isLoading } = useQuery(
+    trpc.properties.getMyProperties.queryOptions(),
+  )
+  const properties: PropertyRow[] = rawProperties.map((p) => ({
+    id: p.id,
+    name: p.name,
+    status: p.status as "pending" | "approved" | "rejected",
+    type: p.type,
+    ownerName: p.ownerName,
+    ownerEmail: p.ownerEmail,
+    city: p.city,
+    country: p.country,
+  }))
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
   const [addFormValues, setAddFormValues] =
     React.useState<AddPropertyFormValues>(DEFAULT_ADD_FORM_VALUES)
@@ -505,70 +308,10 @@ function RouteComponent() {
   const handleAddPropertySubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault()
-
-      const nextValues = {
-        propertyName: addFormValues.propertyName.trim(),
-        propertyType: addFormValues.propertyType,
-        ownerName: addFormValues.ownerName.trim(),
-        ownerEmail: addFormValues.ownerEmail.trim(),
-        businessPhone: addFormValues.businessPhone.trim(),
-        businessWebsite: addFormValues.businessWebsite.trim(),
-        addressLine1: addFormValues.addressLine1.trim(),
-        addressCity: addFormValues.addressCity.trim(),
-        addressPostalCode: addFormValues.addressPostalCode.trim(),
-        addressCountry: addFormValues.addressCountry.trim(),
-      }
-
-      const requiredValues = [
-        nextValues.propertyName,
-        nextValues.ownerName,
-        nextValues.ownerEmail,
-        nextValues.businessPhone,
-        nextValues.addressLine1,
-        nextValues.addressCity,
-        nextValues.addressPostalCode,
-        nextValues.addressCountry,
-      ]
-
-      if (requiredValues.some((value) => value.length === 0)) {
-        setAddFormError("Complete all required fields before adding the property.")
-        return
-      }
-
-      if (!nextValues.ownerEmail.includes("@")) {
-        setAddFormError("Enter a valid owner email address.")
-        return
-      }
-
-      const nextPropertyId =
-        properties.reduce((maxId, property) => Math.max(maxId, property.propertyId), 0) + 1
-
-      setProperties((prev) => [
-        ...prev,
-        {
-          propertyId: nextPropertyId,
-          propertyName: nextValues.propertyName,
-          status: NEW_PROPERTY_DEFAULT_STATUS,
-          propertyType: nextValues.propertyType,
-          ownerName: nextValues.ownerName,
-          ownerEmail: nextValues.ownerEmail,
-          businessPhone: nextValues.businessPhone,
-          businessWebsite: nextValues.businessWebsite,
-          address: {
-            line1: nextValues.addressLine1,
-            city: nextValues.addressCity,
-            postalCode: nextValues.addressPostalCode,
-            country: nextValues.addressCountry,
-          },
-          routePropertyId: toRoutePropertyId(nextValues.propertyName) || undefined,
-        },
-      ])
-
-      setAddFormValues(DEFAULT_ADD_FORM_VALUES)
-      setAddFormError(null)
+      // Properties are registered automatically via the Wix bridge
       setIsAddDialogOpen(false)
     },
-    [addFormValues, properties]
+    []
   )
 
   const filteredData = React.useMemo(() => {
@@ -579,7 +322,7 @@ function RouteComponent() {
         return false
       }
 
-      if (search.type !== "all" && property.propertyType !== search.type) {
+      if (search.type !== "all" && property.type !== search.type) {
         return false
       }
 
@@ -588,15 +331,14 @@ function RouteComponent() {
       }
 
       return [
-        String(property.propertyId),
-        property.propertyName,
+        property.id,
+        property.name,
         property.status,
-        property.propertyType,
+        property.type ?? "",
         property.ownerName,
         property.ownerEmail,
-        property.businessPhone,
-        property.businessWebsite,
-        formatAddressInline(property.address),
+        property.city,
+        property.country,
       ].some((value) => value.toLowerCase().includes(query))
     })
   }, [properties, search.q, search.status, search.type])
@@ -648,94 +390,52 @@ function RouteComponent() {
   const columns = React.useMemo<ColumnDef<PropertyRow>[]>(
     () => [
       {
-        id: "id",
-        accessorKey: "propertyId",
-        header: "Id",
-        enableSorting: true,
+        accessorKey: "name",
+        header: ({ column }) => (
+          <Button variant="ghost" size="sm" onClick={() => column.toggleSorting()}>
+            Property Name <ArrowUpDownIcon className="ml-1 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.propertyId}</span>
+          <Link to="/properties/$propertyId/dashboard" params={{ propertyId: row.original.id }}>
+            <span className="font-medium hover:underline">{row.original.name}</span>
+          </Link>
         ),
       },
       {
-        id: "name",
-        accessorKey: "propertyName",
-        header: "Name",
-        enableSorting: true,
-        cell: ({ row }) => (
-          <span className="block max-w-[180px] truncate" title={row.original.propertyName}>
-            {row.original.propertyName}
-          </span>
-        ),
-      },
-      {
-        id: "status",
         accessorKey: "status",
         header: "Status",
-        enableSorting: true,
-        cell: ({ row }) => <PropertyStatusBadge status={row.original.status} />,
+        cell: ({ row }) => {
+          const s = row.original.status
+          return (
+            <Badge
+              variant={
+                s === "approved" ? "default" : s === "rejected" ? "destructive" : "secondary"
+              }
+            >
+              {s === "pending"
+                ? "Awaiting Approval"
+                : s.charAt(0).toUpperCase() + s.slice(1)}
+            </Badge>
+          )
+        },
       },
       {
-        id: "type",
-        accessorKey: "propertyType",
+        accessorKey: "type",
         header: "Type",
-        enableSorting: true,
+        cell: ({ row }) => row.original.type ?? "—",
       },
       {
-        id: "ownerName",
+        accessorKey: "city",
+        header: "City",
+      },
+      {
         accessorKey: "ownerName",
-        header: "Owner Name",
-        enableSorting: true,
+        header: "Owner",
       },
       {
-        id: "ownerEmail",
         accessorKey: "ownerEmail",
-        header: "Owner Email",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="block max-w-[220px] truncate" title={row.original.ownerEmail}>
-            {row.original.ownerEmail}
-          </span>
-        ),
-      },
-      {
-        id: "businessPhone",
-        accessorKey: "businessPhone",
-        header: "Business Phone",
-        enableSorting: false,
-      },
-      {
-        id: "businessWebsite",
-        accessorKey: "businessWebsite",
-        header: "Business Website",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="block max-w-[220px] truncate" title={row.original.businessWebsite}>
-            {row.original.businessWebsite}
-          </span>
-        ),
-      },
-      {
-        id: "address",
-        header: "Address",
-        enableSorting: false,
-        cell: ({ row }) => <PropertyAddressPopover address={row.original.address} />,
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        enableSorting: false,
-        meta: {
-          headClassName:
-            "sticky right-0 z-30 bg-card border-l border-border/70 text-right shadow-[-8px_0_10px_-10px_rgba(0,0,0,0.55)]",
-          cellClassName:
-            "sticky right-0 z-20 bg-card border-l border-border/70 shadow-[-8px_0_10px_-10px_rgba(0,0,0,0.55)]",
-        } satisfies ColumnMeta,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5">
-            <ViewPropertyButton routePropertyId={row.original.routePropertyId} />
-            <DeletePropertyButton propertyName={row.original.propertyName} />
-          </div>
-        ),
+        header: "Email",
       },
     ],
     []
@@ -858,6 +558,9 @@ function RouteComponent() {
               </Button>
             </div>
 
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">Loading properties…</p>
+            ) : (
             <div className="min-w-0 w-full overflow-x-auto">
               <Table className="min-w-[1320px] text-xs [&_th]:h-8 [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1.5 [&_td]:whitespace-nowrap">
                 <TableHeader>
@@ -951,6 +654,7 @@ function RouteComponent() {
                 </TableBody>
               </Table>
             </div>
+            )}
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
