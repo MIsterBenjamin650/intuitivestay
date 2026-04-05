@@ -199,4 +199,38 @@ export const propertiesRouter = router({
         avgRecognition: scores?.avgRecognition != null ? Number(scores.avgRecognition) : null,
       }
     }),
+
+  getPropertyQrData: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const qrCode = await db.query.qrCodes.findFirst({
+        where: eq(qrCodes.propertyId, input.propertyId),
+      })
+
+      const scores = await db.query.propertyScores.findFirst({
+        where: eq(propertyScores.propertyId, input.propertyId),
+      })
+
+      return {
+        qrCode: qrCode
+          ? {
+              uniqueCode: qrCode.uniqueCode,
+              feedbackUrl: qrCode.feedbackUrl,
+              createdAt: qrCode.createdAt,
+            }
+          : null,
+        totalSubmissions: scores?.totalFeedback ?? 0,
+      }
+    }),
 })
