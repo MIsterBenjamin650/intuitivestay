@@ -1,7 +1,7 @@
 import { db } from "@intuitive-stay/db"
 import { feedback, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
 import { TRPCError } from "@trpc/server"
-import { and, count, eq, inArray, sql } from "drizzle-orm"
+import { and, count, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure, router } from "../index"
@@ -240,4 +240,64 @@ export const feedbackRouter = router({
 
     return result?.total ?? 0
   }),
+
+  getPropertyFeedbackSummary: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const scores = await db.query.propertyScores.findFirst({
+        where: eq(propertyScores.propertyId, input.propertyId),
+      })
+
+      const pillarScores = [
+        {
+          pillar: "Resilience",
+          score: scores?.avgResilience != null ? Number(scores.avgResilience) : 0,
+        },
+        {
+          pillar: "Empathy",
+          score: scores?.avgEmpathy != null ? Number(scores.avgEmpathy) : 0,
+        },
+        {
+          pillar: "Anticipation",
+          score: scores?.avgAnticipation != null ? Number(scores.avgAnticipation) : 0,
+        },
+        {
+          pillar: "Recognition",
+          score: scores?.avgRecognition != null ? Number(scores.avgRecognition) : 0,
+        },
+      ]
+
+      const mentionRows = await db
+        .select({ name: feedback.namedStaffMember })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, input.propertyId), isNotNull(feedback.namedStaffMember)))
+
+      const mentionMap: Record<string, number> = {}
+      for (const row of mentionRows) {
+        if (row.name) {
+          mentionMap[row.name] = (mentionMap[row.name] ?? 0) + 1
+        }
+      }
+      const staffMentions = Object.entries(mentionMap)
+        .map(([name, mentions]) => ({ name, mentions }))
+        .sort((a, b) => b.mentions - a.mentions)
+        .slice(0, 10)
+
+      return {
+        pillarScores,
+        staffMentions,
+        totalFeedback: scores?.totalFeedback ?? 0,
+      }
+    }),
 })
