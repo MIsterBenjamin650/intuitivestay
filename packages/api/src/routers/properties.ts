@@ -1,11 +1,13 @@
 import { db } from "@intuitive-stay/db"
-import { organisations, properties } from "@intuitive-stay/db/schema"
+import { organisations, properties, qrCodes } from "@intuitive-stay/db/schema"
+import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
 import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
+import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
 
 export const propertiesRouter = router({
   getPendingProperties: adminProcedure.query(async () => {
@@ -29,10 +31,36 @@ export const propertiesRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
       }
 
-      // Fire-and-forget: email failure must not block the approval action
-      sendApprovalEmail(property.ownerEmail, property.ownerName, property.name).catch(
-        (err) => console.error("Failed to send approval email:", err),
-      )
+      // Check if a QR code already exists (idempotency — re-approving should not create a duplicate)
+      const existingQr = await db.query.qrCodes.findFirst({
+        where: eq(qrCodes.propertyId, property.id),
+      })
+
+      if (!existingQr) {
+        const uniqueCode = generateUniqueCode()
+        const feedbackUrl = `${env.PUBLIC_PORTAL_URL}/f/${uniqueCode}`
+
+        await db.insert(qrCodes).values({
+          id: crypto.randomUUID(),
+          propertyId: property.id,
+          uniqueCode,
+          feedbackUrl,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+
+        // Fire-and-forget: generate PDF then send approval email with attachment
+        generateQrPdf(feedbackUrl, property.name)
+          .then((pdfBuffer) =>
+            sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, pdfBuffer),
+          )
+          .catch((err) => console.error("Failed to generate QR / send approval email:", err))
+      } else {
+        // QR already exists — just resend the approval email without regenerating
+        sendApprovalEmail(property.ownerEmail, property.ownerName, property.name).catch((err) =>
+          console.error("Failed to send approval email:", err),
+        )
+      }
 
       return property
     }),
