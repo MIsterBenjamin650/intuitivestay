@@ -31,6 +31,7 @@ import {
   CreditCardIcon,
   LayoutDashboardIcon,
   QrCodeIcon,
+  ShieldCheckIcon,
   TrendingUpIcon,
   UserCogIcon,
   UsersIcon,
@@ -305,6 +306,20 @@ export function AppSidebar({
                 isActive={isRouteActive(location.pathname, "/organisation/billing")}
                 muted
                 badge={<PlanBadge variant="host" className="ml-auto" />}
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Admin</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarLinkItem
+                label="Approvals"
+                icon={<ShieldCheckIcon />}
+                link={<AppSidebarLink to="/admin/approvals" />}
+                isActive={isRouteActive(location.pathname, "/admin/approvals")}
+                muted
               />
             </SidebarMenu>
           </SidebarGroupContent>
