@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PortalRouteImport } from './routes/_portal'
 import { Route as PortalIndexRouteImport } from './routes/_portal.index'
+import { Route as FUniqueCodeRouteImport } from './routes/f.$uniqueCode'
 import { Route as PortalPropertiesRouteImport } from './routes/_portal.properties'
 import { Route as PortalOrganisationRolesPermissionsRouteImport } from './routes/_portal.organisation.roles-permissions'
 import { Route as PortalOrganisationMembersRouteImport } from './routes/_portal.organisation.members'
 import { Route as PortalOrganisationBillingRouteImport } from './routes/_portal.organisation.billing'
 import { Route as PortalOrganisationAlertsRouteImport } from './routes/_portal.organisation.alerts'
+import { Route as PortalAdminApprovalsRouteImport } from './routes/_portal.admin.approvals'
 import { Route as PortalPropertiesPropertyIdQrFormRouteImport } from './routes/_portal.properties.$propertyId.qr-form'
 import { Route as PortalPropertiesPropertyIdLocalMarketRouteImport } from './routes/_portal.properties.$propertyId.local-market'
 import { Route as PortalPropertiesPropertyIdInsightsRouteImport } from './routes/_portal.properties.$propertyId.insights'
@@ -38,6 +40,11 @@ const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalRoute,
+} as any)
+const FUniqueCodeRoute = FUniqueCodeRouteImport.update({
+  id: '/f/$uniqueCode',
+  path: '/f/$uniqueCode',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PortalPropertiesRoute = PortalPropertiesRouteImport.update({
   id: '/properties',
@@ -68,6 +75,11 @@ const PortalOrganisationAlertsRoute =
     path: '/organisation/alerts',
     getParentRoute: () => PortalRoute,
   } as any)
+const PortalAdminApprovalsRoute = PortalAdminApprovalsRouteImport.update({
+  id: '/admin/approvals',
+  path: '/admin/approvals',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalPropertiesPropertyIdQrFormRoute =
   PortalPropertiesPropertyIdQrFormRouteImport.update({
     id: '/$propertyId/qr-form',
@@ -115,6 +127,8 @@ export interface FileRoutesByFullPath {
   '/': typeof PortalIndexRoute
   '/login': typeof LoginRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
+  '/f/$uniqueCode': typeof FUniqueCodeRoute
+  '/admin/approvals': typeof PortalAdminApprovalsRoute
   '/organisation/alerts': typeof PortalOrganisationAlertsRoute
   '/organisation/billing': typeof PortalOrganisationBillingRoute
   '/organisation/members': typeof PortalOrganisationMembersRoute
@@ -130,7 +144,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
+  '/f/$uniqueCode': typeof FUniqueCodeRoute
   '/': typeof PortalIndexRoute
+  '/admin/approvals': typeof PortalAdminApprovalsRoute
   '/organisation/alerts': typeof PortalOrganisationAlertsRoute
   '/organisation/billing': typeof PortalOrganisationBillingRoute
   '/organisation/members': typeof PortalOrganisationMembersRoute
@@ -148,7 +164,9 @@ export interface FileRoutesById {
   '/_portal': typeof PortalRouteWithChildren
   '/login': typeof LoginRoute
   '/_portal/properties': typeof PortalPropertiesRouteWithChildren
+  '/f/$uniqueCode': typeof FUniqueCodeRoute
   '/_portal/': typeof PortalIndexRoute
+  '/_portal/admin/approvals': typeof PortalAdminApprovalsRoute
   '/_portal/organisation/alerts': typeof PortalOrganisationAlertsRoute
   '/_portal/organisation/billing': typeof PortalOrganisationBillingRoute
   '/_portal/organisation/members': typeof PortalOrganisationMembersRoute
@@ -167,6 +185,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/properties'
+    | '/f/$uniqueCode'
+    | '/admin/approvals'
     | '/organisation/alerts'
     | '/organisation/billing'
     | '/organisation/members'
@@ -182,7 +202,9 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/properties'
+    | '/f/$uniqueCode'
     | '/'
+    | '/admin/approvals'
     | '/organisation/alerts'
     | '/organisation/billing'
     | '/organisation/members'
@@ -199,7 +221,9 @@ export interface FileRouteTypes {
     | '/_portal'
     | '/login'
     | '/_portal/properties'
+    | '/f/$uniqueCode'
     | '/_portal/'
+    | '/_portal/admin/approvals'
     | '/_portal/organisation/alerts'
     | '/_portal/organisation/billing'
     | '/_portal/organisation/members'
@@ -216,6 +240,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
   LoginRoute: typeof LoginRoute
+  FUniqueCodeRoute: typeof FUniqueCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -240,6 +265,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof PortalIndexRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/f/$uniqueCode': {
+      id: '/f/$uniqueCode'
+      path: '/f/$uniqueCode'
+      fullPath: '/f/$uniqueCode'
+      preLoaderRoute: typeof FUniqueCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_portal/properties': {
       id: '/_portal/properties'
@@ -274,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/organisation/alerts'
       fullPath: '/organisation/alerts'
       preLoaderRoute: typeof PortalOrganisationAlertsRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/admin/approvals': {
+      id: '/_portal/admin/approvals'
+      path: '/admin/approvals'
+      fullPath: '/admin/approvals'
+      preLoaderRoute: typeof PortalAdminApprovalsRouteImport
       parentRoute: typeof PortalRoute
     }
     '/_portal/properties/$propertyId/qr-form': {
@@ -359,6 +398,7 @@ const PortalPropertiesRouteWithChildren =
 interface PortalRouteChildren {
   PortalPropertiesRoute: typeof PortalPropertiesRouteWithChildren
   PortalIndexRoute: typeof PortalIndexRoute
+  PortalAdminApprovalsRoute: typeof PortalAdminApprovalsRoute
   PortalOrganisationAlertsRoute: typeof PortalOrganisationAlertsRoute
   PortalOrganisationBillingRoute: typeof PortalOrganisationBillingRoute
   PortalOrganisationMembersRoute: typeof PortalOrganisationMembersRoute
@@ -368,6 +408,7 @@ interface PortalRouteChildren {
 const PortalRouteChildren: PortalRouteChildren = {
   PortalPropertiesRoute: PortalPropertiesRouteWithChildren,
   PortalIndexRoute: PortalIndexRoute,
+  PortalAdminApprovalsRoute: PortalAdminApprovalsRoute,
   PortalOrganisationAlertsRoute: PortalOrganisationAlertsRoute,
   PortalOrganisationBillingRoute: PortalOrganisationBillingRoute,
   PortalOrganisationMembersRoute: PortalOrganisationMembersRoute,
@@ -381,6 +422,7 @@ const PortalRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
   LoginRoute: LoginRoute,
+  FUniqueCodeRoute: FUniqueCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -29,6 +29,7 @@
     "next-themes": "catalog:",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "recharts": "^3.8.1",
     "sonner": "catalog:",
     "tailwindcss": "catalog:",
     "vite-tsconfig-paths": "^5.1.4",
