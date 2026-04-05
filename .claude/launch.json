@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "portal-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@intuitive-stay/portal-web", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "portal-server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@intuitive-stay/portal-server", "dev"],
+      "port": 5174
+    }
+  ]
+}
