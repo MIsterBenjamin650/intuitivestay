@@ -154,8 +154,25 @@ export const feedbackRouter = router({
 
   /** Public — saves staff name nomination from Name Drop™ screen (GCS ≥ 8). */
   submitNameDrop: publicProcedure
-    .input(z.object({ feedbackId: z.string(), staffName: z.string().min(1).max(100) }))
+    .input(z.object({ feedbackId: z.string(), uniqueCode: z.string(), staffName: z.string().min(1).max(100) }))
     .mutation(async ({ input }) => {
+      // Verify the feedback row belongs to the QR code from this session
+      const qrCode = await db.query.qrCodes.findFirst({
+        where: eq(qrCodes.uniqueCode, input.uniqueCode),
+      })
+
+      if (!qrCode) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invalid feedback link" })
+      }
+
+      const row = await db.query.feedback.findFirst({
+        where: and(eq(feedback.id, input.feedbackId), eq(feedback.qrCodeId, qrCode.id)),
+      })
+
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Feedback not found" })
+      }
+
       await db
         .update(feedback)
         .set({ namedStaffMember: input.staffName })
@@ -165,8 +182,25 @@ export const feedbackRouter = router({
 
   /** Public — saves private vent text from Vent Box™ screen (GCS ≤ 5). */
   submitVentText: publicProcedure
-    .input(z.object({ feedbackId: z.string(), text: z.string().min(1).max(2000) }))
+    .input(z.object({ feedbackId: z.string(), uniqueCode: z.string(), text: z.string().min(1).max(2000) }))
     .mutation(async ({ input }) => {
+      // Verify the feedback row belongs to the QR code from this session
+      const qrCode = await db.query.qrCodes.findFirst({
+        where: eq(qrCodes.uniqueCode, input.uniqueCode),
+      })
+
+      if (!qrCode) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invalid feedback link" })
+      }
+
+      const row = await db.query.feedback.findFirst({
+        where: and(eq(feedback.id, input.feedbackId), eq(feedback.qrCodeId, qrCode.id)),
+      })
+
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Feedback not found" })
+      }
+
       await db
         .update(feedback)
         .set({ ventText: input.text })

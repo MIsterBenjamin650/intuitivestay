@@ -95,6 +95,7 @@ function FeedbackPage() {
     mutationFn: () =>
       trpcClient.feedback.submitNameDrop.mutate({
         feedbackId: feedbackId!,
+        uniqueCode,
         staffName,
       }),
     onSuccess: () => setStep("thank-you"),
@@ -104,6 +105,7 @@ function FeedbackPage() {
     mutationFn: () =>
       trpcClient.feedback.submitVentText.mutate({
         feedbackId: feedbackId!,
+        uniqueCode,
         text: ventText,
       }),
     onSuccess: () => setStep("thank-you"),
