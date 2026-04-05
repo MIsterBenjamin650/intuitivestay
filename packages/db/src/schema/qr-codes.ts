@@ -12,6 +12,10 @@ export const qrCodes = pgTable("qr_codes", {
   uniqueCode: text("unique_code").notNull().unique(),
   feedbackUrl: text("feedback_url").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
 });
 
 export const qrCodesRelations = relations(qrCodes, ({ one }) => ({

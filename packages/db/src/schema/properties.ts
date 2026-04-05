@@ -16,10 +16,11 @@ export const properties = pgTable("properties", {
   status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected'
   ownerEmail: text("owner_email").notNull(),
   ownerName: text("owner_name").notNull(),
+  // ownerEmail/ownerName copied from Wix registration form; add userId FK in a later migration once owner creates their portal account
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => new Date())
+    .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
 
