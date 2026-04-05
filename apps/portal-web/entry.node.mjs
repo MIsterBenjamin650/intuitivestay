@@ -1,6 +1,7 @@
 /**
  * Node.js HTTP server entry point for Railway deployment.
  * TanStack Start builds a Web Fetch handler; this wraps it for Node.js.
+ * Also proxies /api/auth/* to portal-server so auth cookies are same-domain.
  */
 import http from 'node:http'
 import { createReadStream, existsSync, statSync } from 'node:fs'
@@ -8,6 +9,8 @@ import { resolve, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+const PORTAL_SERVER = process.env.PORTAL_SERVER_URL || 'https://intuitivestay-production.up.railway.app'
 
 const { default: app } = await import('./dist/server/server.js')
 
@@ -33,6 +36,38 @@ const MIME_TYPES = {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Proxy /api/auth/* to portal-server so auth cookies are set on this domain
+  if (req.url.startsWith('/api/auth/')) {
+    const targetUrl = `${PORTAL_SERVER}${req.url}`
+    const chunks = []
+    for await (const chunk of req) chunks.push(chunk)
+    const body = Buffer.concat(chunks)
+
+    const headers = {}
+    for (const [key, value] of Object.entries(req.headers)) {
+      if (key.toLowerCase() !== 'host') headers[key] = value
+    }
+
+    try {
+      const proxyRes = await fetch(targetUrl, {
+        method: req.method,
+        headers,
+        body: ['GET', 'HEAD'].includes(req.method) ? undefined : body,
+      })
+
+      const resHeaders = {}
+      proxyRes.headers.forEach((value, key) => { resHeaders[key] = value })
+      res.writeHead(proxyRes.status, resHeaders)
+      const resBody = await proxyRes.arrayBuffer()
+      res.end(Buffer.from(resBody))
+    } catch (err) {
+      console.error('Auth proxy error:', err)
+      res.writeHead(502)
+      res.end('Bad Gateway')
+    }
+    return
+  }
+
   // Serve static assets directly (hashed filenames in dist/client)
   const urlPath = req.url.split('?')[0]
   const staticFile = join(STATIC_DIR, urlPath)
