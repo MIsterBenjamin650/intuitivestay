@@ -65,7 +65,7 @@ function FeedbackPage() {
   // Form state
   const [resilience, setResilience] = useState(0)
   const [empathy, setEmpathy] = useState(0)
-  const [consistency, setConsistency] = useState(0)
+  const [anticipation, setAnticipation] = useState(0)
   const [recognition, setRecognition] = useState(0)
   const [mealTime, setMealTime] = useState<MealTime>("none")
 
@@ -79,7 +79,7 @@ function FeedbackPage() {
         uniqueCode,
         resilience,
         empathy,
-        consistency,
+        anticipation,
         recognition,
         mealTime,
       }),
@@ -111,7 +111,7 @@ function FeedbackPage() {
     onSuccess: () => setStep("thank-you"),
   })
 
-  const allRated = resilience > 0 && empathy > 0 && consistency > 0 && recognition > 0
+  const allRated = resilience > 0 && empathy > 0 && anticipation > 0 && recognition > 0
 
   if (isLoading) {
     return (
@@ -165,10 +165,10 @@ function FeedbackPage() {
               onChange={setEmpathy}
             />
             <RatingInput
-              label="Consistency"
-              description="Was the quality of service consistent throughout?"
-              value={consistency}
-              onChange={setConsistency}
+              label="Anticipation"
+              description="Did staff anticipate your needs before you had to ask?"
+              value={anticipation}
+              onChange={setAnticipation}
             />
             <RatingInput
               label="Recognition"

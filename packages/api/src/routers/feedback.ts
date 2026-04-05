@@ -14,7 +14,7 @@ import { sendAlertEmail } from "../lib/email"
  */
 async function updatePropertyScores(
   propertyId: string,
-  scores: { resilience: number; empathy: number; consistency: number; recognition: number; gcs: number },
+  scores: { resilience: number; empathy: number; anticipation: number; recognition: number; gcs: number },
 ) {
   const existing = await db.query.propertyScores.findFirst({
     where: eq(propertyScores.propertyId, propertyId),
@@ -27,7 +27,7 @@ async function updatePropertyScores(
       gcs: Number(existing.avgGcs ?? 0),
       resilience: Number(existing.avgResilience ?? 0),
       empathy: Number(existing.avgEmpathy ?? 0),
-      consistency: Number(existing.avgConsistency ?? 0),
+      anticipation: Number(existing.avgAnticipation ?? 0),
       recognition: Number(existing.avgRecognition ?? 0),
     }
 
@@ -37,7 +37,7 @@ async function updatePropertyScores(
         avgGcs: String(((prev.gcs * total) + scores.gcs) / newTotal),
         avgResilience: String(((prev.resilience * total) + scores.resilience) / newTotal),
         avgEmpathy: String(((prev.empathy * total) + scores.empathy) / newTotal),
-        avgConsistency: String(((prev.consistency * total) + scores.consistency) / newTotal),
+        avgAnticipation: String(((prev.anticipation * total) + scores.anticipation) / newTotal),
         avgRecognition: String(((prev.recognition * total) + scores.recognition) / newTotal),
         totalFeedback: newTotal,
         updatedAt: new Date(),
@@ -50,7 +50,7 @@ async function updatePropertyScores(
       avgGcs: String(scores.gcs),
       avgResilience: String(scores.resilience),
       avgEmpathy: String(scores.empathy),
-      avgConsistency: String(scores.consistency),
+      avgAnticipation: String(scores.anticipation),
       avgRecognition: String(scores.recognition),
       totalFeedback: 1,
       createdAt: new Date(),
@@ -93,7 +93,7 @@ export const feedbackRouter = router({
         uniqueCode: z.string(),
         resilience: z.number().int().min(1).max(10),
         empathy: z.number().int().min(1).max(10),
-        consistency: z.number().int().min(1).max(10),
+        anticipation: z.number().int().min(1).max(10),
         recognition: z.number().int().min(1).max(10),
         mealTime: z.enum(["breakfast", "lunch", "dinner", "none"]).nullable().optional(),
       }),
@@ -107,7 +107,7 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Invalid feedback link" })
       }
 
-      const gcs = (input.resilience + input.empathy + input.consistency + input.recognition) / 4
+      const gcs = (input.resilience + input.empathy + input.anticipation + input.recognition) / 4
 
       const feedbackId = crypto.randomUUID()
       await db.insert(feedback).values({
@@ -116,7 +116,7 @@ export const feedbackRouter = router({
         qrCodeId: qrCode.id,
         resilience: input.resilience,
         empathy: input.empathy,
-        consistency: input.consistency,
+        anticipation: input.anticipation,
         recognition: input.recognition,
         gcs: gcs.toFixed(2),
         mealTime: input.mealTime ?? null,
@@ -128,7 +128,7 @@ export const feedbackRouter = router({
       await updatePropertyScores(qrCode.propertyId, {
         resilience: input.resilience,
         empathy: input.empathy,
-        consistency: input.consistency,
+        anticipation: input.anticipation,
         recognition: input.recognition,
         gcs,
       })
@@ -143,7 +143,7 @@ export const feedbackRouter = router({
           sendAlertEmail(property.ownerEmail, property.ownerName, property.name, gcs, {
             resilience: input.resilience,
             empathy: input.empathy,
-            consistency: input.consistency,
+            anticipation: input.anticipation,
             recognition: input.recognition,
           }).catch((err) => console.error("Failed to send alert email:", err))
         }

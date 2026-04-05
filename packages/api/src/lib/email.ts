@@ -52,7 +52,7 @@ export async function sendAlertEmail(
   ownerName: string,
   propertyName: string,
   gcs: number,
-  pillars: { resilience: number; empathy: number; consistency: number; recognition: number },
+  pillars: { resilience: number; empathy: number; anticipation: number; recognition: number },
 ) {
   await resend.emails.send({
     from: FROM,
@@ -64,7 +64,7 @@ export async function sendAlertEmail(
 <ul>
   <li>Resilience: ${pillars.resilience}/10</li>
   <li>Empathy: ${pillars.empathy}/10</li>
-  <li>Consistency: ${pillars.consistency}/10</li>
+  <li>Anticipation: ${pillars.anticipation}/10</li>
   <li>Recognition: ${pillars.recognition}/10</li>
 </ul>
 <p>Log in to your portal to view any additional feedback left by the guest:</p>

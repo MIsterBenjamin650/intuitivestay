@@ -14,9 +14,9 @@ export const feedback = pgTable("feedback", {
   }),
   resilience: integer("resilience").notNull(),
   empathy: integer("empathy").notNull(),
-  consistency: integer("consistency").notNull(),
+  anticipation: integer("anticipation").notNull(),
   recognition: integer("recognition").notNull(),
-  gcs: numeric("gcs", { precision: 4, scale: 2 }).notNull(), // pre-calculated before insert: (resilience + empathy + consistency + recognition) / 4
+  gcs: numeric("gcs", { precision: 4, scale: 2 }).notNull(), // pre-calculated before insert: (resilience + empathy + anticipation + recognition) / 4
   mealTime: text("meal_time"),
   source: text("source").notNull().default("qr_form"),
   namedStaffMember: text("named_staff_member"),

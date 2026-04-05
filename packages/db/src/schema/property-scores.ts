@@ -12,7 +12,7 @@ export const propertyScores = pgTable("property_scores", {
   avgGcs: numeric("avg_gcs", { precision: 4, scale: 2 }),
   avgResilience: numeric("avg_resilience", { precision: 4, scale: 2 }),
   avgEmpathy: numeric("avg_empathy", { precision: 4, scale: 2 }),
-  avgConsistency: numeric("avg_consistency", { precision: 4, scale: 2 }),
+  avgAnticipation: numeric("avg_anticipation", { precision: 4, scale: 2 }),
   avgRecognition: numeric("avg_recognition", { precision: 4, scale: 2 }),
   // avg columns are nullable: null until first feedback is received for this property
   totalFeedback: integer("total_feedback").default(0).notNull(),
