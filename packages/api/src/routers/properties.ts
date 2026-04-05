@@ -166,4 +166,37 @@ export const propertiesRouter = router({
 
     return { portfolioGcs, activeCount, alertCount, monthlyTrend }
   }),
+
+  getPropertyDashboard: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const scores = await db.query.propertyScores.findFirst({
+        where: eq(propertyScores.propertyId, input.propertyId),
+      })
+
+      return {
+        name: property.name,
+        type: property.type,
+        city: property.city,
+        country: property.country,
+        status: property.status,
+        avgGcs: scores?.avgGcs != null ? Number(scores.avgGcs) : null,
+        totalFeedback: scores?.totalFeedback ?? 0,
+        avgResilience: scores?.avgResilience != null ? Number(scores.avgResilience) : null,
+        avgEmpathy: scores?.avgEmpathy != null ? Number(scores.avgEmpathy) : null,
+        avgAnticipation: scores?.avgAnticipation != null ? Number(scores.avgAnticipation) : null,
+        avgRecognition: scores?.avgRecognition != null ? Number(scores.avgRecognition) : null,
+      }
+    }),
 })
