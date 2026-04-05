@@ -12,7 +12,7 @@ export const env = createEnv({
     WIXBRIDGE_SECRET: z.string().min(16),
     RESEND_API_KEY: z.string().min(1),
     ADMIN_EMAIL: z.string().email(),
-    PUBLIC_PORTAL_URL: z.string().url(),
+    PUBLIC_PORTAL_URL: z.url(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
