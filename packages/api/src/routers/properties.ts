@@ -2,7 +2,7 @@ import { db } from "@intuitive-stay/db"
 import { feedback, organisations, properties, propertyScores, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, count, desc, eq, inArray, max, sql } from "drizzle-orm"
+import { and, avg, count, desc, eq, gte, inArray, max, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
@@ -902,4 +902,75 @@ export const propertiesRouter = router({
       properties: propertyData,
     }
   }),
+
+  getDashboardStats: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const [row] = await db
+        .select({
+          totalFeedback: count(),
+          avgGcs: avg(feedback.gcs),
+        })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
+      return {
+        totalFeedback: row?.totalFeedback ?? 0,
+        avgGcs: row?.avgGcs != null ? Number(row.avgGcs) : null,
+      }
+    }),
+
+  getGcsHistory: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const bucketExpr = input.days >= 14
+        ? sql<string>`to_char(date_trunc('week', ${feedback.submittedAt}), 'YYYY-MM-DD')`
+        : sql<string>`to_char(${feedback.submittedAt}, 'YYYY-MM-DD')`
+      const rows = await db
+        .select({
+          bucket: bucketExpr,
+          gcs: avg(feedback.gcs),
+          resilience: avg(sql<number>`${feedback.resilience}::numeric`),
+          empathy: avg(sql<number>`${feedback.empathy}::numeric`),
+          anticipation: avg(sql<number>`${feedback.anticipation}::numeric`),
+          recognition: avg(sql<number>`${feedback.recognition}::numeric`),
+        })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
+        .groupBy(bucketExpr)
+        .orderBy(bucketExpr)
+      return rows.map((r) => ({
+        bucket: r.bucket ?? "",
+        gcs: r.gcs != null ? Number(r.gcs) : null,
+        resilience: r.resilience != null ? Number(r.resilience) : null,
+        empathy: r.empathy != null ? Number(r.empathy) : null,
+        anticipation: r.anticipation != null ? Number(r.anticipation) : null,
+        recognition: r.recognition != null ? Number(r.recognition) : null,
+      }))
+    }),
+
+  getRecentFeedback: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const rows = await db
+        .select({
+          id: feedback.id,
+          resilience: feedback.resilience,
+          empathy: feedback.empathy,
+          anticipation: feedback.anticipation,
+          recognition: feedback.recognition,
+          gcs: feedback.gcs,
+          mealTime: feedback.mealTime,
+          namedStaffMember: feedback.namedStaffMember,
+          ventText: feedback.ventText,
+          submittedAt: feedback.submittedAt,
+        })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
+        .orderBy(desc(feedback.submittedAt))
+        .limit(10)
+      return rows.map((r) => ({ ...r, gcs: Number(r.gcs) }))
+    }),
 })
