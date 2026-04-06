@@ -7,6 +7,7 @@ import { env } from "@intuitive-stay/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { stripeWebhookHandler } from "./webhooks/stripe";
 
 const app = new Hono();
 
@@ -97,6 +98,8 @@ app.post("/api/properties/register", async (c) => {
 
   return c.json({ success: true, propertyId: property.id }, 201)
 })
+
+app.post("/webhooks/stripe", stripeWebhookHandler)
 
 app.get("/", (c) => {
   return c.text("OK");
