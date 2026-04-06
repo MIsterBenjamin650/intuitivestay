@@ -664,23 +664,41 @@ export const propertiesRouter = router({
 
       const city = property.city
 
-      // Within-city: all approved properties in same city with scores
-      const cityRows = await db
-        .select({
-          id: properties.id,
-          name: properties.name,
-          gcs: propertyScores.avgGcs,
-        })
-        .from(properties)
-        .innerJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
-        .where(
-          and(
-            eq(properties.city, city),
-            eq(properties.status, "approved"),
-            sql`${propertyScores.avgGcs} is not null`,
-          ),
-        )
-        .orderBy(desc(propertyScores.avgGcs))
+      // Run within-city and national queries in parallel
+      const [cityRows, nationalRows] = await Promise.all([
+        db
+          .select({
+            id: properties.id,
+            name: properties.name,
+            gcs: propertyScores.avgGcs,
+          })
+          .from(properties)
+          .innerJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+          .where(
+            and(
+              eq(properties.city, city),
+              eq(properties.status, "approved"),
+              sql`${propertyScores.avgGcs} is not null`,
+            ),
+          )
+          .orderBy(desc(propertyScores.avgGcs)),
+        db
+          .select({
+            city: properties.city,
+            avgGcs: sql<string>`round(avg(${propertyScores.avgGcs}::numeric), 2)`,
+            propertyCount: count(properties.id),
+          })
+          .from(properties)
+          .innerJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+          .where(
+            and(
+              eq(properties.status, "approved"),
+              sql`${propertyScores.avgGcs} is not null`,
+            ),
+          )
+          .groupBy(properties.city)
+          .orderBy(desc(sql`avg(${propertyScores.avgGcs}::numeric)`)),
+      ])
 
       const withinCityRankings = cityRows.map((row, idx) => ({
         rank: idx + 1,
@@ -690,32 +708,14 @@ export const propertiesRouter = router({
       }))
 
       const yourEntry = withinCityRankings.find((r) => r.isYou)
-      const yourRank = yourEntry?.rank ?? 0
-      const yourGcs = yourEntry?.gcs ?? 0
+      const yourRank = yourEntry?.rank ?? null
+      const yourGcs = yourEntry?.gcs ?? null
       const cityAvgGcs =
         withinCityRankings.length > 0
           ? Math.round(
               (withinCityRankings.reduce((s, r) => s + r.gcs, 0) / withinCityRankings.length) * 10,
             ) / 10
           : 0
-
-      // National: all cities averaged
-      const nationalRows = await db
-        .select({
-          city: properties.city,
-          avgGcs: sql<string>`round(avg(${propertyScores.avgGcs}::numeric), 2)`,
-          propertyCount: count(properties.id),
-        })
-        .from(properties)
-        .innerJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
-        .where(
-          and(
-            eq(properties.status, "approved"),
-            sql`${propertyScores.avgGcs} is not null`,
-          ),
-        )
-        .groupBy(properties.city)
-        .orderBy(desc(sql`avg(${propertyScores.avgGcs}::numeric)`))
 
       const nationalCityRankings = nationalRows.map((row, idx) => ({
         rank: idx + 1,
@@ -731,7 +731,7 @@ export const propertiesRouter = router({
         totalInCity: withinCityRankings.length,
         yourGcs,
         cityAvgGcs,
-        gapToCityAvg: Math.round((yourGcs - cityAvgGcs) * 10) / 10,
+        gapToCityAvg: yourGcs !== null ? Math.round((yourGcs - cityAvgGcs) * 10) / 10 : null,
         withinCityRankings,
         nationalCityRankings,
         userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
