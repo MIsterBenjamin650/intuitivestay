@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PortalRouteImport } from './routes/_portal'
 import { Route as PortalIndexRouteImport } from './routes/_portal.index'
@@ -30,6 +31,11 @@ import { Route as PortalPropertiesPropertyIdAlertsRouteImport } from './routes/_
 import { Route as PortalPropertiesPropertyIdAdvancedInsightsRouteImport } from './routes/_portal.properties.$propertyId.advanced-insights'
 import { Route as PortalAdminPropertiesPropertyIdRouteImport } from './routes/_portal.admin.properties.$propertyId'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -145,6 +151,7 @@ const PortalAdminPropertiesPropertyIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof PortalIndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/choose-plan': typeof PortalChoosePlanRoute
   '/insights': typeof PortalInsightsRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/choose-plan': typeof PortalChoosePlanRoute
   '/insights': typeof PortalInsightsRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_portal': typeof PortalRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_portal/choose-plan': typeof PortalChoosePlanRoute
   '/_portal/insights': typeof PortalInsightsRoute
   '/_portal/properties': typeof PortalPropertiesRouteWithChildren
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/reset-password'
     | '/choose-plan'
     | '/insights'
     | '/properties'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/reset-password'
     | '/choose-plan'
     | '/insights'
     | '/properties'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_portal'
     | '/login'
+    | '/reset-password'
     | '/_portal/choose-plan'
     | '/_portal/insights'
     | '/_portal/properties'
@@ -277,11 +289,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   FUniqueCodeRoute: typeof FUniqueCodeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -486,6 +506,7 @@ const PortalRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   FUniqueCodeRoute: FUniqueCodeRoute,
 }
 export const routeTree = rootRouteImport

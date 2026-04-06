@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+export default function SignInForm({ onSwitchToSignUp, onForgotPassword }: { onSwitchToSignUp: () => void; onForgotPassword: () => void }) {
   const navigate = useNavigate({
     from: "/login",
   });
@@ -119,7 +119,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         </form.Subscribe>
       </form>
 
-      <div className="mt-4 text-center">
+      <div className="mt-4 text-center space-y-2">
         <Button
           variant="link"
           onClick={onSwitchToSignUp}
@@ -127,6 +127,15 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         >
           Need an account? Sign Up
         </Button>
+        <div>
+          <Button
+            variant="link"
+            onClick={onForgotPassword}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Forgot password?
+          </Button>
+        </div>
       </div>
     </div>
   );

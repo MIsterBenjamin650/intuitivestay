@@ -1,0 +1,132 @@
+<h2>Admin Dashboard — Filter Options</h2>
+<p class="subtitle">How should filtering work on the properties table?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Search + Dropdowns</h3>
+      <p>A search box (filters by property name or owner name) plus dropdown filters for Status, City, and Country. Simple and fast.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:12px;font-size:12px">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input class="mock-input" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px" placeholder="Search property or owner...">
+            <select style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:12px;color:#64748b;background:#fff">
+              <option>All Statuses</option>
+              <option>Approved</option>
+              <option>Pending</option>
+              <option>Rejected</option>
+            </select>
+            <select style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:12px;color:#64748b;background:#fff">
+              <option>All Cities</option>
+              <option>London</option>
+              <option>Brighton</option>
+            </select>
+            <select style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:12px;color:#64748b;background:#fff">
+              <option>All Countries</option>
+              <option>UK</option>
+              <option>France</option>
+            </select>
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid #e2e8f0;text-align:left;color:#64748b">
+                <th style="padding:6px 8px">Property</th>
+                <th style="padding:6px 8px">Owner</th>
+                <th style="padding:6px 8px">Status</th>
+                <th style="padding:6px 8px">City</th>
+                <th style="padding:6px 8px">GCS ↕</th>
+                <th style="padding:6px 8px">Feedback ↕</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #f1f5f9">
+                <td style="padding:6px 8px;font-weight:500">The Grand Hotel</td>
+                <td style="padding:6px 8px;color:#64748b">Jane Smith</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;color:#64748b">London</td>
+                <td style="padding:6px 8px;font-weight:600">8.4</td>
+                <td style="padding:6px 8px;color:#64748b">142</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-weight:500">Cosy Apartments</td>
+                <td style="padding:6px 8px;color:#64748b">Sara Lee</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;color:#64748b">Manchester</td>
+                <td style="padding:6px 8px;font-weight:600">7.1</td>
+                <td style="padding:6px 8px;color:#64748b">38</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size:11px;color:#94a3b8;margin-top:8px">Columns marked ↕ are sortable by clicking</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Search + Dropdowns + GCS Range</h3>
+      <p>Same as A, but adds a GCS range filter (e.g. "Only show properties scoring below 6"). Useful for spotting underperformers quickly.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:12px;font-size:12px">
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <input class="mock-input" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px" placeholder="Search property or owner...">
+            <select style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:12px;color:#64748b;background:#fff">
+              <option>All Statuses</option>
+              <option>Approved</option>
+              <option>Pending</option>
+            </select>
+            <select style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:12px;color:#64748b;background:#fff">
+              <option>All Cities</option>
+              <option>London</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+            <span style="color:#64748b;font-size:11px">GCS score:</span>
+            <select style="border:1px solid #e2e8f0;border-radius:6px;padding:4px 8px;font-size:12px;color:#64748b;background:#fff">
+              <option>Any score</option>
+              <option>Below 5 (critical)</option>
+              <option>5–7 (average)</option>
+              <option>Above 7 (good)</option>
+            </select>
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid #e2e8f0;text-align:left;color:#64748b">
+                <th style="padding:6px 8px">Property</th>
+                <th style="padding:6px 8px">Owner</th>
+                <th style="padding:6px 8px">Status</th>
+                <th style="padding:6px 8px">City</th>
+                <th style="padding:6px 8px">GCS ↕</th>
+                <th style="padding:6px 8px">Feedback ↕</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #f1f5f9">
+                <td style="padding:6px 8px;font-weight:500">The Grand Hotel</td>
+                <td style="padding:6px 8px;color:#64748b">Jane Smith</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;color:#64748b">London</td>
+                <td style="padding:6px 8px;font-weight:600">8.4</td>
+                <td style="padding:6px 8px;color:#64748b">142</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-weight:500">Cosy Apartments</td>
+                <td style="padding:6px 8px;color:#64748b">Sara Lee</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;color:#64748b">Manchester</td>
+                <td style="padding:6px 8px;font-weight:600">7.1</td>
+                <td style="padding:6px 8px;color:#64748b">38</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size:11px;color:#94a3b8;margin-top:8px">Columns marked ↕ are sortable by clicking</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

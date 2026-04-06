@@ -53,6 +53,21 @@ export async function sendRejectionEmail(
   })
 }
 
+export async function sendPasswordResetEmail(
+  ownerEmail: string,
+  resetUrl: string,
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: "Reset your IntuItiveStay password",
+    html: `<h1>Reset your password</h1>
+<p>Click the link below to reset your IntuItiveStay password. This link expires in 1 hour.</p>
+<p><a href="${resetUrl}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Reset Password →</a></p>
+<p style="font-size:12px;color:#64748b">If you didn't request this, you can safely ignore this email.</p>`,
+  })
+}
+
 export async function sendAlertEmail(
   ownerEmail: string,
   ownerName: string,

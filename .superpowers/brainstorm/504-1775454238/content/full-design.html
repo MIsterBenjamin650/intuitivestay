@@ -1,0 +1,211 @@
+<h2>Full Admin Design — Layout Preview</h2>
+<p class="subtitle">The expanded dashboard + the property detail page. Review both sections.</p>
+
+<h3 style="margin-top:24px">Part 1 — Main Admin Dashboard (expanded)</h3>
+
+<div class="mockup" style="margin-top:12px">
+  <div class="mockup-header">Admin Dashboard — /</div>
+  <div class="mockup-body" style="padding:16px;font-size:11px">
+
+    <!-- Row 1: existing cards -->
+    <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Overview</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="color:#64748b;font-size:10px">Total Properties</div>
+        <div style="font-size:18px;font-weight:700">12</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="color:#64748b;font-size:10px">Approved</div>
+        <div style="font-size:18px;font-weight:700;color:#16a34a">9</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="color:#64748b;font-size:10px">Platform Avg GCS</div>
+        <div style="font-size:18px;font-weight:700;color:#6366f1">7.8</div>
+      </div>
+    </div>
+
+    <!-- Row 2: plan distribution -->
+    <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Plan Distribution</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="color:#64748b;font-size:10px">Host</div>
+        <div style="font-size:18px;font-weight:700">8</div>
+      </div>
+      <div style="background:#dbeafe;border:1px solid #bfdbfe;border-radius:8px;padding:10px">
+        <div style="color:#1e40af;font-size:10px">Partner</div>
+        <div style="font-size:18px;font-weight:700;color:#1e40af">3</div>
+      </div>
+      <div style="background:#ede9fe;border:1px solid #ddd6fe;border-radius:8px;padding:10px">
+        <div style="color:#6d28d9;font-size:10px">Founder</div>
+        <div style="font-size:18px;font-weight:700;color:#6d28d9">1</div>
+      </div>
+    </div>
+
+    <!-- Row 3: activity stats -->
+    <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Activity</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px">
+        <div style="color:#16a34a;font-size:10px">Total Feedback</div>
+        <div style="font-size:18px;font-weight:700;color:#16a34a">1,847</div>
+      </div>
+      <div style="background:#fefce8;border:1px solid #fef08a;border-radius:8px;padding:10px">
+        <div style="color:#854d0e;font-size:10px">Pending Approval</div>
+        <div style="font-size:18px;font-weight:700;color:#854d0e">2</div>
+        <div style="color:#6366f1;font-size:9px;margin-top:2px">→ Review</div>
+      </div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px">
+        <div style="color:#c2410c;font-size:10px">No Activity</div>
+        <div style="font-size:18px;font-weight:700;color:#c2410c">4</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="color:#64748b;font-size:10px">Registered Users</div>
+        <div style="font-size:18px;font-weight:700">12</div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <div style="flex:1;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;color:#94a3b8;font-size:10px">Search property or owner...</div>
+      <div style="border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;color:#94a3b8;font-size:10px">All Statuses ▾</div>
+      <div style="border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;color:#94a3b8;font-size:10px">All Cities ▾</div>
+      <div style="border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;color:#94a3b8;font-size:10px">Any Score ▾</div>
+    </div>
+
+    <!-- Table -->
+    <div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
+            <th style="padding:6px 8px;text-align:left;color:#64748b;font-weight:500">Property</th>
+            <th style="padding:6px 8px;text-align:left;color:#64748b;font-weight:500">Owner</th>
+            <th style="padding:6px 8px;text-align:left;color:#64748b;font-weight:500">Plan</th>
+            <th style="padding:6px 8px;text-align:left;color:#64748b;font-weight:500">Status</th>
+            <th style="padding:6px 8px;text-align:left;color:#64748b;font-weight:500">GCS ↕</th>
+            <th style="padding:6px 8px;text-align:left;color:#64748b;font-weight:500">Feedback ↕</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9;cursor:pointer" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+            <td style="padding:6px 8px;font-weight:600;color:#6366f1;text-decoration:underline">The Grand Hotel</td>
+            <td style="padding:6px 8px;color:#64748b">Jane Smith</td>
+            <td style="padding:6px 8px"><span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:999px;font-size:9px">Partner</span></td>
+            <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:999px;font-size:9px">Approved</span></td>
+            <td style="padding:6px 8px;font-weight:600">8.4</td>
+            <td style="padding:6px 8px">142</td>
+          </tr>
+          <tr style="cursor:pointer" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+            <td style="padding:6px 8px;font-weight:600;color:#6366f1;text-decoration:underline">Cosy Apartments</td>
+            <td style="padding:6px 8px;color:#64748b">Sara Lee</td>
+            <td style="padding:6px 8px"><span style="background:#f1f5f9;color:#475569;padding:1px 6px;border-radius:999px;font-size:9px">Host</span></td>
+            <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:999px;font-size:9px">Approved</span></td>
+            <td style="padding:6px 8px;color:#94a3b8">—</td>
+            <td style="padding:6px 8px"><span style="background:#fed7aa;color:#c2410c;padding:1px 6px;border-radius:999px;font-size:9px">No activity</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:9px;color:#94a3b8;margin-top:6px">Property names are clickable — opens the property detail page</p>
+  </div>
+</div>
+
+<h3 style="margin-top:28px">Part 2 — Property Detail Page (/admin/properties/:id)</h3>
+
+<div class="mockup" style="margin-top:12px">
+  <div class="mockup-header">Property Detail — /admin/properties/abc123</div>
+  <div class="mockup-body" style="padding:16px;font-size:11px">
+
+    <!-- Breadcrumb + header -->
+    <div style="color:#6366f1;font-size:10px;margin-bottom:8px">← Back to Admin Dashboard</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="font-size:16px;font-weight:700">The Grand Hotel</div>
+      <span style="background:#dcfce7;color:#166534;padding:1px 8px;border-radius:999px;font-size:10px">Approved</span>
+      <span style="background:#dbeafe;color:#1e40af;padding:1px 8px;border-radius:999px;font-size:10px">Partner</span>
+    </div>
+    <div style="color:#64748b;font-size:10px;margin-bottom:16px">London · UK · Hotel · Registered 3 Jan 2026</div>
+
+    <!-- Owner info + QR info side by side -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="font-size:10px;font-weight:600;margin-bottom:6px">Owner</div>
+        <div style="font-weight:500">Jane Smith</div>
+        <div style="color:#64748b;font-size:10px">jane@example.com</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px">
+        <div style="font-size:10px;font-weight:600;margin-bottom:6px">QR Code</div>
+        <div style="font-size:10px;color:#64748b;word-break:break-all">feedback.intuitivestay.com/f/xK9m...</div>
+        <div style="color:#64748b;font-size:10px;margin-top:2px">Generated 5 Jan 2026</div>
+      </div>
+    </div>
+
+    <!-- Score cards -->
+    <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Performance</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:16px">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:#64748b">Avg GCS</div>
+        <div style="font-size:16px;font-weight:700;color:#6366f1">8.4</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:#64748b">Feedback</div>
+        <div style="font-size:16px;font-weight:700">142</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:#64748b">Resilience</div>
+        <div style="font-size:16px;font-weight:700">8.1</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:#64748b">Empathy</div>
+        <div style="font-size:16px;font-weight:700">8.7</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:#64748b">Anticipation</div>
+        <div style="font-size:16px;font-weight:700">8.2</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:9px;color:#64748b">Recognition</div>
+        <div style="font-size:16px;font-weight:700">8.6</div>
+      </div>
+    </div>
+
+    <!-- Feedback table -->
+    <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Feedback History (142 submissions)</div>
+    <div style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Date</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">GCS</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Resilience</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Empathy</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Anticipation</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Recognition</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Staff Named</th>
+            <th style="padding:5px 8px;text-align:left;color:#64748b;font-weight:500">Vent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9">
+            <td style="padding:5px 8px;color:#64748b">3 Apr 2026</td>
+            <td style="padding:5px 8px;font-weight:600">9.0</td>
+            <td style="padding:5px 8px">9</td>
+            <td style="padding:5px 8px">9</td>
+            <td style="padding:5px 8px">9</td>
+            <td style="padding:5px 8px">9</td>
+            <td style="padding:5px 8px;color:#64748b">Sarah</td>
+            <td style="padding:5px 8px;color:#94a3b8">—</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f1f5f9">
+            <td style="padding:5px 8px;color:#64748b">2 Apr 2026</td>
+            <td style="padding:5px 8px;font-weight:600;color:#dc2626">4.5</td>
+            <td style="padding:5px 8px">4</td>
+            <td style="padding:5px 8px">5</td>
+            <td style="padding:5px 8px">4</td>
+            <td style="padding:5px 8px">5</td>
+            <td style="padding:5px 8px;color:#94a3b8">—</td>
+            <td style="padding:5px 8px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dc2626" title="Room was not clean on arrival">Room was not clean...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:9px;color:#94a3b8;margin-top:6px">GCS ≤ 5 shown in red · Vent text truncated, hover to see full text</p>
+  </div>
+</div>

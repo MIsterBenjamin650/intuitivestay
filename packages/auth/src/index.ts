@@ -2,6 +2,7 @@ import { expo } from "@better-auth/expo";
 import { db } from "@intuitive-stay/db";
 import * as schema from "@intuitive-stay/db/schema/auth";
 import { env } from "@intuitive-stay/env/server";
+import { sendPasswordResetEmail } from "@intuitive-stay/api/lib/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
@@ -23,6 +24,9 @@ export const auth = betterAuth({
   ],
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail(user.email, url)
+    },
   },
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,

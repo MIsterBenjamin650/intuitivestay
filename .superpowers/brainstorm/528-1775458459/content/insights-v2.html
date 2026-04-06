@@ -1,0 +1,158 @@
+<h2>Property Insights — Updated Design</h2>
+<p class="subtitle">Added: tier-based time filters, detailed chart labels, staff mention tag cloud</p>
+
+<div class="mockup">
+  <div class="mockup-header">Property Insights — The Grand Hotel · Partner Plan</div>
+  <div class="mockup-body" style="padding:16px;display:flex;flex-direction:column;gap:16px;font-size:11px">
+
+    <!-- Tier filter bar -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em">Time Range</span>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #6366f1;background:#ede9fe;color:#6366f1;font-size:10px;font-weight:600;cursor:pointer">Last 7 days</button>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #6366f1;background:#6366f1;color:white;font-size:10px;font-weight:600;cursor:pointer">Last 30 days ✓</button>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#94a3b8;font-size:10px;cursor:pointer" title="Founder only">
+        🔒 Last 6 months
+      </button>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#94a3b8;font-size:10px;cursor:pointer" title="Founder only">
+        🔒 Last 12 months
+      </button>
+      <span style="font-size:9px;color:#94a3b8;margin-left:4px">🔒 = Founder plan required</span>
+    </div>
+
+    <!-- Row 1: Full-width GCS trend with value labels -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em">GCS Over Time</div>
+        <div style="font-size:9px;color:#6366f1;font-weight:600">↑ +0.6 vs last period</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;height:100px;position:relative;overflow:visible">
+        <svg width="100%" height="75" viewBox="0 0 500 75" preserveAspectRatio="none">
+          <defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.15"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,55 C50,50 100,38 167,42 C233,46 283,28 333,22 C383,16 433,10 500,6 L500,75 L0,75 Z" fill="url(#g2)"/>
+          <path d="M0,55 C50,50 100,38 167,42 C233,46 283,28 333,22 C383,16 433,10 500,6" fill="none" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="0"   cy="55" r="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="167" cy="42" r="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="333" cy="22" r="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="500" cy="6"  r="4" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+          <text x="0"   y="48" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">7.1</text>
+          <text x="167" y="35" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">7.5</text>
+          <text x="333" y="15" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">8.1</text>
+          <text x="497" y="4"  text-anchor="end"    font-size="9" fill="#6366f1" font-weight="bold">8.4</text>
+        </svg>
+        <div style="display:flex;justify-content:space-between;color:#94a3b8;font-size:9px;margin-top:-2px">
+          <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Radar + Weekly bars -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Pillar Averages</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:120px;display:flex;align-items:center;justify-content:center;gap:12px">
+          <svg width="80" height="80" viewBox="-50 -50 100 100">
+            <polygon points="0,-38 33,19 -33,19" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            <polygon points="0,-28 24,14 -24,14" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            <polygon points="0,-18 15,9 -15,9" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            <line x1="0" y1="-38" x2="0" y2="19" stroke="#e2e8f0" stroke-width="0.5"/>
+            <line x1="-33" y1="19" x2="33" y2="19" stroke="#e2e8f0" stroke-width="0.5"/>
+            <polygon points="0,-35 30,17 -22,17" fill="#6366f1" fill-opacity="0.25" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="0" y="-42" text-anchor="middle" font-size="7" fill="#64748b">Resilience</text>
+            <text x="38" y="24" text-anchor="start" font-size="7" fill="#64748b">Empathy</text>
+            <text x="-38" y="24" text-anchor="end" font-size="7" fill="#64748b">Recognition</text>
+          </svg>
+          <div style="font-size:10px;display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Resilience</span><strong>8.4</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Empathy</span><strong>7.9</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Anticipation</span><strong>7.2</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Recognition</span><strong>8.1</strong></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Submissions per Week</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 10px 20px;height:120px;position:relative">
+          <svg width="100%" height="80" viewBox="0 0 200 80" preserveAspectRatio="none" style="position:absolute;top:10px;left:8px;right:8px;bottom:20px">
+            <rect x="5"  y="45" width="35" height="32" rx="3" fill="#818cf8"/>
+            <text x="22" y="42" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">12</text>
+            <rect x="55" y="30" width="35" height="47" rx="3" fill="#818cf8"/>
+            <text x="72" y="27" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">18</text>
+            <rect x="105" y="20" width="35" height="57" rx="3" fill="#818cf8"/>
+            <text x="122" y="17" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">22</text>
+            <rect x="155" y="8" width="35" height="69" rx="3" fill="#6366f1"/>
+            <text x="172" y="5" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">27</text>
+          </svg>
+          <div style="display:flex;justify-content:space-around;position:absolute;bottom:6px;left:0;width:100%;color:#94a3b8;font-size:9px">
+            <span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Meal time + Pillar spotlight -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Avg GCS by Meal Time</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:100px">
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:60px;color:#64748b;font-size:9px">Breakfast</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:88%;background:#22c55e;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#16a34a">8.8</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:60px;color:#64748b;font-size:9px">Lunch</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:75%;background:#6366f1;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#4f46e5">7.5</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:60px;color:#64748b;font-size:9px">Dinner</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:65%;background:#f97316;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#ea580c">6.5</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:60px;color:#64748b;font-size:9px">N/A</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:80%;background:#6366f1;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#4f46e5">8.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Pillar Spotlight</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:100px;display:flex;flex-direction:column;gap:8px;justify-content:center">
+          <div style="background:#dcfce7;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:8px;color:#16a34a;font-weight:600">★ Strongest pillar</div><div style="font-size:11px;font-weight:700">Resilience</div></div>
+            <div style="font-size:16px;font-weight:800;color:#16a34a">8.4</div>
+          </div>
+          <div style="background:#fef2f2;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:8px;color:#dc2626;font-weight:600">↓ Needs most focus</div><div style="font-size:11px;font-weight:700">Anticipation</div></div>
+            <div style="font-size:16px;font-weight:800;color:#dc2626">7.2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Staff mention tag cloud (FULL WIDTH) -->
+    <div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Staff Recognition — Name Drop™ Tag Cloud</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;min-height:90px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center">
+        <span style="font-size:28px;font-weight:800;color:#6366f1">Sarah</span>
+        <span style="font-size:20px;font-weight:700;color:#818cf8">James</span>
+        <span style="font-size:16px;font-weight:600;color:#a5b4fc">Maria</span>
+        <span style="font-size:24px;font-weight:800;color:#4f46e5">Tom</span>
+        <span style="font-size:13px;font-weight:500;color:#c7d2fe">Priya</span>
+        <span style="font-size:18px;font-weight:700;color:#818cf8">Chen</span>
+        <span style="font-size:11px;font-weight:500;color:#c7d2fe">Marcus</span>
+        <span style="font-size:15px;font-weight:600;color:#a5b4fc">Aisha</span>
+        <span style="font-size:22px;font-weight:700;color:#6366f1">David</span>
+        <span style="font-size:10px;font-weight:500;color:#c7d2fe">Fatima</span>
+        <span style="font-size:12px;font-weight:500;color:#c7d2fe">Luke</span>
+      </div>
+      <p style="font-size:9px;color:#94a3b8;margin-top:4px">Size = number of guest mentions · Darker = higher GCS from those guests</p>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:12px">Does this feel like the right set of charts and detail level? Any additions or changes?</p>

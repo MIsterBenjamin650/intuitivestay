@@ -1,0 +1,169 @@
+<h2>Admin Dashboard — Layout Options</h2>
+<p class="subtitle">Which approach works best for managing all properties?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Simple Table</h3>
+      <p>A clean data table — one row per property. Columns: name, owner, status, city, GCS score, feedback count. No summary stats. Maximum density, easy to scan.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:12px;font-size:12px">
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid #e2e8f0;text-align:left;color:#64748b">
+                <th style="padding:6px 8px">Property</th>
+                <th style="padding:6px 8px">Owner</th>
+                <th style="padding:6px 8px">Status</th>
+                <th style="padding:6px 8px">City</th>
+                <th style="padding:6px 8px">GCS</th>
+                <th style="padding:6px 8px">Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #f1f5f9">
+                <td style="padding:6px 8px;font-weight:500">The Grand Hotel</td>
+                <td style="padding:6px 8px;color:#64748b">Jane Smith</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;color:#64748b">London</td>
+                <td style="padding:6px 8px;font-weight:600">8.4</td>
+                <td style="padding:6px 8px;color:#64748b">142</td>
+              </tr>
+              <tr style="border-bottom:1px solid #f1f5f9">
+                <td style="padding:6px 8px;font-weight:500">Sea View B&amp;B</td>
+                <td style="padding:6px 8px;color:#64748b">Mike Jones</td>
+                <td style="padding:6px 8px"><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:999px;font-size:11px">Pending</span></td>
+                <td style="padding:6px 8px;color:#64748b">Brighton</td>
+                <td style="padding:6px 8px;color:#94a3b8">—</td>
+                <td style="padding:6px 8px;color:#94a3b8">—</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-weight:500">Cosy Apartments</td>
+                <td style="padding:6px 8px;color:#64748b">Sara Lee</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;color:#64748b">Manchester</td>
+                <td style="padding:6px 8px;font-weight:600">7.1</td>
+                <td style="padding:6px 8px;color:#64748b">38</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Stats + Table</h3>
+      <p>Three summary cards at the top (total properties, approved count, platform-wide avg GCS), then the same table below. Quick pulse check before diving into the detail.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:12px;font-size:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
+              <div style="color:#64748b;font-size:11px">Total Properties</div>
+              <div style="font-size:20px;font-weight:700">12</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
+              <div style="color:#64748b;font-size:11px">Approved</div>
+              <div style="font-size:20px;font-weight:700;color:#16a34a">9</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
+              <div style="color:#64748b;font-size:11px">Avg GCS</div>
+              <div style="font-size:20px;font-weight:700;color:#6366f1">7.8</div>
+            </div>
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid #e2e8f0;text-align:left;color:#64748b">
+                <th style="padding:6px 8px">Property</th>
+                <th style="padding:6px 8px">Owner</th>
+                <th style="padding:6px 8px">Status</th>
+                <th style="padding:6px 8px">GCS</th>
+                <th style="padding:6px 8px">Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #f1f5f9">
+                <td style="padding:6px 8px;font-weight:500">The Grand Hotel</td>
+                <td style="padding:6px 8px;color:#64748b">Jane Smith</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;font-weight:600">8.4</td>
+                <td style="padding:6px 8px;color:#64748b">142</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-weight:500">Sea View B&amp;B</td>
+                <td style="padding:6px 8px;color:#64748b">Mike Jones</td>
+                <td style="padding:6px 8px"><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:999px;font-size:11px">Pending</span></td>
+                <td style="padding:6px 8px;color:#94a3b8">—</td>
+                <td style="padding:6px 8px;color:#94a3b8">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Stats + Tabbed Table</h3>
+      <p>Same stats at top, but the table has filter tabs: All / Approved / Pending / Rejected. Useful once you have many properties and want to focus on one group at a time.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:12px;font-size:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
+              <div style="color:#64748b;font-size:11px">Total Properties</div>
+              <div style="font-size:20px;font-weight:700">12</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
+              <div style="color:#64748b;font-size:11px">Approved</div>
+              <div style="font-size:20px;font-weight:700;color:#16a34a">9</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center">
+              <div style="color:#64748b;font-size:11px">Avg GCS</div>
+              <div style="font-size:20px;font-weight:700;color:#6366f1">7.8</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0;margin-bottom:10px;border-bottom:1px solid #e2e8f0">
+            <div style="padding:6px 12px;border-bottom:2px solid #6366f1;color:#6366f1;font-weight:500;font-size:11px">All (12)</div>
+            <div style="padding:6px 12px;color:#64748b;font-size:11px">Approved (9)</div>
+            <div style="padding:6px 12px;color:#64748b;font-size:11px">Pending (2)</div>
+            <div style="padding:6px 12px;color:#64748b;font-size:11px">Rejected (1)</div>
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="border-bottom:1px solid #e2e8f0;text-align:left;color:#64748b">
+                <th style="padding:6px 8px">Property</th>
+                <th style="padding:6px 8px">Owner</th>
+                <th style="padding:6px 8px">Status</th>
+                <th style="padding:6px 8px">GCS</th>
+                <th style="padding:6px 8px">Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #f1f5f9">
+                <td style="padding:6px 8px;font-weight:500">The Grand Hotel</td>
+                <td style="padding:6px 8px;color:#64748b">Jane Smith</td>
+                <td style="padding:6px 8px"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px">Approved</span></td>
+                <td style="padding:6px 8px;font-weight:600">8.4</td>
+                <td style="padding:6px 8px;color:#64748b">142</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 8px;font-weight:500">Sea View B&amp;B</td>
+                <td style="padding:6px 8px;color:#64748b">Mike Jones</td>
+                <td style="padding:6px 8px"><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:999px;font-size:11px">Pending</span></td>
+                <td style="padding:6px 8px;color:#94a3b8">—</td>
+                <td style="padding:6px 8px;color:#94a3b8">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

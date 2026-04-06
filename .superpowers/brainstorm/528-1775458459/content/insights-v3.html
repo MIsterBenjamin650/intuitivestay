@@ -1,0 +1,212 @@
+<h2>Property Insights — Full Design</h2>
+<p class="subtitle">All charts + GCS distribution, vent keyword cloud, name drop rate, per-staff GCS</p>
+
+<div class="mockup">
+  <div class="mockup-header">Property Insights — The Grand Hotel · Partner Plan</div>
+  <div class="mockup-body" style="padding:16px;display:flex;flex-direction:column;gap:16px;font-size:11px">
+
+    <!-- Tier filter bar -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em">Time Range</span>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #6366f1;background:#ede9fe;color:#6366f1;font-size:10px;font-weight:600">Last 7 days</button>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #6366f1;background:#6366f1;color:white;font-size:10px;font-weight:600">Last 30 days ✓</button>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#94a3b8;font-size:10px" title="Founder only">🔒 Last 6 months</button>
+      <button style="padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#94a3b8;font-size:10px" title="Founder only">🔒 Last 12 months</button>
+      <span style="font-size:9px;color:#94a3b8;margin-left:4px">🔒 = Founder plan required</span>
+    </div>
+
+    <!-- Row 1: GCS trend + quick stats -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em">GCS Over Time</div>
+        <div style="font-size:9px;color:#6366f1;font-weight:600">↑ +0.6 vs last period</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;height:100px;position:relative">
+        <svg width="100%" height="75" viewBox="0 0 500 75" preserveAspectRatio="none">
+          <defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.15"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,55 C50,50 100,38 167,42 C233,46 283,28 333,22 C383,16 433,10 500,6 L500,75 L0,75 Z" fill="url(#g2)"/>
+          <path d="M0,55 C50,50 100,38 167,42 C233,46 283,28 333,22 C383,16 433,10 500,6" fill="none" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="0"   cy="55" r="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="167" cy="42" r="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="333" cy="22" r="4" fill="white" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="500" cy="6"  r="4" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+          <text x="8"   y="48" text-anchor="start" font-size="9" fill="#6366f1" font-weight="bold">7.1</text>
+          <text x="167" y="35" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">7.5</text>
+          <text x="333" y="15" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">8.1</text>
+          <text x="492" y="4"  text-anchor="end"    font-size="9" fill="#6366f1" font-weight="bold">8.4</text>
+        </svg>
+        <div style="display:flex;justify-content:space-between;color:#94a3b8;font-size:9px;margin-top:-2px">
+          <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: GCS Distribution + Pillar Radar -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Score Distribution</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:120px;position:relative">
+          <svg width="100%" height="85" viewBox="0 0 220 85" preserveAspectRatio="none" style="position:absolute;top:8px;left:8px;right:8px;bottom:18px">
+            <!-- bars for scores 1-10 -->
+            <rect x="2"  y="78" width="17" height="4"  rx="2" fill="#fca5a5"/>
+            <rect x="23" y="72" width="17" height="10" rx="2" fill="#fca5a5"/>
+            <rect x="44" y="65" width="17" height="17" rx="2" fill="#fcd34d"/>
+            <rect x="65" y="55" width="17" height="27" rx="2" fill="#fcd34d"/>
+            <rect x="86" y="48" width="17" height="34" rx="2" fill="#6366f1" opacity="0.6"/>
+            <rect x="107" y="38" width="17" height="44" rx="2" fill="#6366f1" opacity="0.7"/>
+            <rect x="128" y="25" width="17" height="57" rx="2" fill="#6366f1" opacity="0.85"/>
+            <rect x="149" y="15" width="17" height="67" rx="2" fill="#6366f1"/>
+            <rect x="170" y="32" width="17" height="50" rx="2" fill="#22c55e" opacity="0.8"/>
+            <rect x="191" y="50" width="17" height="32" rx="2" fill="#22c55e" opacity="0.6"/>
+          </svg>
+          <div style="display:flex;justify-content:space-between;position:absolute;bottom:5px;left:8px;right:8px;color:#94a3b8;font-size:8px">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          </div>
+          <div style="position:absolute;top:8px;right:10px;font-size:8px;color:#64748b">Most guests: 7–8</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Pillar Averages</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:120px;display:flex;align-items:center;justify-content:center;gap:12px">
+          <svg width="80" height="80" viewBox="-50 -50 100 100">
+            <polygon points="0,-38 33,19 -33,19" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            <polygon points="0,-28 24,14 -24,14" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            <polygon points="0,-18 15,9 -15,9" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+            <line x1="0" y1="-38" x2="0" y2="19" stroke="#e2e8f0" stroke-width="0.5"/>
+            <line x1="-33" y1="19" x2="33" y2="19" stroke="#e2e8f0" stroke-width="0.5"/>
+            <polygon points="0,-35 30,17 -22,17" fill="#6366f1" fill-opacity="0.25" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="0" y="-42" text-anchor="middle" font-size="7" fill="#64748b">Resilience</text>
+            <text x="38" y="24" text-anchor="start" font-size="7" fill="#64748b">Empathy</text>
+            <text x="-38" y="24" text-anchor="end" font-size="7" fill="#64748b">Recognition</text>
+          </svg>
+          <div style="font-size:10px;display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Resilience</span><strong>8.4</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Empathy</span><strong>7.9</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Anticipation</span><strong>7.2</strong></div>
+            <div style="display:flex;justify-content:space-between;gap:10px"><span style="color:#64748b">Recognition</span><strong>8.1</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Meal time + Submissions + Pillar spotlight -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">GCS by Meal Time</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:100px">
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:56px;color:#64748b;font-size:9px">Breakfast</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:88%;background:#22c55e;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#16a34a">8.8</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:56px;color:#64748b;font-size:9px">Lunch</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:75%;background:#6366f1;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#4f46e5">7.5</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:56px;color:#64748b;font-size:9px">Dinner</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:65%;background:#f97316;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#ea580c">6.5</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:56px;color:#64748b;font-size:9px">N/A</span>
+              <div style="flex:1;background:#e2e8f0;border-radius:99px;height:7px"><div style="width:80%;background:#6366f1;border-radius:99px;height:7px"></div></div>
+              <span style="font-size:10px;font-weight:700;color:#4f46e5">8.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Submissions per Week</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 10px 20px;height:100px;position:relative">
+          <svg width="100%" height="65" viewBox="0 0 200 65" preserveAspectRatio="none" style="position:absolute;top:8px;left:8px;right:8px;bottom:18px">
+            <rect x="5"  y="35" width="35" height="27" rx="3" fill="#818cf8"/>
+            <text x="22" y="31" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">12</text>
+            <rect x="55" y="20" width="35" height="42" rx="3" fill="#818cf8"/>
+            <text x="72" y="16" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">18</text>
+            <rect x="105" y="10" width="35" height="52" rx="3" fill="#818cf8"/>
+            <text x="122" y="6" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">22</text>
+            <rect x="155" y="1" width="35" height="61" rx="3" fill="#6366f1"/>
+            <text x="172" y="-3" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="bold">27</text>
+          </svg>
+          <div style="display:flex;justify-content:space-around;position:absolute;bottom:5px;left:0;width:100%;color:#94a3b8;font-size:9px">
+            <span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Pillar Spotlight</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;height:100px;display:flex;flex-direction:column;gap:8px;justify-content:center">
+          <div style="background:#dcfce7;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:8px;color:#16a34a;font-weight:600">★ Strongest</div><div style="font-size:11px;font-weight:700">Resilience</div></div>
+            <div style="font-size:16px;font-weight:800;color:#16a34a">8.4</div>
+          </div>
+          <div style="background:#fef2f2;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:8px;color:#dc2626;font-weight:600">↓ Needs focus</div><div style="font-size:11px;font-weight:700">Anticipation</div></div>
+            <div style="font-size:16px;font-weight:800;color:#dc2626">7.2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Engagement stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Name Drop Rate</div>
+        <div style="font-size:22px;font-weight:800;color:#6366f1">68%</div>
+        <div style="font-size:9px;color:#94a3b8">of happy guests named staff</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Vent Box Rate</div>
+        <div style="font-size:22px;font-weight:800;color:#f97316">12%</div>
+        <div style="font-size:9px;color:#94a3b8">of guests left a complaint</div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:9px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Total Submissions</div>
+        <div style="font-size:22px;font-weight:800;color:#22c55e">79</div>
+        <div style="font-size:9px;color:#94a3b8">this period</div>
+      </div>
+    </div>
+
+    <!-- Row 5: Staff tag cloud (with per-staff GCS) -->
+    <div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Staff Recognition — Name Drop™ Tag Cloud</div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;min-height:90px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center">
+        <span style="font-size:28px;font-weight:800;color:#6366f1" title="Sarah · 18 mentions · avg GCS 9.1">Sarah</span>
+        <span style="font-size:20px;font-weight:700;color:#818cf8" title="James · 12 mentions · avg GCS 8.7">James</span>
+        <span style="font-size:16px;font-weight:600;color:#a5b4fc" title="Maria · 8 mentions · avg GCS 8.4">Maria</span>
+        <span style="font-size:24px;font-weight:800;color:#4f46e5" title="Tom · 15 mentions · avg GCS 9.3">Tom</span>
+        <span style="font-size:13px;font-weight:500;color:#c7d2fe" title="Priya · 4 mentions · avg GCS 8.1">Priya</span>
+        <span style="font-size:18px;font-weight:700;color:#818cf8" title="Chen · 10 mentions · avg GCS 8.9">Chen</span>
+        <span style="font-size:11px;font-weight:500;color:#c7d2fe" title="Marcus · 3 mentions · avg GCS 7.8">Marcus</span>
+        <span style="font-size:15px;font-weight:600;color:#a5b4fc" title="Aisha · 7 mentions · avg GCS 8.5">Aisha</span>
+        <span style="font-size:22px;font-weight:700;color:#6366f1" title="David · 14 mentions · avg GCS 8.8">David</span>
+      </div>
+      <p style="font-size:9px;color:#94a3b8;margin-top:4px">Size = mentions · Darker = higher avg GCS · Hover for details</p>
+    </div>
+
+    <!-- Row 6: Vent keyword cloud -->
+    <div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:0.05em;margin-bottom:6px">Complaint Themes — Vent Keywords</div>
+      <div style="background:#fff7f7;border:1px solid #fecaca;border-radius:8px;padding:16px;min-height:70px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center">
+        <span style="font-size:22px;font-weight:800;color:#dc2626">wait time</span>
+        <span style="font-size:17px;font-weight:700;color:#ef4444">cold food</span>
+        <span style="font-size:14px;font-weight:600;color:#f87171">noise</span>
+        <span style="font-size:20px;font-weight:700;color:#dc2626">slow service</span>
+        <span style="font-size:12px;font-weight:500;color:#fca5a5">billing</span>
+        <span style="font-size:16px;font-weight:600;color:#ef4444">cleanliness</span>
+        <span style="font-size:11px;font-weight:500;color:#fca5a5">parking</span>
+        <span style="font-size:13px;font-weight:600;color:#f87171">attitude</span>
+      </div>
+      <p style="font-size:9px;color:#94a3b8;margin-top:4px">Extracted from vent text · Size = frequency · Darker = more urgent</p>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:12px">Full Insights page design. Ready to build?</p>

@@ -1,0 +1,75 @@
+<h2>Property Detail — How should it open?</h2>
+<p class="subtitle">When you click a property row in the admin table, where does the detail appear?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Slide-out Panel</h3>
+      <p>A panel slides in from the right, overlaying the table. The table stays visible behind it. Quick to open and close — great for scanning multiple properties fast.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:0;display:flex;height:180px;overflow:hidden">
+          <div style="flex:1;padding:12px;font-size:11px;opacity:0.4">
+            <div style="background:#f1f5f9;height:8px;border-radius:4px;margin-bottom:6px;width:80%"></div>
+            <div style="background:#f1f5f9;height:8px;border-radius:4px;margin-bottom:6px;width:60%"></div>
+            <div style="background:#f1f5f9;height:8px;border-radius:4px;margin-bottom:6px;width:70%"></div>
+          </div>
+          <div style="width:55%;border-left:1px solid #e2e8f0;padding:12px;font-size:11px;background:#fff">
+            <div style="font-weight:600;margin-bottom:4px">The Grand Hotel</div>
+            <div style="color:#64748b;font-size:10px;margin-bottom:10px">Jane Smith · jane@example.com</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+              <div style="background:#f8fafc;border-radius:6px;padding:6px;text-align:center">
+                <div style="font-size:9px;color:#64748b">GCS</div>
+                <div style="font-weight:700;font-size:14px">8.4</div>
+              </div>
+              <div style="background:#f8fafc;border-radius:6px;padding:6px;text-align:center">
+                <div style="font-size:9px;color:#64748b">Feedback</div>
+                <div style="font-weight:700;font-size:14px">142</div>
+              </div>
+            </div>
+            <div style="font-size:10px;color:#64748b">Recent feedback...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Dedicated Page</h3>
+      <p>Clicking a property navigates to a full page at <code>/admin/properties/:id</code>. More space for all the data — feedback table, scores, QR info. Back button returns to the dashboard. Better for writing reports.</p>
+      <div class="mockup" style="margin-top:12px">
+        <div class="mockup-header">Preview</div>
+        <div class="mockup-body" style="padding:12px;font-size:11px;height:180px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <div style="color:#6366f1;font-size:10px">← Back to Dashboard</div>
+          </div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:2px">The Grand Hotel</div>
+          <div style="color:#64748b;font-size:10px;margin-bottom:10px">London · UK · Hotel · Approved</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+            <div style="background:#f8fafc;border-radius:6px;padding:6px;text-align:center">
+              <div style="font-size:9px;color:#64748b">GCS</div>
+              <div style="font-weight:700">8.4</div>
+            </div>
+            <div style="background:#f8fafc;border-radius:6px;padding:6px;text-align:center">
+              <div style="font-size:9px;color:#64748b">Feedback</div>
+              <div style="font-weight:700">142</div>
+            </div>
+            <div style="background:#f8fafc;border-radius:6px;padding:6px;text-align:center">
+              <div style="font-size:9px;color:#64748b">Resilience</div>
+              <div style="font-weight:700">8.1</div>
+            </div>
+            <div style="background:#f8fafc;border-radius:6px;padding:6px;text-align:center">
+              <div style="font-size:9px;color:#64748b">Empathy</div>
+              <div style="font-weight:700">8.7</div>
+            </div>
+          </div>
+          <div style="font-size:10px;font-weight:600;margin-bottom:4px">Feedback History</div>
+          <div style="background:#f8fafc;border-radius:4px;padding:6px;font-size:10px;color:#64748b">142 submissions — full table below...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

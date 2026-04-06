@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chart.js Samples — IntuItiveStay Insights</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; padding: 24px; }
+    h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    p.sub { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card.full { grid-column: 1 / -1; }
+    .card h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 16px; }
+    canvas { max-height: 220px; }
+  </style>
+</head>
+<body>
+
+<h1>Chart.js Samples — Insights Page</h1>
+<p class="sub">These are real interactive Chart.js charts — the same library used in the app. Hover over data points to see tooltips.</p>
+
+<div class="grid">
+
+  <!-- GCS Over Time — Line -->
+  <div class="card full">
+    <h2>GCS Over Time — Line Chart</h2>
+    <canvas id="gcsTrend"></canvas>
+  </div>
+
+  <!-- Score Distribution — Bar -->
+  <div class="card">
+    <h2>Score Distribution — Bar Chart</h2>
+    <canvas id="scoreDist"></canvas>
+  </div>
+
+  <!-- Submissions per Week — Bar -->
+  <div class="card">
+    <h2>Submissions per Week — Bar Chart</h2>
+    <canvas id="submissions"></canvas>
+  </div>
+
+  <!-- Pillar Averages — Radar -->
+  <div class="card">
+    <h2>Pillar Averages — Radar Chart</h2>
+    <canvas id="pillar"></canvas>
+  </div>
+
+  <!-- GCS by Meal Time — Horizontal Bar -->
+  <div class="card">
+    <h2>GCS by Meal Time — Horizontal Bar</h2>
+    <canvas id="mealTime"></canvas>
+  </div>
+
+  <!-- City Leaderboard — Horizontal Bar -->
+  <div class="card full">
+    <h2>London Property Rankings — Horizontal Bar (You highlighted)</h2>
+    <canvas id="cityRank"></canvas>
+  </div>
+
+</div>
+
+<script>
+const indigo = '#6366f1';
+const indigoLight = 'rgba(99,102,241,0.15)';
+const indigoMid = 'rgba(99,102,241,0.6)';
+const slate = '#94a3b8';
+
+// 1. GCS Over Time
+new Chart(document.getElementById('gcsTrend'), {
+  type: 'line',
+  data: {
+    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    datasets: [{
+      label: 'GCS',
+      data: [7.1, 7.5, 8.1, 8.4],
+      borderColor: indigo,
+      backgroundColor: indigoLight,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: 'white',
+      pointBorderColor: indigo,
+      pointBorderWidth: 2,
+      pointRadius: 5,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' GCS: ' + ctx.parsed.y } } },
+    scales: {
+      y: { min: 5, max: 10, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 2. Score Distribution
+new Chart(document.getElementById('scoreDist'), {
+  type: 'bar',
+  data: {
+    labels: ['1','2','3','4','5','6','7','8','9','10'],
+    datasets: [{
+      label: 'Submissions',
+      data: [1, 1, 2, 3, 4, 6, 18, 24, 14, 6],
+      backgroundColor: [
+        '#fca5a5','#fca5a5','#fcd34d','#fcd34d',
+        'rgba(99,102,241,0.4)','rgba(99,102,241,0.5)',
+        'rgba(99,102,241,0.75)','rgba(99,102,241,0.9)',
+        '#4ade80','#22c55e'
+      ],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 3. Submissions per Week
+new Chart(document.getElementById('submissions'), {
+  type: 'bar',
+  data: {
+    labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'],
+    datasets: [{
+      label: 'Submissions',
+      data: [12, 18, 22, 27],
+      backgroundColor: [indigoMid, indigoMid, indigoMid, indigo],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 4. Pillar Radar
+new Chart(document.getElementById('pillar'), {
+  type: 'radar',
+  data: {
+    labels: ['Resilience', 'Empathy', 'Anticipation', 'Recognition'],
+    datasets: [{
+      label: 'Your property',
+      data: [8.4, 7.9, 7.2, 8.1],
+      borderColor: indigo,
+      backgroundColor: 'rgba(99,102,241,0.2)',
+      pointBackgroundColor: indigo,
+      pointRadius: 4,
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        min: 0, max: 10,
+        ticks: { stepSize: 2, font: { size: 10 } },
+        pointLabels: { font: { size: 11 } },
+        grid: { color: '#e2e8f0' },
+        angleLines: { color: '#e2e8f0' }
+      }
+    }
+  }
+});
+
+// 5. GCS by Meal Time — Horizontal Bar
+new Chart(document.getElementById('mealTime'), {
+  type: 'bar',
+  data: {
+    labels: ['Breakfast', 'Lunch', 'Dinner', 'N/A'],
+    datasets: [{
+      label: 'Avg GCS',
+      data: [8.8, 7.5, 6.5, 8.0],
+      backgroundColor: ['#22c55e', indigo, '#f97316', indigoMid],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { min: 0, max: 10, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 6. City Property Rankings — Horizontal Bar
+new Chart(document.getElementById('cityRank'), {
+  type: 'bar',
+  data: {
+    labels: ['#1 Anonymous', '#2 The Grand Hotel', '#3 Anonymous', '#4 Anonymous', '#5 Anonymous', '#6 Anonymous'],
+    datasets: [{
+      label: 'Avg GCS',
+      data: [8.7, 8.4, 8.0, 7.8, 7.5, 7.1],
+      backgroundColor: [
+        'rgba(99,102,241,0.35)',
+        indigo,
+        'rgba(99,102,241,0.35)',
+        'rgba(99,102,241,0.35)',
+        'rgba(99,102,241,0.35)',
+        'rgba(99,102,241,0.35)',
+      ],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' Avg GCS: ' + ctx.parsed.x } }
+    },
+    scales: {
+      x: { min: 5, max: 10, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 }, color: (ctx) => ctx.index === 1 ? indigo : '#64748b', weight: (ctx) => ctx.index === 1 ? 'bold' : 'normal' } }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
