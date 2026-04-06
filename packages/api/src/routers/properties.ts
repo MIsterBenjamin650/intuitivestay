@@ -737,4 +737,153 @@ export const propertiesRouter = router({
         userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
       }
     }),
+
+  getFounderOverview: protectedProcedure.query(async ({ ctx }) => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+    if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+    if (org.plan !== "founder") throw new TRPCError({ code: "FORBIDDEN", message: "Founder plan required" })
+
+    // All properties in org
+    const orgProperties = await db
+      .select({
+        id: properties.id,
+        name: properties.name,
+        city: properties.city,
+        status: properties.status,
+      })
+      .from(properties)
+      .where(eq(properties.organisationId, org.id))
+
+    if (orgProperties.length === 0) {
+      return { aggregateGcs: null, totalSubmissions: 0, bestProperty: null, worstProperty: null, properties: [] }
+    }
+
+    const propertyIds = orgProperties.map((p) => p.id)
+
+    // Scores and recent feedback in parallel
+    const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000)
+    const [scoreRows, recentFeedback] = await Promise.all([
+      db
+        .select({
+          propertyId: propertyScores.propertyId,
+          avgGcs: propertyScores.avgGcs,
+          avgResilience: propertyScores.avgResilience,
+          avgEmpathy: propertyScores.avgEmpathy,
+          avgAnticipation: propertyScores.avgAnticipation,
+          avgRecognition: propertyScores.avgRecognition,
+          totalFeedback: propertyScores.totalFeedback,
+        })
+        .from(propertyScores)
+        .where(inArray(propertyScores.propertyId, propertyIds)),
+      db
+        .select({
+          propertyId: feedback.propertyId,
+          gcs: feedback.gcs,
+          submittedAt: feedback.submittedAt,
+        })
+        .from(feedback)
+        .where(
+          and(
+            inArray(feedback.propertyId, propertyIds),
+            sql`${feedback.submittedAt} >= ${eightWeeksAgo}`,
+          ),
+        )
+        .orderBy(feedback.submittedAt),
+    ])
+
+    const scoreMap = new Map(scoreRows.map((s) => [s.propertyId, s]))
+
+    // Group recent feedback by propertyId → week
+    const feedbackByProperty = new Map<string, { week: string; gcs: number }[]>()
+    for (const row of recentFeedback) {
+      const existing = feedbackByProperty.get(row.propertyId) ?? []
+      existing.push({ week: weekStart(row.submittedAt), gcs: Number(row.gcs) })
+      feedbackByProperty.set(row.propertyId, existing)
+    }
+
+    // Build per-property data
+    const propertyData = orgProperties.map((prop) => {
+      const scores = scoreMap.get(prop.id)
+      const avgGcs = scores?.avgGcs != null ? Math.round(Number(scores.avgGcs) * 10) / 10 : null
+      const totalFeedback = scores?.totalFeedback ?? 0
+
+      // Sparkline: last 4 weeks avg GCS
+      const rows = feedbackByProperty.get(prop.id) ?? []
+      const weekMap = new Map<string, number[]>()
+      for (const r of rows) {
+        const existing = weekMap.get(r.week) ?? []
+        existing.push(r.gcs)
+        weekMap.set(r.week, existing)
+      }
+      const sparkline = Array.from(weekMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-4)
+        .map(([week, gcsList]) => ({ week, avg: mean(gcsList) }))
+
+      // Trend delta: last 4 weeks avg vs previous 4 weeks avg
+      const allWeeks = Array.from(weekMap.entries()).sort(([a], [b]) => a.localeCompare(b))
+      const recentAvg = mean(allWeeks.slice(-4).flatMap(([, v]) => v))
+      const prevAvg = mean(allWeeks.slice(-8, -4).flatMap(([, v]) => v))
+      const trendDelta = allWeeks.length >= 2 ? Math.round((recentAvg - prevAvg) * 10) / 10 : null
+
+      // Pillar averages for strongest/weakest
+      const pillars = scores
+        ? {
+            Resilience: scores.avgResilience != null ? Number(scores.avgResilience) : 0,
+            Empathy: scores.avgEmpathy != null ? Number(scores.avgEmpathy) : 0,
+            Anticipation: scores.avgAnticipation != null ? Number(scores.avgAnticipation) : 0,
+            Recognition: scores.avgRecognition != null ? Number(scores.avgRecognition) : 0,
+          }
+        : null
+
+      const pillarEntries = pillars ? (Object.entries(pillars) as [string, number][]) : []
+      const strongestPillar =
+        pillarEntries.length > 0 ? pillarEntries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : null
+      const weakestPillar =
+        pillarEntries.length > 0 ? pillarEntries.reduce((a, b) => (b[1] < a[1] ? b : a))[0] : null
+
+      return {
+        id: prop.id,
+        name: prop.name,
+        city: prop.city,
+        status: prop.status,
+        avgGcs,
+        totalFeedback,
+        trendDelta,
+        strongestPillar,
+        weakestPillar,
+        sparkline,
+      }
+    })
+
+    // Aggregate stats
+    const propertiesWithGcs = propertyData.filter((p) => p.avgGcs != null)
+    const aggregateGcs =
+      propertiesWithGcs.length > 0
+        ? Math.round(
+            (propertiesWithGcs.reduce((s, p) => s + (p.avgGcs ?? 0), 0) /
+              propertiesWithGcs.length) *
+              10,
+          ) / 10
+        : null
+    const totalSubmissions = propertyData.reduce((s, p) => s + p.totalFeedback, 0)
+    const bestProperty =
+      propertiesWithGcs.length > 0
+        ? propertiesWithGcs.reduce((a, b) => ((b.avgGcs ?? 0) > (a.avgGcs ?? 0) ? b : a))
+        : null
+    const worstProperty =
+      propertiesWithGcs.length > 1
+        ? propertiesWithGcs.reduce((a, b) => ((b.avgGcs ?? 10) < (a.avgGcs ?? 10) ? b : a))
+        : null
+
+    return {
+      aggregateGcs,
+      totalSubmissions,
+      bestProperty: bestProperty ? { name: bestProperty.name, avgGcs: bestProperty.avgGcs! } : null,
+      worstProperty: worstProperty ? { name: worstProperty.name, avgGcs: worstProperty.avgGcs! } : null,
+      properties: propertyData,
+    }
+  }),
 })
