@@ -97,7 +97,7 @@ const columns = [
     header: "Property",
     cell: (info) => (
       <Link
-        to="/properties/$propertyId/dashboard"
+        to="/admin/properties/$propertyId"
         params={{ propertyId: info.row.original.id }}
         className="font-medium text-indigo-600 underline hover:text-indigo-800"
       >
