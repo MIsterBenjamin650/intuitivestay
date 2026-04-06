@@ -21,8 +21,7 @@ export const Route = createFileRoute("/_portal")({
 
     const isChoosingPlan = location.pathname === "/choose-plan"
     if (!isChoosingPlan && session.subscriptionStatus === "none") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      throw redirect({ to: "/choose-plan" as any })
+      throw redirect({ to: "/choose-plan" })
     }
 
     return { session }

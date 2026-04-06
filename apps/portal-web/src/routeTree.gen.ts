@@ -14,6 +14,8 @@ import { Route as PortalRouteImport } from './routes/_portal'
 import { Route as PortalIndexRouteImport } from './routes/_portal.index'
 import { Route as FUniqueCodeRouteImport } from './routes/f.$uniqueCode'
 import { Route as PortalPropertiesRouteImport } from './routes/_portal.properties'
+import { Route as PortalInsightsRouteImport } from './routes/_portal.insights'
+import { Route as PortalChoosePlanRouteImport } from './routes/_portal.choose-plan'
 import { Route as PortalOrganisationRolesPermissionsRouteImport } from './routes/_portal.organisation.roles-permissions'
 import { Route as PortalOrganisationMembersRouteImport } from './routes/_portal.organisation.members'
 import { Route as PortalOrganisationBillingRouteImport } from './routes/_portal.organisation.billing'
@@ -27,7 +29,6 @@ import { Route as PortalPropertiesPropertyIdDashboardRouteImport } from './route
 import { Route as PortalPropertiesPropertyIdAlertsRouteImport } from './routes/_portal.properties.$propertyId.alerts'
 import { Route as PortalPropertiesPropertyIdAdvancedInsightsRouteImport } from './routes/_portal.properties.$propertyId.advanced-insights'
 import { Route as PortalAdminPropertiesPropertyIdRouteImport } from './routes/_portal.admin.properties.$propertyId'
-import { Route as PortalInsightsRouteImport } from './routes/_portal.insights'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -51,6 +52,16 @@ const FUniqueCodeRoute = FUniqueCodeRouteImport.update({
 const PortalPropertiesRoute = PortalPropertiesRouteImport.update({
   id: '/properties',
   path: '/properties',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalInsightsRoute = PortalInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalChoosePlanRoute = PortalChoosePlanRouteImport.update({
+  id: '/choose-plan',
+  path: '/choose-plan',
   getParentRoute: () => PortalRoute,
 } as any)
 const PortalOrganisationRolesPermissionsRoute =
@@ -130,15 +141,12 @@ const PortalAdminPropertiesPropertyIdRoute =
     path: '/admin/properties/$propertyId',
     getParentRoute: () => PortalRoute,
   } as any)
-const PortalInsightsRoute = PortalInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => PortalRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PortalIndexRoute
   '/login': typeof LoginRoute
+  '/choose-plan': typeof PortalChoosePlanRoute
+  '/insights': typeof PortalInsightsRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
   '/f/$uniqueCode': typeof FUniqueCodeRoute
   '/admin/approvals': typeof PortalAdminApprovalsRoute
@@ -147,7 +155,6 @@ export interface FileRoutesByFullPath {
   '/organisation/members': typeof PortalOrganisationMembersRoute
   '/organisation/roles-permissions': typeof PortalOrganisationRolesPermissionsRoute
   '/admin/properties/$propertyId': typeof PortalAdminPropertiesPropertyIdRoute
-  '/insights': typeof PortalInsightsRoute
   '/properties/$propertyId/advanced-insights': typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
   '/properties/$propertyId/alerts': typeof PortalPropertiesPropertyIdAlertsRoute
   '/properties/$propertyId/dashboard': typeof PortalPropertiesPropertyIdDashboardRoute
@@ -158,6 +165,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/choose-plan': typeof PortalChoosePlanRoute
+  '/insights': typeof PortalInsightsRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
   '/f/$uniqueCode': typeof FUniqueCodeRoute
   '/': typeof PortalIndexRoute
@@ -167,7 +176,6 @@ export interface FileRoutesByTo {
   '/organisation/members': typeof PortalOrganisationMembersRoute
   '/organisation/roles-permissions': typeof PortalOrganisationRolesPermissionsRoute
   '/admin/properties/$propertyId': typeof PortalAdminPropertiesPropertyIdRoute
-  '/insights': typeof PortalInsightsRoute
   '/properties/$propertyId/advanced-insights': typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
   '/properties/$propertyId/alerts': typeof PortalPropertiesPropertyIdAlertsRoute
   '/properties/$propertyId/dashboard': typeof PortalPropertiesPropertyIdDashboardRoute
@@ -180,6 +188,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_portal': typeof PortalRouteWithChildren
   '/login': typeof LoginRoute
+  '/_portal/choose-plan': typeof PortalChoosePlanRoute
+  '/_portal/insights': typeof PortalInsightsRoute
   '/_portal/properties': typeof PortalPropertiesRouteWithChildren
   '/f/$uniqueCode': typeof FUniqueCodeRoute
   '/_portal/': typeof PortalIndexRoute
@@ -189,7 +199,6 @@ export interface FileRoutesById {
   '/_portal/organisation/members': typeof PortalOrganisationMembersRoute
   '/_portal/organisation/roles-permissions': typeof PortalOrganisationRolesPermissionsRoute
   '/_portal/admin/properties/$propertyId': typeof PortalAdminPropertiesPropertyIdRoute
-  '/_portal/insights': typeof PortalInsightsRoute
   '/_portal/properties/$propertyId/advanced-insights': typeof PortalPropertiesPropertyIdAdvancedInsightsRoute
   '/_portal/properties/$propertyId/alerts': typeof PortalPropertiesPropertyIdAlertsRoute
   '/_portal/properties/$propertyId/dashboard': typeof PortalPropertiesPropertyIdDashboardRoute
@@ -203,6 +212,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/choose-plan'
+    | '/insights'
     | '/properties'
     | '/f/$uniqueCode'
     | '/admin/approvals'
@@ -211,7 +222,6 @@ export interface FileRouteTypes {
     | '/organisation/members'
     | '/organisation/roles-permissions'
     | '/admin/properties/$propertyId'
-    | '/insights'
     | '/properties/$propertyId/advanced-insights'
     | '/properties/$propertyId/alerts'
     | '/properties/$propertyId/dashboard'
@@ -222,6 +232,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/choose-plan'
+    | '/insights'
     | '/properties'
     | '/f/$uniqueCode'
     | '/'
@@ -231,7 +243,6 @@ export interface FileRouteTypes {
     | '/organisation/members'
     | '/organisation/roles-permissions'
     | '/admin/properties/$propertyId'
-    | '/insights'
     | '/properties/$propertyId/advanced-insights'
     | '/properties/$propertyId/alerts'
     | '/properties/$propertyId/dashboard'
@@ -243,6 +254,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_portal'
     | '/login'
+    | '/_portal/choose-plan'
+    | '/_portal/insights'
     | '/_portal/properties'
     | '/f/$uniqueCode'
     | '/_portal/'
@@ -252,7 +265,6 @@ export interface FileRouteTypes {
     | '/_portal/organisation/members'
     | '/_portal/organisation/roles-permissions'
     | '/_portal/admin/properties/$propertyId'
-    | '/_portal/insights'
     | '/_portal/properties/$propertyId/advanced-insights'
     | '/_portal/properties/$propertyId/alerts'
     | '/_portal/properties/$propertyId/dashboard'
@@ -303,6 +315,20 @@ declare module '@tanstack/react-router' {
       path: '/properties'
       fullPath: '/properties'
       preLoaderRoute: typeof PortalPropertiesRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/insights': {
+      id: '/_portal/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof PortalInsightsRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/_portal/choose-plan': {
+      id: '/_portal/choose-plan'
+      path: '/choose-plan'
+      fullPath: '/choose-plan'
+      preLoaderRoute: typeof PortalChoosePlanRouteImport
       parentRoute: typeof PortalRoute
     }
     '/_portal/organisation/roles-permissions': {
@@ -396,13 +422,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAdminPropertiesPropertyIdRouteImport
       parentRoute: typeof PortalRoute
     }
-    '/_portal/insights': {
-      id: '/_portal/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof PortalInsightsRouteImport
-      parentRoute: typeof PortalRoute
-    }
   }
 }
 
@@ -435,6 +454,8 @@ const PortalPropertiesRouteWithChildren =
   PortalPropertiesRoute._addFileChildren(PortalPropertiesRouteChildren)
 
 interface PortalRouteChildren {
+  PortalChoosePlanRoute: typeof PortalChoosePlanRoute
+  PortalInsightsRoute: typeof PortalInsightsRoute
   PortalPropertiesRoute: typeof PortalPropertiesRouteWithChildren
   PortalIndexRoute: typeof PortalIndexRoute
   PortalAdminApprovalsRoute: typeof PortalAdminApprovalsRoute
@@ -443,10 +464,11 @@ interface PortalRouteChildren {
   PortalOrganisationMembersRoute: typeof PortalOrganisationMembersRoute
   PortalOrganisationRolesPermissionsRoute: typeof PortalOrganisationRolesPermissionsRoute
   PortalAdminPropertiesPropertyIdRoute: typeof PortalAdminPropertiesPropertyIdRoute
-  PortalInsightsRoute: typeof PortalInsightsRoute
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
+  PortalChoosePlanRoute: PortalChoosePlanRoute,
+  PortalInsightsRoute: PortalInsightsRoute,
   PortalPropertiesRoute: PortalPropertiesRouteWithChildren,
   PortalIndexRoute: PortalIndexRoute,
   PortalAdminApprovalsRoute: PortalAdminApprovalsRoute,
@@ -456,7 +478,6 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalOrganisationRolesPermissionsRoute:
     PortalOrganisationRolesPermissionsRoute,
   PortalAdminPropertiesPropertyIdRoute: PortalAdminPropertiesPropertyIdRoute,
-  PortalInsightsRoute: PortalInsightsRoute,
 }
 
 const PortalRouteWithChildren =
