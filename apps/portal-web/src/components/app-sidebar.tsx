@@ -125,8 +125,10 @@ function SidebarLinkItem({
 
 export function AppSidebar({
   isAdmin = false,
+  plan = null,
+  subscriptionStatus = "none",
   ...props
-}: React.ComponentProps<typeof Sidebar> & { isAdmin?: boolean }) {
+}: React.ComponentProps<typeof Sidebar> & { isAdmin?: boolean; plan?: string | null; subscriptionStatus?: string }) {
   const location = useLocation()
   const { activePropertyId, properties } = useActiveProperty()
 
@@ -342,7 +344,7 @@ export function AppSidebar({
                 link={<AppSidebarLink to="/organisation/billing" />}
                 isActive={isRouteActive(location.pathname, "/organisation/billing")}
                 muted
-                badge={<PlanBadge variant="host" className="ml-auto" />}
+                badge={subscriptionStatus !== "none" && plan ? <PlanBadge variant={plan as "host" | "partner" | "founder"} className="ml-auto" /> : undefined}
               />
             </SidebarMenu>
           </SidebarGroupContent>
