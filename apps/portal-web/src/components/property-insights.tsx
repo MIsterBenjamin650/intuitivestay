@@ -254,27 +254,33 @@ export function PropertyInsights({ propertyId }: Props) {
         <div>
           <SectionLabel>Pillar Averages</SectionLabel>
           <ChartCard>
-            <ResponsiveContainer width="100%" height={180}>
-              <RadarChart
-                data={[
-                  { pillar: "Resilience", score: data.pillarAverages.resilience },
-                  { pillar: "Empathy", score: data.pillarAverages.empathy },
-                  { pillar: "Anticipation", score: data.pillarAverages.anticipation },
-                  { pillar: "Recognition", score: data.pillarAverages.recognition },
-                ]}
-              >
-                <PolarGrid />
-                <PolarAngleAxis dataKey="pillar" tick={{ fontSize: 10 }} />
-                <Radar
-                  name="Score"
-                  dataKey="score"
-                  stroke="#6366f1"
-                  fill="#6366f1"
-                  fillOpacity={0.25}
-                />
-                <Tooltip formatter={(v) => (typeof v === "number" ? v.toFixed(1) : v)} />
-              </RadarChart>
-            </ResponsiveContainer>
+            {data.engagementStats.totalSubmissions === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No feedback yet in this period.
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <RadarChart
+                  data={[
+                    { pillar: "Resilience", score: data.pillarAverages.resilience },
+                    { pillar: "Empathy", score: data.pillarAverages.empathy },
+                    { pillar: "Anticipation", score: data.pillarAverages.anticipation },
+                    { pillar: "Recognition", score: data.pillarAverages.recognition },
+                  ]}
+                >
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="pillar" tick={{ fontSize: 10 }} />
+                  <Radar
+                    name="Score"
+                    dataKey="score"
+                    stroke="#6366f1"
+                    fill="#6366f1"
+                    fillOpacity={0.25}
+                  />
+                  <Tooltip formatter={(v) => (typeof v === "number" ? v.toFixed(1) : v)} />
+                </RadarChart>
+              </ResponsiveContainer>
+            )}
           </ChartCard>
         </div>
       </div>
