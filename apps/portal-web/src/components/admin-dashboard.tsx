@@ -21,6 +21,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table"
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { useMemo, useState } from "react"
 
@@ -94,7 +95,15 @@ const col = createColumnHelper<PropertyRow>()
 const columns = [
   col.accessor("name", {
     header: "Property",
-    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    cell: (info) => (
+      <Link
+        to="/properties/$propertyId/dashboard"
+        params={{ propertyId: info.row.original.id }}
+        className="font-medium text-indigo-600 underline hover:text-indigo-800"
+      >
+        {info.getValue()}
+      </Link>
+    ),
     enableSorting: false,
   }),
   col.display({
@@ -226,32 +235,97 @@ export function AdminDashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-4 pt-0">
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription>Total Properties</CardDescription>
-            <CardTitle>{isLoading ? "—" : (stats?.totalCount ?? 0)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription>Approved</CardDescription>
-            <CardTitle>{isLoading ? "—" : (stats?.approvedCount ?? 0)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription>Platform Avg GCS</CardDescription>
-            <CardTitle>
-              {isLoading
-                ? "—"
-                : stats?.platformAvgGcs != null
-                  ? stats.platformAvgGcs.toFixed(1)
-                  : "No data"}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+      {/* Stats — Row 1: Overview */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Overview</p>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card size="sm">
+            <CardHeader>
+              <CardDescription>Total Properties</CardDescription>
+              <CardTitle>{isLoading ? "—" : (stats?.totalCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm">
+            <CardHeader>
+              <CardDescription>Approved</CardDescription>
+              <CardTitle>{isLoading ? "—" : (stats?.approvedCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm">
+            <CardHeader>
+              <CardDescription>Platform Avg GCS</CardDescription>
+              <CardTitle>
+                {isLoading
+                  ? "—"
+                  : stats?.platformAvgGcs != null
+                    ? stats.platformAvgGcs.toFixed(1)
+                    : "No data"}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+
+      {/* Stats — Row 2: Plan Distribution */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plan Distribution</p>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card size="sm" className="bg-slate-50">
+            <CardHeader>
+              <CardDescription className="text-slate-600">Host</CardDescription>
+              <CardTitle className="text-slate-800">{isLoading ? "—" : (stats?.hostCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm" className="bg-blue-50">
+            <CardHeader>
+              <CardDescription className="text-blue-700">Partner</CardDescription>
+              <CardTitle className="text-blue-900">{isLoading ? "—" : (stats?.partnerCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm" className="bg-purple-50">
+            <CardHeader>
+              <CardDescription className="text-purple-700">Founder</CardDescription>
+              <CardTitle className="text-purple-900">{isLoading ? "—" : (stats?.founderCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+
+      {/* Stats — Row 3: Activity */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Activity</p>
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card size="sm" className="bg-green-50">
+            <CardHeader>
+              <CardDescription className="text-green-700">Total Feedback</CardDescription>
+              <CardTitle className="text-green-900">{isLoading ? "—" : (stats?.platformTotalFeedback ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm" className="bg-yellow-50">
+            <CardHeader>
+              <CardDescription className="text-yellow-700">Pending Approval</CardDescription>
+              <CardTitle className="text-yellow-900">
+                {isLoading ? "—" : (
+                  <Link to="/admin/approvals" className="hover:underline">
+                    {stats?.pendingCount ?? 0}
+                  </Link>
+                )}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm" className="bg-orange-50">
+            <CardHeader>
+              <CardDescription className="text-orange-700">No Activity</CardDescription>
+              <CardTitle className="text-orange-900">{isLoading ? "—" : (stats?.inactiveCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card size="sm">
+            <CardHeader>
+              <CardDescription>Registered Users</CardDescription>
+              <CardTitle>{isLoading ? "—" : (stats?.totalUsers ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
       </div>
 
       {/* Filters */}
