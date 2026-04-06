@@ -1,11 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router"
-
-import { FounderInsightsOverview } from "@/components/founder-insights-overview"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_portal/insights")({
-  component: RouteComponent,
+  beforeLoad: () => {
+    throw redirect({ to: "/" })
+  },
+  component: () => null,
 })
-
-function RouteComponent() {
-  return <FounderInsightsOverview />
-}
