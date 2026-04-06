@@ -41,9 +41,9 @@ Four compact pill cards in a row:
 | Total Feedback | count of submissions in range | Indigo |
 | Avg Response Rate | % of QR code scans that completed feedback | Teal |
 | Open Alerts | count of unresolved alerts | Orange |
-| Current Seal | Bronze / Silver / Gold badge | Bronze/Silver/Gold |
+| Current Seal | Member / Bronze / Silver / Gold / Platinum badge | Tier colour |
 
-Seal thresholds: GCS < 7.0 → Bronze, 7.0–8.4 → Silver, ≥ 8.5 → Gold.
+Seal thresholds (see Tier System section for full rules):
 
 ---
 
@@ -55,12 +55,11 @@ Seal thresholds: GCS < 7.0 → Bronze, 7.0–8.4 → Silver, ≥ 8.5 → Gold.
 - Fills clockwise from 0 to GCS score (0–10 scale)
 - Score printed in centre, large (32px extrabold)
 - Label "Guest Care Score" below score
-- Seal badge rendered below the ring: coloured pill (Bronze/Silver/Gold) with appropriate background
+- Seal badge rendered below the ring: coloured pill (Member/Bronze/Silver/Gold/Platinum) with appropriate background
+- If a tier change is pending (grace/confirmation window active), show a secondary indicator: e.g. "⚠ At risk: Bronze" or "⏳ Confirming: Gold"
+- GCS displayed on the ring is on a 0–10 scale; the tier score used for seal calculation is `avg(pillars) × 10` = 0–100
 
-Ring colour bands:
-- < 7.0 → amber/bronze (`#b45309`)
-- 7.0–8.4 → slate/silver (`#64748b`)
-- ≥ 8.5 → yellow/gold (`#ca8a04`)
+Ring colour bands match current official tier colour (see Tier System section).
 
 ### AI Daily Summary card (right)
 
@@ -70,6 +69,79 @@ Ring colour bands:
 - Pillar names highlighted in their respective colour (Indigo/Teal/Purple/Orange)
 - Stale indicator if no summary generated yet today ("Summary not yet available for today")
 - Falls back to yesterday's summary if today's hasn't run yet
+
+---
+
+---
+
+## Tier System
+
+### Score Calculation
+
+The **tier score** is derived from the property's 30-day rolling average GCS, converted to a 0–100 scale:
+
+```
+tierScore = (average of all pillar scores over last 30 days) × 10
+```
+
+Each pillar score is 0–10, so the tier score is 0–100.
+
+### Tiers
+
+| Tier | Score Range | Colour |
+|---|---|---|
+| Member | 0–49 | Grey `#9ca3af` |
+| Bronze | 50–69 | Amber `#b45309` |
+| Silver | 70–79 | Slate `#64748b` |
+| Gold | 80–94 | Yellow `#ca8a04` |
+| Platinum | 95–100 | Indigo/purple `#6366f1` |
+
+### Tier Change Rules
+
+Tier changes are **never immediate**. A 30-day grace/confirmation window applies in both directions:
+
+**Downgrade (grace period):**
+1. On the 1st of each month, the system evaluates the property's tier score for the past 30 days
+2. If the score has dropped below the current tier's lower threshold → create a `pendingTierChange` record with direction `"downgrade"`, new tier, and `pendingFrom = today`
+3. Owner receives an alert/email: "Your score has dropped to [score]. You have 30 days to recover above [threshold] or your seal will change from [CurrentTier] to [NewTier]."
+4. On the next monthly evaluation (30 days later):
+   - If score is still below threshold → apply the downgrade, delete pending record, create alert "Your seal has changed to [NewTier]"
+   - If score has recovered → delete pending record, create alert "Your seal is safe — well done"
+
+**Upgrade (confirmation window):**
+1. On the 1st of each month, if the score qualifies for a higher tier → create a `pendingTierChange` record with direction `"upgrade"`, new tier, and `pendingFrom = today`
+2. Owner receives an alert/email: "Your score is qualifying for [NewTier]. Maintain your score above [threshold] for 30 more days to achieve it."
+3. On the next monthly evaluation:
+   - If score is still above threshold → apply the upgrade, delete pending record, create alert "Congratulations! Your seal has been upgraded to [NewTier]"
+   - If score has dropped → delete pending record, no tier change, create alert "Your [NewTier] upgrade didn't complete — keep working to maintain your score"
+
+**Concurrent changes:** Only one pending change per property at a time. If a pending upgrade is in progress and the score drops below the current tier, cancel the upgrade and start a downgrade grace instead.
+
+### Database: `propertyTiers` table
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| propertyId | uuid FK → properties, unique | one row per property |
+| currentTier | text | `"member"`, `"bronze"`, `"silver"`, `"gold"`, `"platinum"` |
+| pendingTier | text nullable | tier being gained/lost |
+| pendingDirection | text nullable | `"upgrade"` or `"downgrade"` |
+| pendingFrom | date nullable | date the grace/confirmation window started |
+| lastEvaluatedAt | timestamp | when the monthly job last ran for this property |
+| updatedAt | timestamp | |
+
+New properties start at `member` tier with no pending change.
+
+### Monthly Evaluation Job
+
+- Cron: runs on the 1st of each month at 00:01 UTC
+- For each property:
+  1. Calculate 30-day rolling tier score
+  2. Determine qualifying tier from score
+  3. Check `pendingTierChange`:
+     - If pending change exists and 30 days have passed → resolve it (apply or cancel)
+     - If no pending change and qualifying tier ≠ current tier → create pending change
+  4. Send appropriate alert/email to owner
 
 ---
 
@@ -300,6 +372,8 @@ All data comes from the existing `guestFeedback` table:
 | `property.getAiSummary` | Latest AI daily summary for property |
 | `ai.generateDailySummary` | Admin-triggered or cron-triggered generation |
 | `property.getCityLeaderboard` | GCS ranking of all properties in same city for date range |
+| `property.getTierStatus` | Current tier, pending change, and score for the property |
+| `tier.runMonthlyEvaluation` | Admin/cron-triggered monthly tier evaluation job |
 
 ---
 
@@ -324,3 +398,7 @@ All data comes from the existing `guestFeedback` table:
 - City leaderboard visible and populated for Host/Partner plans; blurred with upgrade CTA for Founder plan
 - Own property row always highlighted in leaderboard regardless of rank
 - Other properties anonymised as "Property #N" in leaderboard
+- Tier system uses 5 levels: Member (0–49), Bronze (50–69), Silver (70–79), Gold (80–94), Platinum (95–100)
+- Tier upgrades only apply after 30-day confirmation window; tier downgrades have 30-day grace period
+- Pending tier changes shown on dashboard seal badge with warning/confirmation indicator
+- Monthly evaluation cron job creates pending changes and resolves expired ones
