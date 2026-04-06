@@ -514,8 +514,14 @@ export const propertiesRouter = router({
       if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
       if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
 
-      // 2. Clamp time range to plan
-      const effectiveRange = clampTimeRange(input.timeRange, org.plan)
+      // 2. Clamp time range to plan — restrict grace/expired orgs to host-level
+      const effectivePlan: Plan =
+        org.subscriptionStatus === "grace" || org.subscriptionStatus === "expired"
+          ? "host"
+          : isPlan(org.plan)
+            ? org.plan
+            : "host"
+      const effectiveRange = clampTimeRange(input.timeRange, effectivePlan)
       const startDate = new Date(Date.now() - RANGE_DAYS[effectiveRange] * 24 * 60 * 60 * 1000)
 
       // 3. Fetch all feedback in range
@@ -626,7 +632,7 @@ export const propertiesRouter = router({
 
       // 10. Vent keywords (Founder only)
       const ventKeywords =
-        org.plan === "founder" ? extractKeywords(rows.map((r) => r.ventText)) : []
+        effectivePlan === "founder" ? extractKeywords(rows.map((r) => r.ventText)) : []
 
       return {
         gcsOverTime,
@@ -646,7 +652,8 @@ export const propertiesRouter = router({
         staffTagCloud,
         ventKeywords,
         allowedTimeRange: effectiveRange,
-        userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
+        userPlan: effectivePlan,
+        subscriptionStatus: org.subscriptionStatus as "none" | "trial" | "active" | "grace" | "expired",
       }
     }),
 
