@@ -28,7 +28,6 @@ import {
   UsersIcon,
 } from "lucide-react"
 
-const SIDEBAR_WORDMARK = "Intuitive Stay"
 
 const SidebarAnchor = React.forwardRef<
   HTMLAnchorElement,
