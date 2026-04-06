@@ -46,7 +46,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useQuery } from "@tanstack/react-query"
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
+import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/utils/trpc"
 import {
   ArrowUpDownIcon,
@@ -238,6 +238,24 @@ function RequiredMark() {
 }
 
 export const Route = createFileRoute("/_portal/properties")({
+  beforeLoad: async ({ context }) => {
+    const session = context.session as {
+      plan?: string | null
+      user?: { properties?: Array<{ id: string }> }
+    } | null
+    const plan = session?.plan ?? null
+    if (plan !== "founder") {
+      const properties = session?.user?.properties ?? []
+      const firstId = properties[0]?.id
+      if (firstId) {
+        throw redirect({
+          to: "/properties/$propertyId/dashboard",
+          params: { propertyId: firstId },
+        })
+      }
+      throw redirect({ to: "/" })
+    }
+  },
   validateSearch,
   component: RouteComponent,
 })
