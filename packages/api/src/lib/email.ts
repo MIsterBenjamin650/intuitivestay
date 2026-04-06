@@ -117,3 +117,23 @@ export async function sendDailySummaryEmail(
 <p><a href="${portalUrl}">View your full dashboard →</a></p>`,
   })
 }
+
+export async function sendStaffInviteEmail(
+  invitedEmail: string,
+  propertyName: string,
+  inviterName: string,
+  token: string,
+) {
+  const inviteUrl = `${env.PUBLIC_PORTAL_URL}/invite?token=${token}`
+
+  await resend.emails.send({
+    from: FROM,
+    to: invitedEmail,
+    subject: `${propertyName} — You've been invited to view the dashboard`,
+    html: `<h1>You've been invited!</h1>
+<p><strong>${inviterName}</strong> has invited you to access the guest feedback dashboard for <strong>${propertyName}</strong>.</p>
+<p>Click the button below to accept your invitation and set up your account:</p>
+<p><a href="${inviteUrl}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Accept Invitation →</a></p>
+<p style="font-size:12px;color:#64748b">This invitation expires in 7 days. If you didn't expect this email, you can safely ignore it.</p>`,
+  })
+}
