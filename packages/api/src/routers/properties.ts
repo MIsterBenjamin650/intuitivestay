@@ -1,8 +1,8 @@
 import { db } from "@intuitive-stay/db"
-import { feedback, organisations, properties, propertyScores, qrCodes, user } from "@intuitive-stay/db/schema"
+import { aiDailySummaries, feedback, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, avg, count, desc, eq, gte, inArray, max, sql } from "drizzle-orm"
+import { and, avg, count, desc, eq, gte, inArray, isNotNull, max, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
@@ -972,5 +972,149 @@ export const propertiesRouter = router({
         .orderBy(desc(feedback.submittedAt))
         .limit(10)
       return rows.map((r) => ({ ...r, gcs: Number(r.gcs) }))
+    }),
+
+  getWordCloud: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const rows = await db
+        .select({ adjectives: feedback.adjectives })
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.propertyId, input.propertyId),
+            gte(feedback.submittedAt, since),
+            isNotNull(feedback.adjectives),
+          ),
+        )
+      const freq: Record<string, number> = {}
+      for (const row of rows) {
+        if (!row.adjectives) continue
+        for (const word of row.adjectives.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)) {
+          freq[word] = (freq[word] ?? 0) + 1
+        }
+      }
+      return Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30)
+        .map(([word, count]) => ({ word, count }))
+    }),
+
+  getStaffBubbles: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const rows = await db
+        .select({ name: feedback.namedStaffMember, gcs: feedback.gcs })
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.propertyId, input.propertyId),
+            gte(feedback.submittedAt, since),
+            isNotNull(feedback.namedStaffMember),
+          ),
+        )
+      const map: Record<string, { count: number; totalGcs: number }> = {}
+      for (const row of rows) {
+        if (!row.name) continue
+        const entry = map[row.name] ?? { count: 0, totalGcs: 0 }
+        entry.count += 1
+        entry.totalGcs += Number(row.gcs)
+        map[row.name] = entry
+      }
+      return Object.entries(map).map(([name, { count, totalGcs }]) => {
+        const avgGcs = totalGcs / count
+        const sentiment: "positive" | "neutral" | "negative" =
+          avgGcs >= 7 ? "positive" : avgGcs < 6 ? "negative" : "neutral"
+        return { name, count, sentiment }
+      })
+    }),
+
+  getCityLeaderboardLive: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const prop = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+        columns: { city: true, name: true },
+      })
+      if (!prop) return { city: "", rows: [] }
+      const cityProperties = await db
+        .select({ id: properties.id, name: properties.name })
+        .from(properties)
+        .where(and(eq(properties.city, prop.city), eq(properties.status, "approved")))
+      const cityPropertyIds = cityProperties.map((p) => p.id)
+      if (!cityPropertyIds.length) return { city: prop.city, rows: [] }
+      const agg = await db
+        .select({
+          propertyId: feedback.propertyId,
+          avgGcs: avg(feedback.gcs),
+          avgResilience: avg(sql<number>`${feedback.resilience}::numeric`),
+          avgEmpathy: avg(sql<number>`${feedback.empathy}::numeric`),
+          avgAnticipation: avg(sql<number>`${feedback.anticipation}::numeric`),
+          avgRecognition: avg(sql<number>`${feedback.recognition}::numeric`),
+          submissions: count(),
+        })
+        .from(feedback)
+        .where(and(inArray(feedback.propertyId, cityPropertyIds), gte(feedback.submittedAt, since)))
+        .groupBy(feedback.propertyId)
+      const aggMap = Object.fromEntries(agg.map((r) => [r.propertyId, r]))
+      const rows = cityProperties
+        .map((p) => {
+          const r = aggMap[p.id]
+          return {
+            propertyId: p.id,
+            isOwn: p.id === input.propertyId,
+            name: p.id === input.propertyId ? p.name : null,
+            avgGcs: r?.avgGcs != null ? Number(r.avgGcs) : null,
+            avgResilience: r?.avgResilience != null ? Number(r.avgResilience) : null,
+            avgEmpathy: r?.avgEmpathy != null ? Number(r.avgEmpathy) : null,
+            avgAnticipation: r?.avgAnticipation != null ? Number(r.avgAnticipation) : null,
+            avgRecognition: r?.avgRecognition != null ? Number(r.avgRecognition) : null,
+            submissions: r?.submissions ?? 0,
+          }
+        })
+        .sort((a, b) => {
+          if (a.avgGcs == null && b.avgGcs == null) return 0
+          if (a.avgGcs == null) return 1
+          if (b.avgGcs == null) return -1
+          return b.avgGcs - a.avgGcs
+        })
+        .map((row, idx) => ({ ...row, rank: idx + 1 }))
+      return { city: prop.city, rows }
+    }),
+
+  getTierStatus: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ input }) => {
+      const tier = await db.query.propertyTiers.findFirst({
+        where: eq(propertyTiers.propertyId, input.propertyId),
+      })
+      if (!tier) {
+        return { currentTier: "member" as const, pendingTier: null, pendingDirection: null, pendingFrom: null }
+      }
+      return {
+        currentTier: tier.currentTier,
+        pendingTier: tier.pendingTier,
+        pendingDirection: tier.pendingDirection,
+        pendingFrom: tier.pendingFrom,
+      }
+    }),
+
+  getAiSummary: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ input }) => {
+      const summary = await db.query.aiDailySummaries.findFirst({
+        where: eq(aiDailySummaries.propertyId, input.propertyId),
+        orderBy: [desc(aiDailySummaries.date)],
+      })
+      if (!summary) return null
+      return {
+        date: summary.date,
+        narrative: summary.narrative,
+        focusPoints: summary.focusPoints as Array<{ pillar: string; action: string }>,
+        generatedAt: summary.generatedAt,
+      }
     }),
 })
