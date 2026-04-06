@@ -157,11 +157,19 @@ function RouteComponent() {
   const { session } = useRouteContext({ from: "/_portal" })
   const navigate = useNavigate()
   const isAdmin = (session as { isAdmin?: boolean } | null)?.isAdmin === true
+  const isStaff = (session as { isStaff?: boolean } | null)?.isStaff === true
+  const staffPropertyId = (session as { staffPropertyId?: string | null } | null)?.staffPropertyId ?? null
   const plan = (session as { plan?: string | null } | null)?.plan ?? null
   const properties = (session as { user?: { properties?: Array<{ id: string; name: string }> } } | null)?.user?.properties ?? []
 
   React.useEffect(() => {
-    if (!isAdmin && (plan === "host" || plan === "partner") && properties.length > 0) {
+    if (isStaff && staffPropertyId) {
+      void navigate({
+        to: "/properties/$propertyId/dashboard",
+        params: { propertyId: staffPropertyId },
+        replace: true,
+      })
+    } else if (!isAdmin && (plan === "host" || plan === "partner") && properties.length > 0) {
       const firstProperty = properties[0]
       if (firstProperty) {
         void navigate({
@@ -171,11 +179,10 @@ function RouteComponent() {
         })
       }
     }
-  }, [isAdmin, plan, properties, navigate])
+  }, [isAdmin, isStaff, staffPropertyId, plan, properties, navigate])
 
   if (isAdmin) return <AdminDashboard />
-  if ((plan === "host" || plan === "partner") && properties.length > 0) {
-    return null
-  }
+  if (isStaff && staffPropertyId) return null
+  if ((plan === "host" || plan === "partner") && properties.length > 0) return null
   return <PortfolioDashboard />
 }

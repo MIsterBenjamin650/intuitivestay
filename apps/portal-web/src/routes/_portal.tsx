@@ -70,6 +70,8 @@ function resolveSessionProperties(session: unknown): PropertySummary[] | undefin
 function RouteComponent() {
   const { session } = Route.useRouteContext();
   const sessionProperties = resolveSessionProperties(session);
+  const isStaff = (session as { isStaff?: boolean } | null)?.isStaff === true
+  const staffPermissions = (session as { staffPermissions?: Record<string, boolean> | null } | null)?.staffPermissions ?? null
 
   return (
     <SidebarProvider>
@@ -78,6 +80,8 @@ function RouteComponent() {
           isAdmin={(session as { isAdmin?: boolean } | null)?.isAdmin === true}
           plan={(session as { plan?: string | null } | null)?.plan ?? null}
           subscriptionStatus={(session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"}
+          isStaff={isStaff}
+          staffPermissions={staffPermissions}
         />
         <SidebarInset className="overflow-x-hidden bg-[#f8fafc]">
           <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b bg-white/90 backdrop-blur-md">
