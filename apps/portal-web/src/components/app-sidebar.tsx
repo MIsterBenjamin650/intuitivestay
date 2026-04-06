@@ -56,14 +56,14 @@ const AppSidebarLink: LinkComponent<typeof SidebarAnchor> = (props) => {
 
 function SidebarBrand() {
   return (
-    <div className="flex min-h-8 items-center px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-      <span className="truncate text-sm font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-        {SIDEBAR_WORDMARK}
+    <div className="flex min-h-8 items-center px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+      <span className="truncate text-[15px] font-bold tracking-[-0.4px] text-white group-data-[collapsible=icon]:hidden">
+        Intuitive Stay
       </span>
       <span
-        className="hidden size-8 items-center justify-center rounded-md border border-sidebar-primary bg-transparent text-xs font-semibold text-sidebar-foreground dark:text-white group-data-[collapsible=icon]:inline-flex"
-        aria-label={SIDEBAR_WORDMARK}
-        title={SIDEBAR_WORDMARK}
+        className="hidden size-8 items-center justify-center rounded-md bg-white/10 text-xs font-bold text-white group-data-[collapsible=icon]:inline-flex"
+        aria-label="Intuitive Stay"
+        title="Intuitive Stay"
       >
         IS
       </span>
@@ -97,7 +97,10 @@ function SidebarLinkItem({
   disabled?: boolean
 }) {
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className="relative">
+      {isActive && !disabled && (
+        <span className="pointer-events-none absolute left-0 top-1 bottom-1 z-10 w-[3px] rounded-r bg-[#a5b4fc]" />
+      )}
       <SidebarMenuButton
         render={disabled ? undefined : link}
         tooltip={label}
@@ -108,7 +111,7 @@ function SidebarLinkItem({
           !disabled && muted ? "text-sidebar-foreground/80" : undefined,
           disabled
             ? "cursor-default aria-disabled:opacity-100 hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground focus-visible:ring-0 focus-visible:ring-transparent"
-            : undefined
+            : undefined,
         )}
       >
         <span className={cn(disabled ? "text-sidebar-foreground/50" : undefined)}>
@@ -147,7 +150,11 @@ export function AppSidebar({
 
   if (isAdmin) {
     return (
-      <Sidebar collapsible="icon" {...props}>
+      <Sidebar
+        collapsible="icon"
+        className="[background:linear-gradient(180deg,#1e1b4b_0%,#312e81_100%)] border-r-0"
+        {...props}
+      >
         <SidebarHeader className="gap-0 p-0">
           <div className="flex h-16 items-center border-b border-sidebar-border p-2">
             <SidebarBrand />
@@ -156,7 +163,7 @@ export function AppSidebar({
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarLinkItem
@@ -182,7 +189,11 @@ export function AppSidebar({
   }
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar
+      collapsible="icon"
+      className="[background:linear-gradient(180deg,#1e1b4b_0%,#312e81_100%)] border-r-0"
+      {...props}
+    >
       <SidebarHeader className="gap-0 p-0">
         <div className="flex h-16 items-center border-b border-sidebar-border p-2">
           <SidebarBrand />
@@ -194,7 +205,7 @@ export function AppSidebar({
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarLinkItem
@@ -215,7 +226,7 @@ export function AppSidebar({
 
         {hasProperties ? (
           <SidebarGroup>
-            <SidebarGroupLabel>Current Property</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">Current Property</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarLinkItem
@@ -310,7 +321,7 @@ export function AppSidebar({
         ) : null}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Organisation</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">Organisation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarLinkItem
@@ -350,7 +361,7 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>Admin</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">Admin</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarLinkItem
