@@ -646,4 +646,95 @@ export const propertiesRouter = router({
         userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
       }
     }),
+
+  getCityLeaderboard: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Verify ownership
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const city = property.city
+
+      // Within-city: all approved properties in same city with scores
+      const cityRows = await db
+        .select({
+          id: properties.id,
+          name: properties.name,
+          gcs: propertyScores.avgGcs,
+        })
+        .from(properties)
+        .innerJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+        .where(
+          and(
+            eq(properties.city, city),
+            eq(properties.status, "approved"),
+            sql`${propertyScores.avgGcs} is not null`,
+          ),
+        )
+        .orderBy(desc(propertyScores.avgGcs))
+
+      const withinCityRankings = cityRows.map((row, idx) => ({
+        rank: idx + 1,
+        name: row.id === input.propertyId ? row.name : null,
+        isYou: row.id === input.propertyId,
+        gcs: Math.round(Number(row.gcs) * 10) / 10,
+      }))
+
+      const yourEntry = withinCityRankings.find((r) => r.isYou)
+      const yourRank = yourEntry?.rank ?? 0
+      const yourGcs = yourEntry?.gcs ?? 0
+      const cityAvgGcs =
+        withinCityRankings.length > 0
+          ? Math.round(
+              (withinCityRankings.reduce((s, r) => s + r.gcs, 0) / withinCityRankings.length) * 10,
+            ) / 10
+          : 0
+
+      // National: all cities averaged
+      const nationalRows = await db
+        .select({
+          city: properties.city,
+          avgGcs: sql<string>`round(avg(${propertyScores.avgGcs}::numeric), 2)`,
+          propertyCount: count(properties.id),
+        })
+        .from(properties)
+        .innerJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+        .where(
+          and(
+            eq(properties.status, "approved"),
+            sql`${propertyScores.avgGcs} is not null`,
+          ),
+        )
+        .groupBy(properties.city)
+        .orderBy(desc(sql`avg(${propertyScores.avgGcs}::numeric)`))
+
+      const nationalCityRankings = nationalRows.map((row, idx) => ({
+        rank: idx + 1,
+        city: row.city,
+        avgGcs: Math.round(Number(row.avgGcs) * 10) / 10,
+        propertyCount: row.propertyCount,
+        isYou: row.city === city,
+      }))
+
+      return {
+        cityName: city,
+        yourRank,
+        totalInCity: withinCityRankings.length,
+        yourGcs,
+        cityAvgGcs,
+        gapToCityAvg: Math.round((yourGcs - cityAvgGcs) * 10) / 10,
+        withinCityRankings,
+        nationalCityRankings,
+        userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
+      }
+    }),
 })
