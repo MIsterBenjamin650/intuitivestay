@@ -90,10 +90,9 @@ export function FounderInsightsOverview() {
                 </p>
                 {prop.trendDelta != null && (
                   <p
-                    className={`text-[10px] font-semibold ${prop.trendDelta >= 0 ? "text-green-600" : "text-red-500"}`}
+                    className={`text-[10px] font-semibold ${prop.trendDelta > 0 ? "text-green-600" : prop.trendDelta < 0 ? "text-red-500" : "text-slate-400"}`}
                   >
-                    {prop.trendDelta >= 0 ? "↑ +" : "↓ "}
-                    {prop.trendDelta.toFixed(1)}
+                    {prop.trendDelta > 0 ? `↑ +${prop.trendDelta.toFixed(1)}` : prop.trendDelta < 0 ? `↓ ${prop.trendDelta.toFixed(1)}` : `→ ${prop.trendDelta.toFixed(1)}`}
                   </p>
                 )}
               </div>
