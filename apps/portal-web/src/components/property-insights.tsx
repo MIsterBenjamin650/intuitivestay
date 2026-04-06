@@ -537,7 +537,7 @@ export function PropertyInsights({ propertyId }: Props) {
                   <BarChart
                     data={cityData.withinCityRankings.map((r) => ({
                       ...r,
-                      label: r.isYou ? r.name! : `#${r.rank} Anonymous`,
+                      label: r.isYou ? (r.name ?? "Your Property") : `#${r.rank} Anonymous`,
                     }))}
                     layout="vertical"
                   >
