@@ -9,6 +9,70 @@ import { adminProcedure, protectedProcedure, router } from "../index"
 import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
 import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
 
+// ─── Insights helpers ─────────────────────────────────────────────────────────
+
+const TIER_ORDER = ["7d", "30d", "180d", "365d"] as const
+type TimeRange = (typeof TIER_ORDER)[number]
+
+const PLAN_MAX_RANGE: Record<string, TimeRange> = {
+  host: "7d",
+  partner: "30d",
+  founder: "365d",
+}
+
+const RANGE_DAYS: Record<TimeRange, number> = {
+  "7d": 7,
+  "30d": 30,
+  "180d": 180,
+  "365d": 365,
+}
+
+function clampTimeRange(requested: string, plan: string): TimeRange {
+  const max = PLAN_MAX_RANGE[plan] ?? "7d"
+  const reqIdx = TIER_ORDER.indexOf(requested as TimeRange)
+  const maxIdx = TIER_ORDER.indexOf(max)
+  return reqIdx !== -1 && reqIdx <= maxIdx ? (requested as TimeRange) : max
+}
+
+function weekStart(date: Date): string {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  return d.toISOString().slice(0, 10)
+}
+
+function mean(arr: number[]): number {
+  if (!arr.length) return 0
+  return Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10
+}
+
+const STOP_WORDS = new Set([
+  "the","a","an","is","was","it","to","of","and","in","that","this","for","on",
+  "with","at","by","from","i","my","we","me","very","so","but","not","be","are",
+  "have","had","were","he","she","they","you","your","our","their","its","just",
+  "really","when","what","how","did","got","get","no","also","would","could",
+  "should","been","has","food","hotel","room","staff","service","time",
+])
+
+function extractKeywords(texts: (string | null)[]): { word: string; count: number }[] {
+  const freq: Record<string, number> = {}
+  for (const text of texts) {
+    if (!text) continue
+    const words = text
+      .toLowerCase()
+      .split(/[\s.,!?;:()"'\-]+/)
+      .filter((w) => w.length > 2 && !STOP_WORDS.has(w) && /^[a-z]+$/.test(w))
+    for (const word of words) {
+      freq[word] = (freq[word] ?? 0) + 1
+    }
+  }
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([word, count]) => ({ word, count }))
+}
+
 export const propertiesRouter = router({
   getPendingProperties: adminProcedure.query(async () => {
     return db
@@ -417,6 +481,160 @@ export const propertiesRouter = router({
             }
           : null,
         totalSubmissions: scores?.totalFeedback ?? 0,
+      }
+    }),
+
+  getPropertyInsights: protectedProcedure
+    .input(
+      z.object({
+        propertyId: z.string(),
+        timeRange: z.enum(["7d", "30d", "180d", "365d"]).default("30d"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      // 1. Verify property belongs to the user's org
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      // 2. Clamp time range to plan
+      const effectiveRange = clampTimeRange(input.timeRange, org.plan)
+      const startDate = new Date(Date.now() - RANGE_DAYS[effectiveRange] * 24 * 60 * 60 * 1000)
+
+      // 3. Fetch all feedback in range
+      const rows = await db
+        .select({
+          gcs: feedback.gcs,
+          resilience: feedback.resilience,
+          empathy: feedback.empathy,
+          anticipation: feedback.anticipation,
+          recognition: feedback.recognition,
+          mealTime: feedback.mealTime,
+          namedStaffMember: feedback.namedStaffMember,
+          ventText: feedback.ventText,
+          submittedAt: feedback.submittedAt,
+        })
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.propertyId, input.propertyId),
+            sql`${feedback.submittedAt} >= ${startDate}`,
+          ),
+        )
+        .orderBy(feedback.submittedAt)
+
+      // 4. Weekly grouping
+      const weekMap = new Map<string, number[]>()
+      for (const row of rows) {
+        const wk = weekStart(row.submittedAt)
+        const existing = weekMap.get(wk) ?? []
+        existing.push(Number(row.gcs))
+        weekMap.set(wk, existing)
+      }
+      const sortedWeeks = Array.from(weekMap.entries()).sort(([a], [b]) => a.localeCompare(b))
+
+      const gcsOverTime = sortedWeeks.map(([week, gcsList]) => ({
+        week,
+        avg: mean(gcsList),
+      }))
+
+      const submissionsPerWeek = sortedWeeks.map(([week, gcsList]) => ({
+        week,
+        count: gcsList.length,
+      }))
+
+      // 5. Pillar averages + spotlight
+      const pillarAverages = {
+        resilience: mean(rows.map((r) => r.resilience)),
+        empathy: mean(rows.map((r) => r.empathy)),
+        anticipation: mean(rows.map((r) => r.anticipation)),
+        recognition: mean(rows.map((r) => r.recognition)),
+      }
+      const pillarEntries = Object.entries(pillarAverages) as [string, number][]
+      const strongest = pillarEntries.reduce((a, b) => (b[1] > a[1] ? b : a))
+      const weakest = pillarEntries.reduce((a, b) => (b[1] < a[1] ? b : a))
+
+      // 6. Score distribution (1–10)
+      const distMap: Record<number, number> = {}
+      for (const row of rows) {
+        const score = Math.round(Number(row.gcs))
+        distMap[score] = (distMap[score] ?? 0) + 1
+      }
+      const scoreDistribution = Array.from({ length: 10 }, (_, i) => ({
+        score: i + 1,
+        count: distMap[i + 1] ?? 0,
+      }))
+
+      // 7. GCS by meal time
+      const mealMap = new Map<string, number[]>()
+      for (const row of rows) {
+        const meal = row.mealTime ?? "N/A"
+        const existing = mealMap.get(meal) ?? []
+        existing.push(Number(row.gcs))
+        mealMap.set(meal, existing)
+      }
+      const gcsByMealTime = Array.from(mealMap.entries()).map(([mealTime, gcsList]) => ({
+        mealTime,
+        avg: mean(gcsList),
+      }))
+
+      // 8. Engagement stats
+      const totalSubmissions = rows.length
+      const happyRows = rows.filter((r) => Number(r.gcs) >= 8)
+      const nameDropCount = happyRows.filter((r) => r.namedStaffMember).length
+      const nameDropRate =
+        happyRows.length > 0 ? Math.round((nameDropCount / happyRows.length) * 100) : 0
+      const lowRows = rows.filter((r) => Number(r.gcs) <= 5)
+      const ventCount = lowRows.filter((r) => r.ventText).length
+      const ventRate =
+        lowRows.length > 0 ? Math.round((ventCount / lowRows.length) * 100) : 0
+
+      // 9. Staff tag cloud
+      const staffMap = new Map<string, { count: number; totalGcs: number }>()
+      for (const row of rows) {
+        if (!row.namedStaffMember) continue
+        const existing = staffMap.get(row.namedStaffMember) ?? { count: 0, totalGcs: 0 }
+        staffMap.set(row.namedStaffMember, {
+          count: existing.count + 1,
+          totalGcs: existing.totalGcs + Number(row.gcs),
+        })
+      }
+      const staffTagCloud = Array.from(staffMap.entries())
+        .map(([name, { count, totalGcs }]) => ({
+          name,
+          mentions: count,
+          avgGcs: Math.round((totalGcs / count) * 10) / 10,
+        }))
+        .sort((a, b) => b.mentions - a.mentions)
+
+      // 10. Vent keywords (Founder only)
+      const ventKeywords =
+        org.plan === "founder" ? extractKeywords(rows.map((r) => r.ventText)) : []
+
+      return {
+        gcsOverTime,
+        pillarAverages,
+        pillarSpotlight: {
+          strongest: strongest[0],
+          strongestScore: strongest[1],
+          weakest: weakest[0],
+          weakestScore: weakest[1],
+        },
+        gcsByMealTime,
+        submissionsPerWeek,
+        scoreDistribution,
+        engagementStats: { totalSubmissions, nameDropRate, ventRate },
+        staffTagCloud,
+        ventKeywords,
+        allowedTimeRange: effectiveRange,
+        userPlan: org.plan as "host" | "partner" | "founder",
       }
     }),
 })
