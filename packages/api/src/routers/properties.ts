@@ -715,7 +715,7 @@ export const propertiesRouter = router({
           ? Math.round(
               (withinCityRankings.reduce((s, r) => s + r.gcs, 0) / withinCityRankings.length) * 10,
             ) / 10
-          : 0
+          : null
 
       const nationalCityRankings = nationalRows.map((row, idx) => ({
         rank: idx + 1,
@@ -731,7 +731,7 @@ export const propertiesRouter = router({
         totalInCity: withinCityRankings.length,
         yourGcs,
         cityAvgGcs,
-        gapToCityAvg: yourGcs !== null ? Math.round((yourGcs - cityAvgGcs) * 10) / 10 : null,
+        gapToCityAvg: yourGcs !== null && cityAvgGcs !== null ? Math.round((yourGcs - cityAvgGcs) * 10) / 10 : null,
         withinCityRankings,
         nationalCityRankings,
         userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
