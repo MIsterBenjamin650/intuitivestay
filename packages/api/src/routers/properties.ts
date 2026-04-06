@@ -826,7 +826,8 @@ export const propertiesRouter = router({
       const allWeeks = Array.from(weekMap.entries()).sort(([a], [b]) => a.localeCompare(b))
       const recentAvg = mean(allWeeks.slice(-4).flatMap(([, v]) => v))
       const prevAvg = mean(allWeeks.slice(-8, -4).flatMap(([, v]) => v))
-      const trendDelta = allWeeks.length >= 2 ? Math.round((recentAvg - prevAvg) * 10) / 10 : null
+      const hasPrevData = allWeeks.slice(-8, -4).length > 0
+      const trendDelta = hasPrevData ? Math.round((recentAvg - prevAvg) * 10) / 10 : null
 
       // Pillar averages for strongest/weakest
       const pillars = scores
@@ -839,10 +840,15 @@ export const propertiesRouter = router({
         : null
 
       const pillarEntries = pillars ? (Object.entries(pillars) as [string, number][]) : []
+      const allZero = pillarEntries.length > 0 && pillarEntries.every(([, v]) => v === 0)
       const strongestPillar =
-        pillarEntries.length > 0 ? pillarEntries.reduce((a, b) => (b[1] > a[1] ? b : a))[0] : null
+        pillarEntries.length > 0 && !allZero
+          ? pillarEntries.reduce((a, b) => (b[1] > a[1] ? b : a))[0]
+          : null
       const weakestPillar =
-        pillarEntries.length > 0 ? pillarEntries.reduce((a, b) => (b[1] < a[1] ? b : a))[0] : null
+        pillarEntries.length > 0 && !allZero
+          ? pillarEntries.reduce((a, b) => (b[1] < a[1] ? b : a))[0]
+          : null
 
       return {
         id: prop.id,
