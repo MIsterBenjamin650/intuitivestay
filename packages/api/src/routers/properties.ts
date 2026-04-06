@@ -1,5 +1,5 @@
 import { db } from "@intuitive-stay/db"
-import { feedback, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
+import { feedback, organisations, properties, propertyScores, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
 import { and, count, desc, eq, inArray, max, sql } from "drizzle-orm"
@@ -97,27 +97,30 @@ export const propertiesRouter = router({
       .groupBy(feedback.propertyId)
       .as("last_feedback_sq")
 
-    const rows = await db
-      .select({
-        id: properties.id,
-        name: properties.name,
-        status: properties.status,
-        city: properties.city,
-        country: properties.country,
-        type: properties.type,
-        ownerName: properties.ownerName,
-        ownerEmail: properties.ownerEmail,
-        createdAt: properties.createdAt,
-        plan: organisations.plan,
-        avgGcs: propertyScores.avgGcs,
-        totalFeedback: propertyScores.totalFeedback,
-        lastFeedbackAt: lastFeedbackSq.lastFeedbackAt,
-      })
-      .from(properties)
-      .innerJoin(organisations, eq(properties.organisationId, organisations.id))
-      .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
-      .leftJoin(lastFeedbackSq, eq(lastFeedbackSq.propertyId, properties.id))
-      .orderBy(desc(properties.createdAt))
+    const [rows, [userCountRow]] = await Promise.all([
+      db
+        .select({
+          id: properties.id,
+          name: properties.name,
+          status: properties.status,
+          city: properties.city,
+          country: properties.country,
+          type: properties.type,
+          ownerName: properties.ownerName,
+          ownerEmail: properties.ownerEmail,
+          createdAt: properties.createdAt,
+          plan: organisations.plan,
+          avgGcs: propertyScores.avgGcs,
+          totalFeedback: propertyScores.totalFeedback,
+          lastFeedbackAt: lastFeedbackSq.lastFeedbackAt,
+        })
+        .from(properties)
+        .innerJoin(organisations, eq(properties.organisationId, organisations.id))
+        .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+        .leftJoin(lastFeedbackSq, eq(lastFeedbackSq.propertyId, properties.id))
+        .orderBy(desc(properties.createdAt)),
+      db.select({ total: count() }).from(user),
+    ])
 
     const totalCount = rows.length
     const approvedCount = rows.filter((r) => r.status === "approved").length
@@ -132,6 +135,16 @@ export const propertiesRouter = router({
         ? Math.round((approvedGcsValues.reduce((a, b) => a + b, 0) / approvedGcsValues.length) * 10) / 10
         : null
 
+    const hostCount = rows.filter((r) => r.plan === "host").length
+    const partnerCount = rows.filter((r) => r.plan === "partner").length
+    const founderCount = rows.filter((r) => r.plan === "founder").length
+    const platformTotalFeedback = rows.reduce((sum, r) => sum + (r.totalFeedback ?? 0), 0)
+    const pendingCount = rows.filter((r) => r.status === "pending").length
+    const inactiveCount = rows.filter(
+      (r) => r.status === "approved" && (r.totalFeedback ?? 0) === 0,
+    ).length
+    const totalUsers = userCountRow?.total ?? 0
+
     return {
       properties: rows.map((r) => ({
         ...r,
@@ -139,7 +152,18 @@ export const propertiesRouter = router({
         totalFeedback: r.totalFeedback ?? 0,
         lastFeedbackAt: r.lastFeedbackAt ?? null,
       })),
-      stats: { totalCount, approvedCount, platformAvgGcs },
+      stats: {
+        totalCount,
+        approvedCount,
+        platformAvgGcs,
+        hostCount,
+        partnerCount,
+        founderCount,
+        platformTotalFeedback,
+        pendingCount,
+        inactiveCount,
+        totalUsers,
+      },
     }
   }),
 
