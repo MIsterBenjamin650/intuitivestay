@@ -27,6 +27,10 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   advanced: {
+    crossSubdomainCookies: {
+      enabled: true,
+      domain: ".intuitivestay.com",
+    },
     defaultCookieAttributes: {
       sameSite: "none",
       secure: true,
