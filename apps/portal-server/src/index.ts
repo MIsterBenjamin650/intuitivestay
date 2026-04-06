@@ -74,15 +74,22 @@ app.post("/api/properties/register", async (c) => {
   const propertyType =
     typeof body.propertyType === "string" ? body.propertyType.trim() : undefined
 
-  const property = await registerPropertyFromWix({
-    ownerName,
-    ownerEmail,
-    propertyName,
-    propertyAddress,
-    propertyCity,
-    propertyCountry,
-    propertyType,
-  })
+  let property
+  try {
+    property = await registerPropertyFromWix({
+      ownerName,
+      ownerEmail,
+      propertyName,
+      propertyAddress,
+      propertyCity,
+      propertyCountry,
+      propertyType,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("registerPropertyFromWix error:", message)
+    return c.json({ error: message }, 500)
+  }
 
   if (!property) {
     return c.json({ error: "Failed to create property" }, 500)
