@@ -117,9 +117,14 @@ export function AdminPropertyDetail({ propertyId }: Props) {
             <CardDescription>QR Code</CardDescription>
             {qrCode ? (
               <>
-                <CardTitle className="truncate text-sm font-medium">
-                  {truncate(qrCode.feedbackUrl, 50)}
-                </CardTitle>
+                <a
+                  href={qrCode.feedbackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all text-sm font-medium text-primary underline"
+                >
+                  {qrCode.feedbackUrl}
+                </a>
                 <p className="text-xs text-muted-foreground">
                   Generated {new Date(qrCode.createdAt).toLocaleDateString()}
                 </p>
