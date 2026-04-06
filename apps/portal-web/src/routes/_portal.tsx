@@ -79,8 +79,8 @@ function RouteComponent() {
           plan={(session as { plan?: string | null } | null)?.plan ?? null}
           subscriptionStatus={(session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"}
         />
-        <SidebarInset className="overflow-x-hidden">
-          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b bg-background/90 backdrop-blur-md">
+        <SidebarInset className="overflow-x-hidden bg-[#f8fafc]">
+          <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b bg-white/90 backdrop-blur-md">
             <div className="flex w-full items-center justify-between gap-3 px-3 md:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
