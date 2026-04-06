@@ -4,6 +4,9 @@ import * as schema from "@intuitive-stay/db/schema/auth";
 import { env } from "@intuitive-stay/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { magicLink } from "better-auth/plugins";
+
+export const pendingMagicLinks = new Map<string, string>();
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -30,5 +33,13 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
-  plugins: [expo()],
+  plugins: [
+    expo(),
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        pendingMagicLinks.set(email, url);
+      },
+      expiresIn: 60 * 60 * 24, // 24 hours
+    }),
+  ],
 });

@@ -10,17 +10,23 @@ export async function sendApprovalEmail(
   ownerName: string,
   propertyName: string,
   qrPdfBuffer?: Buffer,
+  magicLinkUrl?: string,
 ) {
+  const loginSection = magicLinkUrl
+    ? `<p><a href="${magicLinkUrl}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Open My Dashboard →</a></p>
+<p style="font-size:12px;color:#64748b">This link expires in 24 hours. After that, use the Forgot Password option on the login page.</p>`
+    : `<p><a href="${env.PUBLIC_PORTAL_URL}">${env.PUBLIC_PORTAL_URL}</a></p>
+<p>If you haven't set a password yet, use the "Forgot password" option on the login page.</p>`
+
   await resend.emails.send({
     from: FROM,
     to: ownerEmail,
     subject: `Your property "${propertyName}" has been approved`,
     html: `<h1>Welcome to IntuItiveStay, ${ownerName}!</h1>
 <p>Your property <strong>${propertyName}</strong> has been approved and is now live.</p>
-<p>Log in to your portal to view your dashboard and download your QR code:</p>
-<p><a href="${env.PUBLIC_PORTAL_URL}">${env.PUBLIC_PORTAL_URL}</a></p>
-<p>Your branded QR code is attached to this email as a PDF. Print it and place it at reception, bedside tables, or dining areas.</p>
-<p>If you haven't set a password yet, use the "Forgot password" option on the login page.</p>`,
+<p>Click below to access your dashboard:</p>
+${loginSection}
+<p>Your branded QR code is attached to this email as a PDF. Print it and place it at reception, bedside tables, or dining areas.</p>`,
     attachments: qrPdfBuffer
       ? [
           {

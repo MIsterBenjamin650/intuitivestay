@@ -7,6 +7,7 @@ import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
 import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
+import { generateMagicLinkUrl } from "../lib/generate-magic-link"
 import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
 
 // ─── Insights helpers ─────────────────────────────────────────────────────────
@@ -107,6 +108,8 @@ export const propertiesRouter = router({
         where: eq(qrCodes.propertyId, property.id),
       })
 
+      const magicLinkUrl = await generateMagicLinkUrl(property.ownerEmail).catch(() => null)
+
       if (!existingQr) {
         const uniqueCode = generateUniqueCode()
         const feedbackUrl = `${env.PUBLIC_PORTAL_URL}/f/${uniqueCode}`
@@ -123,12 +126,12 @@ export const propertiesRouter = router({
         // Fire-and-forget: generate PDF then send approval email with attachment
         generateQrPdf(feedbackUrl, property.name)
           .then((pdfBuffer) =>
-            sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, pdfBuffer),
+            sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, pdfBuffer, magicLinkUrl ?? undefined),
           )
           .catch((err) => console.error("Failed to generate QR / send approval email:", err))
       } else {
         // QR already exists — just resend the approval email without regenerating
-        sendApprovalEmail(property.ownerEmail, property.ownerName, property.name).catch((err) =>
+        sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, undefined, magicLinkUrl ?? undefined).catch((err) =>
           console.error("Failed to send approval email:", err),
         )
       }
