@@ -14,7 +14,14 @@ import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
 const TIER_ORDER = ["7d", "30d", "180d", "365d"] as const
 type TimeRange = (typeof TIER_ORDER)[number]
 
-const PLAN_MAX_RANGE: Record<string, TimeRange> = {
+type Plan = "host" | "partner" | "founder"
+const VALID_PLANS = ["host", "partner", "founder"] as const
+
+function isPlan(p: string): p is Plan {
+  return (VALID_PLANS as readonly string[]).includes(p)
+}
+
+const PLAN_MAX_RANGE: Record<Plan, TimeRange> = {
   host: "7d",
   partner: "30d",
   founder: "365d",
@@ -28,7 +35,7 @@ const RANGE_DAYS: Record<TimeRange, number> = {
 }
 
 function clampTimeRange(requested: string, plan: string): TimeRange {
-  const max = PLAN_MAX_RANGE[plan] ?? "7d"
+  const max = PLAN_MAX_RANGE[plan as Plan] ?? "7d"
   const reqIdx = TIER_ORDER.indexOf(requested as TimeRange)
   const maxIdx = TIER_ORDER.indexOf(max)
   return reqIdx !== -1 && reqIdx <= maxIdx ? (requested as TimeRange) : max
@@ -36,9 +43,9 @@ function clampTimeRange(requested: string, plan: string): TimeRange {
 
 function weekStart(date: Date): string {
   const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  d.setDate(diff)
+  const day = d.getUTCDay()
+  const diff = d.getUTCDate() - day + (day === 0 ? -6 : 1)
+  d.setUTCDate(diff)
   return d.toISOString().slice(0, 10)
 }
 
@@ -621,12 +628,14 @@ export const propertiesRouter = router({
       return {
         gcsOverTime,
         pillarAverages,
-        pillarSpotlight: {
-          strongest: strongest[0],
-          strongestScore: strongest[1],
-          weakest: weakest[0],
-          weakestScore: weakest[1],
-        },
+        pillarSpotlight: totalSubmissions > 0
+          ? {
+              strongest: strongest[0],
+              strongestScore: strongest[1],
+              weakest: weakest[0],
+              weakestScore: weakest[1],
+            }
+          : null,
         gcsByMealTime,
         submissionsPerWeek,
         scoreDistribution,
@@ -634,7 +643,7 @@ export const propertiesRouter = router({
         staffTagCloud,
         ventKeywords,
         allowedTimeRange: effectiveRange,
-        userPlan: org.plan as "host" | "partner" | "founder",
+        userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
       }
     }),
 })
