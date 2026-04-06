@@ -2,7 +2,7 @@ import { db } from "@intuitive-stay/db"
 import { feedback, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, count, eq, inArray, sql } from "drizzle-orm"
+import { and, count, desc, eq, inArray, max, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
@@ -85,6 +85,63 @@ export const propertiesRouter = router({
 
       return property
     }),
+
+  getAllProperties: adminProcedure.query(async () => {
+    // Subquery: MAX(submitted_at) per property
+    const lastFeedbackSq = db
+      .select({
+        propertyId: feedback.propertyId,
+        lastFeedbackAt: max(feedback.submittedAt).as("last_feedback_at"),
+      })
+      .from(feedback)
+      .groupBy(feedback.propertyId)
+      .as("last_feedback_sq")
+
+    const rows = await db
+      .select({
+        id: properties.id,
+        name: properties.name,
+        status: properties.status,
+        city: properties.city,
+        country: properties.country,
+        type: properties.type,
+        ownerName: properties.ownerName,
+        ownerEmail: properties.ownerEmail,
+        createdAt: properties.createdAt,
+        plan: organisations.plan,
+        avgGcs: propertyScores.avgGcs,
+        totalFeedback: propertyScores.totalFeedback,
+        lastFeedbackAt: lastFeedbackSq.lastFeedbackAt,
+      })
+      .from(properties)
+      .innerJoin(organisations, eq(properties.organisationId, organisations.id))
+      .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+      .leftJoin(lastFeedbackSq, eq(lastFeedbackSq.propertyId, properties.id))
+      .orderBy(desc(properties.createdAt))
+
+    const totalCount = rows.length
+    const approvedCount = rows.filter((r) => r.status === "approved").length
+
+    const approvedGcsValues = rows
+      .filter((r) => r.status === "approved" && r.avgGcs != null)
+      .map((r) => Number(r.avgGcs))
+      .filter((n) => !isNaN(n) && n > 0)
+
+    const platformAvgGcs =
+      approvedGcsValues.length > 0
+        ? Math.round((approvedGcsValues.reduce((a, b) => a + b, 0) / approvedGcsValues.length) * 10) / 10
+        : null
+
+    return {
+      properties: rows.map((r) => ({
+        ...r,
+        avgGcs: r.avgGcs != null ? Number(r.avgGcs) : null,
+        totalFeedback: r.totalFeedback ?? 0,
+        lastFeedbackAt: r.lastFeedbackAt ?? null,
+      })),
+      stats: { totalCount, approvedCount, platformAvgGcs },
+    }
+  }),
 
   getMyProperties: protectedProcedure.query(async ({ ctx }) => {
     const org = await db.query.organisations.findFirst({
