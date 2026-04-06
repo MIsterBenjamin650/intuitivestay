@@ -167,6 +167,111 @@ export const propertiesRouter = router({
     }
   }),
 
+  getAdminPropertyDetail: adminProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ input }) => {
+      // 1. Property + org plan + scores + qr (single row)
+      const [row] = await db
+        .select({
+          id: properties.id,
+          name: properties.name,
+          status: properties.status,
+          city: properties.city,
+          country: properties.country,
+          address: properties.address,
+          type: properties.type,
+          ownerName: properties.ownerName,
+          ownerEmail: properties.ownerEmail,
+          createdAt: properties.createdAt,
+          plan: organisations.plan,
+          avgGcs: propertyScores.avgGcs,
+          avgResilience: propertyScores.avgResilience,
+          avgEmpathy: propertyScores.avgEmpathy,
+          avgAnticipation: propertyScores.avgAnticipation,
+          avgRecognition: propertyScores.avgRecognition,
+          totalFeedback: propertyScores.totalFeedback,
+          qrUniqueCode: qrCodes.uniqueCode,
+          qrFeedbackUrl: qrCodes.feedbackUrl,
+          qrCreatedAt: qrCodes.createdAt,
+        })
+        .from(properties)
+        .innerJoin(organisations, eq(properties.organisationId, organisations.id))
+        .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+        .leftJoin(qrCodes, eq(qrCodes.propertyId, properties.id))
+        .where(eq(properties.id, input.propertyId))
+
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      // 2. All feedback rows for this property (newest first)
+      const feedbackRows = await db
+        .select({
+          id: feedback.id,
+          submittedAt: feedback.submittedAt,
+          gcs: feedback.gcs,
+          resilience: feedback.resilience,
+          empathy: feedback.empathy,
+          anticipation: feedback.anticipation,
+          recognition: feedback.recognition,
+          namedStaffMember: feedback.namedStaffMember,
+          ventText: feedback.ventText,
+          source: feedback.source,
+          mealTime: feedback.mealTime,
+        })
+        .from(feedback)
+        .where(eq(feedback.propertyId, input.propertyId))
+        .orderBy(desc(feedback.submittedAt))
+
+      const hasScores = row.avgGcs != null
+
+      return {
+        property: {
+          id: row.id,
+          name: row.name,
+          status: row.status,
+          city: row.city,
+          country: row.country,
+          address: row.address,
+          type: row.type,
+          ownerName: row.ownerName,
+          ownerEmail: row.ownerEmail,
+          plan: row.plan,
+          createdAt: row.createdAt,
+        },
+        scores: hasScores
+          ? {
+              avgGcs: Number(row.avgGcs),
+              avgResilience: row.avgResilience != null ? Number(row.avgResilience) : null,
+              avgEmpathy: row.avgEmpathy != null ? Number(row.avgEmpathy) : null,
+              avgAnticipation: row.avgAnticipation != null ? Number(row.avgAnticipation) : null,
+              avgRecognition: row.avgRecognition != null ? Number(row.avgRecognition) : null,
+              totalFeedback: row.totalFeedback ?? 0,
+            }
+          : null,
+        qrCode: row.qrUniqueCode
+          ? {
+              uniqueCode: row.qrUniqueCode,
+              feedbackUrl: row.qrFeedbackUrl!,
+              createdAt: row.qrCreatedAt!,
+            }
+          : null,
+        feedback: feedbackRows.map((f) => ({
+          id: f.id,
+          submittedAt: f.submittedAt,
+          gcs: Number(f.gcs),
+          resilience: f.resilience,
+          empathy: f.empathy,
+          anticipation: f.anticipation,
+          recognition: f.recognition,
+          namedStaffMember: f.namedStaffMember,
+          ventText: f.ventText,
+          source: f.source,
+          mealTime: f.mealTime,
+        })),
+      }
+    }),
+
   getMyProperties: protectedProcedure.query(async ({ ctx }) => {
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
