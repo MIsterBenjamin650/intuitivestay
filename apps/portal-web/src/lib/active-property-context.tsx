@@ -12,11 +12,7 @@ export type PropertySummary = {
   name: string
 }
 
-const DEFAULT_PROPERTIES: PropertySummary[] = [
-  { id: "ben-hostels-london", name: "Ben Hostels London" },
-  { id: "ben-hostels-york", name: "Ben Hostels York" },
-  { id: "ben-hostels-edinburgh", name: "Ben Hostels Edinburgh" },
-]
+const DEFAULT_PROPERTIES: PropertySummary[] = []
 
 type ActivePropertyContextValue = {
   properties: PropertySummary[]
