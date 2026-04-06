@@ -12,16 +12,20 @@ import { ActivePropertyProvider } from "@/lib/active-property-context";
 import type { PropertySummary } from "@/lib/active-property-context";
 
 export const Route = createFileRoute("/_portal")({
-  beforeLoad: async () => {
-    const session = await getUser();
+  beforeLoad: async ({ location }) => {
+    const session = await getUser()
 
     if (!session) {
-      throw redirect({
-        to: "/login",
-      });
+      throw redirect({ to: "/login" })
     }
 
-    return { session };
+    const isChoosingPlan = location.pathname === "/choose-plan"
+    if (!isChoosingPlan && session.subscriptionStatus === "none") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      throw redirect({ to: "/choose-plan" as any })
+    }
+
+    return { session }
   },
   component: RouteComponent,
 });

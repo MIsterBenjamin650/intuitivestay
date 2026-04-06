@@ -10,6 +10,8 @@
   "dependencies": {
     "@intuitive-stay/api": "workspace:*",
     "@intuitive-stay/auth": "workspace:*",
+    "@intuitive-stay/db": "workspace:*",
+    "drizzle-orm": "^0.45.1",
     "@intuitive-stay/env": "workspace:*",
     "@intuitive-stay/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
