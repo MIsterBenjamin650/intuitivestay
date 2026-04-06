@@ -17,7 +17,8 @@ Row 3  — Pillar Scores Over Time chart  |  Radar/spider chart
 Row 4  — 4 pillar donut gauges
 Row 5  — Adjective Word Cloud  |  Staff Bubble Cloud
 Row 6  — Recent Feedback panel
-Row 7  — [Locked] Advanced Insights chart  |  [Locked] Local Market chart
+Row 7  — City Leaderboard (Host & Partner plans) / [Locked] for Founder plan
+Row 8  — [Locked] Advanced Insights chart  |  [Locked] Local Market chart
 ```
 
 ---
@@ -150,7 +151,49 @@ No guest names are ever displayed. All feedback is anonymous.
 
 ---
 
-## Row 7: Locked Charts
+## Row 7: City Leaderboard
+
+**Available to:** Host and Partner plans. Founder plan sees a locked/blurred version with upgrade CTA.
+
+A ranked table of all IntuItiveStay properties in the same city, ordered by GCS (highest to lowest). The current property is highlighted.
+
+### Data
+
+- Source: aggregate GCS averages across all properties where `city` matches the current property's city
+- Time window: matches the selected date range
+- Minimum data threshold: properties with fewer than 3 submissions in the period are excluded from the ranking (shown as "Insufficient data")
+- Anonymisation: other properties shown as "Property #N" (ranked position number) — only the current property shows its own name
+- The current property's row is always shown even if it has insufficient data (so the owner can see their position)
+
+### Table columns
+
+| Column | Content |
+|---|---|
+| Rank | #1, #2, #3 … |
+| Property | "Property #N" (anonymous) or own property name |
+| GCS | Average overall score for the period |
+| Resilience | Average pillar score |
+| Empathy | Average pillar score |
+| Anticipation | Average pillar score |
+| Recognition | Average pillar score |
+| Submissions | Count of feedback submissions in period |
+
+### Visual treatment
+
+- Current property row: indigo left border, light indigo background, bold text
+- Top 3 rows: gold/silver/bronze rank badge
+- GCS column: coloured chip (bronze/silver/gold threshold colouring)
+- "City: [City Name]" label above the table
+
+### Locked state (Founder plan)
+
+- Table rendered but blurred (`backdrop-blur-sm`)
+- Overlay: "See how you rank in [City Name]" + "Upgrade to Host or Partner to unlock"
+- "View Plans" CTA button
+
+---
+
+## Row 8: Locked Charts
 
 Two chart placeholders rendered with blur overlay:
 
@@ -256,6 +299,7 @@ All data comes from the existing `guestFeedback` table:
 | `property.getRecentFeedback` | Last 10 submissions with all fields |
 | `property.getAiSummary` | Latest AI daily summary for property |
 | `ai.generateDailySummary` | Admin-triggered or cron-triggered generation |
+| `property.getCityLeaderboard` | GCS ranking of all properties in same city for date range |
 
 ---
 
@@ -277,3 +321,6 @@ All data comes from the existing `guestFeedback` table:
 - Date range selector updates all charts simultaneously
 - Word cloud renders only when `adjectives` data exists
 - Staff bubble sentiment logic correctly maps score ranges to colours
+- City leaderboard visible and populated for Host/Partner plans; blurred with upgrade CTA for Founder plan
+- Own property row always highlighted in leaderboard regardless of rank
+- Other properties anonymised as "Property #N" in leaderboard
