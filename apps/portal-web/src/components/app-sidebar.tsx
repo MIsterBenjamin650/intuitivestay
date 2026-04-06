@@ -124,8 +124,9 @@ function SidebarLinkItem({
 }
 
 export function AppSidebar({
+  isAdmin = false,
   ...props
-}: React.ComponentProps<typeof Sidebar>) {
+}: React.ComponentProps<typeof Sidebar> & { isAdmin?: boolean }) {
   const location = useLocation()
   const { activePropertyId, properties } = useActiveProperty()
 
@@ -141,6 +142,42 @@ export function AppSidebar({
   const propertyQrFormPath = buildPropertyPath(activePropertyId, "qr-form")
   const propertyAlertsPath = buildPropertyPath(activePropertyId, "alerts")
   const propertyLocalMarketPath = buildPropertyPath(activePropertyId, "local-market")
+
+  if (isAdmin) {
+    return (
+      <Sidebar collapsible="icon" {...props}>
+        <SidebarHeader className="gap-0 p-0">
+          <div className="flex h-16 items-center border-b border-sidebar-border p-2">
+            <SidebarBrand />
+          </div>
+        </SidebarHeader>
+
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarLinkItem
+                  label="Dashboard"
+                  icon={<LayoutDashboardIcon />}
+                  link={<AppSidebarLink to="/" />}
+                  isActive={isRouteActive(location.pathname, "/")}
+                />
+                <SidebarLinkItem
+                  label="Approvals"
+                  icon={<ShieldCheckIcon />}
+                  link={<AppSidebarLink to="/admin/approvals" />}
+                  isActive={isRouteActive(location.pathname, "/admin/approvals")}
+                />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarRail />
+      </Sidebar>
+    )
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>
