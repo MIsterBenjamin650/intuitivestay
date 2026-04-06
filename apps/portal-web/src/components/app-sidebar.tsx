@@ -25,6 +25,7 @@ import {
   LayoutDashboardIcon,
   QrCodeIcon,
   ShieldCheckIcon,
+  UserPlusIcon,
   UsersIcon,
 } from "lucide-react"
 
@@ -120,8 +121,25 @@ export function AppSidebar({
   isAdmin = false,
   plan = null,
   subscriptionStatus = "none",
+  isStaff = false,
+  staffPermissions = null,
+  staffPropertyId = null,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { isAdmin?: boolean; plan?: string | null; subscriptionStatus?: string }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  isAdmin?: boolean
+  plan?: string | null
+  subscriptionStatus?: string
+  isStaff?: boolean
+  staffPermissions?: {
+    viewFeedback: boolean
+    viewAnalytics: boolean
+    viewAiSummary: boolean
+    viewWordCloud: boolean
+    viewStaffCloud: boolean
+    viewAlerts: boolean
+  } | null
+  staffPropertyId?: string | null
+}) {
   const location = useLocation()
   const { activePropertyId, properties } = useActiveProperty()
 
@@ -161,6 +179,64 @@ export function AppSidebar({
                   link={<AppSidebarLink to="/admin/approvals" />}
                   isActive={isRouteActive(location.pathname, "/admin/approvals")}
                 />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarRail />
+      </Sidebar>
+    )
+  }
+
+  // Staff sidebar
+  if (isStaff && staffPropertyId) {
+    const staffPropertyParams = { propertyId: staffPropertyId }
+    const staffDashboardPath = buildPropertyPath(staffPropertyId, "dashboard")
+    const staffFeedbackPath = buildPropertyPath(staffPropertyId, "feedback")
+    return (
+      <Sidebar
+        collapsible="icon"
+        className="[background:linear-gradient(180deg,#1e1b4b_0%,#312e81_100%)] border-r-0"
+        {...props}
+      >
+        <SidebarHeader className="gap-0 p-0">
+          <div className="flex h-16 items-center border-b border-sidebar-border p-2">
+            <SidebarBrand />
+          </div>
+        </SidebarHeader>
+
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">
+              My Property
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarLinkItem
+                  label="Dashboard"
+                  icon={<LayoutDashboardIcon />}
+                  link={
+                    <AppSidebarLink
+                      to="/properties/$propertyId/dashboard"
+                      params={staffPropertyParams}
+                    />
+                  }
+                  isActive={isRouteActive(location.pathname, staffDashboardPath)}
+                />
+                {staffPermissions?.viewFeedback && (
+                  <SidebarLinkItem
+                    label="Feedback"
+                    icon={<UsersIcon />}
+                    link={
+                      <AppSidebarLink
+                        to="/properties/$propertyId/feedback"
+                        params={staffPropertyParams}
+                      />
+                    }
+                    isActive={isRouteActive(location.pathname, staffFeedbackPath)}
+                  />
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -247,6 +323,17 @@ export function AppSidebar({
                       />
                     }
                     isActive={isRouteActive(location.pathname, propertyQrFormPath)}
+                  />
+                  <SidebarLinkItem
+                    label="Team"
+                    icon={<UserPlusIcon />}
+                    link={
+                      <AppSidebarLink
+                        to="/properties/$propertyId/team"
+                        params={propertyParams}
+                      />
+                    }
+                    isActive={isRouteActive(location.pathname, buildPropertyPath(activePropertyId, "team"))}
                   />
                 </SidebarMenu>
               </SidebarGroupContent>

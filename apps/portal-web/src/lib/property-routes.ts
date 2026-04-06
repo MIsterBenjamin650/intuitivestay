@@ -6,6 +6,7 @@ export type PropertyRouteKey =
   | "advanced-insights"
   | "qr-form"
   | "local-market"
+  | "team"
 
 const PROPERTY_ROUTE_TEMPLATES: Record<PropertyRouteKey, string> = {
   dashboard: "/properties/:propertyId/dashboard",
@@ -15,6 +16,7 @@ const PROPERTY_ROUTE_TEMPLATES: Record<PropertyRouteKey, string> = {
   "advanced-insights": "/properties/:propertyId/advanced-insights",
   "qr-form": "/properties/:propertyId/qr-form",
   "local-market": "/properties/:propertyId/local-market",
+  team: "/properties/:propertyId/team",
 }
 
 export function buildPropertyPath(propertyId: string, page: PropertyRouteKey) {

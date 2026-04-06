@@ -71,7 +71,16 @@ function RouteComponent() {
   const { session } = Route.useRouteContext();
   const sessionProperties = resolveSessionProperties(session);
   const isStaff = (session as { isStaff?: boolean } | null)?.isStaff === true
-  const staffPermissions = (session as { staffPermissions?: Record<string, boolean> | null } | null)?.staffPermissions ?? null
+  const staffPermissions = (session as {
+    staffPermissions?: {
+      viewFeedback: boolean
+      viewAnalytics: boolean
+      viewAiSummary: boolean
+      viewWordCloud: boolean
+      viewStaffCloud: boolean
+      viewAlerts: boolean
+    } | null
+  } | null)?.staffPermissions ?? null
 
   return (
     <SidebarProvider>
@@ -82,6 +91,7 @@ function RouteComponent() {
           subscriptionStatus={(session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"}
           isStaff={isStaff}
           staffPermissions={staffPermissions}
+          staffPropertyId={(session as { staffPropertyId?: string | null } | null)?.staffPropertyId ?? null}
         />
         <SidebarInset className="overflow-x-hidden bg-[#f8fafc]">
           <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b bg-white/90 backdrop-blur-md">
