@@ -29,9 +29,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         },
         {
           onSuccess: () => {
-            navigate({
-              to: "/",
-            });
+            window.location.href = "/";
             toast.success("Sign in successful");
           },
           onError: (error) => {

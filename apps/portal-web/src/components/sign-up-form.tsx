@@ -31,9 +31,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onSuccess: () => {
-            navigate({
-              to: "/",
-            });
+            window.location.href = "/";
             toast.success("Sign up successful");
           },
           onError: (error) => {
