@@ -18,6 +18,8 @@ import {
   YAxis,
 } from "recharts"
 
+import { env } from "@intuitive-stay/env/web"
+
 import { useTRPC } from "@/utils/trpc"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -125,6 +127,7 @@ export function PropertyInsights({ propertyId }: Props) {
   )
 
   const plan: Plan = (data?.userPlan as Plan) ?? "host"
+  const subscriptionStatus = data?.subscriptionStatus
 
   if (isLoading) {
     return <div className="p-6 text-sm text-muted-foreground">Loading insights…</div>
@@ -172,6 +175,45 @@ export function PropertyInsights({ propertyId }: Props) {
         })}
         <span className="text-[9px] text-slate-400 ml-1">🔒 = higher plan required</span>
       </div>
+
+      {/* Subscription status banners */}
+      {subscriptionStatus === "grace" && (
+        <div className="flex items-center justify-between rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-orange-700">⚠️ Payment failed</p>
+            <p className="text-xs text-orange-600 mt-0.5">
+              You have 3 days to update your payment details before access is restricted.
+            </p>
+          </div>
+          <a
+            href={env.VITE_WIX_BILLING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-4 shrink-0 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600"
+          >
+            Update payment →
+          </a>
+        </div>
+      )}
+
+      {subscriptionStatus === "expired" && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-red-700">Your subscription has ended</p>
+            <p className="text-xs text-red-600 mt-0.5">
+              You&apos;re on restricted access. Reactivate to restore your full dashboard.
+            </p>
+          </div>
+          <a
+            href={env.VITE_WIX_BILLING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-4 shrink-0 rounded-lg bg-indigo-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-600"
+          >
+            Reactivate →
+          </a>
+        </div>
+      )}
 
       {/* ── GCS Over Time ── */}
       <div>
@@ -400,9 +442,7 @@ export function PropertyInsights({ propertyId }: Props) {
       {/* ── Staff Tag Cloud ── */}
       <div>
         <SectionLabel>Staff Recognition — Name Drop™</SectionLabel>
-        {plan === "host" ? (
-          <LockedCard requiredPlan="Partner" />
-        ) : data.staffTagCloud.length === 0 ? (
+        {data.staffTagCloud.length === 0 ? (
           <ChartCard>
             <p className="text-sm text-muted-foreground text-center py-4">
               No staff mentions yet in this period.
