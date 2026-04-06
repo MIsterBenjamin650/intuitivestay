@@ -92,3 +92,28 @@ export async function sendAlertEmail(
 <p><a href="${env.PUBLIC_PORTAL_URL}">${env.PUBLIC_PORTAL_URL}</a></p>`,
   })
 }
+
+export async function sendDailySummaryEmail(
+  ownerEmail: string,
+  propertyName: string,
+  date: string,
+  narrative: string,
+  focus: Array<{ pillar: string; action: string }>,
+  portalUrl: string,
+) {
+  const focusHtml = focus
+    .map((f) => `<li><strong>${f.pillar}:</strong> ${f.action}</li>`)
+    .join("")
+
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `Your Daily Guest Care Summary — ${date}`,
+    html: `<h2>Daily Guest Care Summary</h2>
+<p><strong>${propertyName}</strong> · ${date}</p>
+<p>${narrative}</p>
+<h3>Today's Focus</h3>
+<ul>${focusHtml}</ul>
+<p><a href="${portalUrl}">View your full dashboard →</a></p>`,
+  })
+}

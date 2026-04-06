@@ -1,4 +1,5 @@
 import { protectedProcedure, publicProcedure, router } from "../index"
+import { aiRouter } from "./ai"
 import { feedbackRouter } from "./feedback"
 import { propertiesRouter } from "./properties"
 
@@ -14,6 +15,7 @@ export const appRouter = router({
   }),
   properties: propertiesRouter,
   feedback: feedbackRouter,
+  ai: aiRouter,
 })
 
 export type AppRouter = typeof appRouter
