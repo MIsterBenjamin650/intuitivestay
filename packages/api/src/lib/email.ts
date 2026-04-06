@@ -3,7 +3,7 @@ import { Resend } from "resend"
 
 const resend = new Resend(env.RESEND_API_KEY)
 
-const FROM = "IntuItiveStay <onboarding@intuitivestay.com>"
+const FROM = "IntuItiveStay <noreply@mail.intuitivestay.com>"
 
 export async function sendApprovalEmail(
   ownerEmail: string,
