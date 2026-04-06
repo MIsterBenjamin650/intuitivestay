@@ -1,15 +1,16 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@intuitive-stay/ui/components/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@intuitive-stay/ui/components/card"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useRouteContext } from "@tanstack/react-router"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
+import { AdminDashboard } from "@/components/admin-dashboard"
 import { useTRPC } from "@/utils/trpc"
 
 export const Route = createFileRoute("/_portal/")({
   component: RouteComponent,
 })
 
-function RouteComponent() {
+function PortfolioDashboard() {
   const trpc = useTRPC()
   const { data, isLoading } = useQuery(trpc.properties.getPortfolioDashboard.queryOptions())
 
@@ -45,9 +46,6 @@ function RouteComponent() {
             Cross-property satisfaction health, trends, and priority actions.
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Main dashboard aggregates all properties. Drill into each property from the sidebar.
-        </CardContent>
       </Card>
 
       <div className="mt-2 rounded-lg border p-4">
@@ -72,4 +70,12 @@ function RouteComponent() {
       </div>
     </div>
   )
+}
+
+function RouteComponent() {
+  const { session } = useRouteContext({ from: "/_portal" })
+  const isAdmin = (session as { isAdmin?: boolean } | null)?.isAdmin === true
+
+  if (isAdmin) return <AdminDashboard />
+  return <PortfolioDashboard />
 }
