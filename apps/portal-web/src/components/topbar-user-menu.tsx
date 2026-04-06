@@ -14,8 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@intuitive-stay/ui/components/dropdown-menu"
 import { Skeleton } from "@intuitive-stay/ui/components/skeleton"
-import { useNavigate } from "@tanstack/react-router"
-import { LogOutIcon, SettingsIcon } from "lucide-react"
+import { Link, useNavigate } from "@tanstack/react-router"
+import { CreditCardIcon, LogOutIcon, SettingsIcon } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
 
@@ -95,24 +95,29 @@ export function TopbarUserMenu() {
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={(event) => event.preventDefault()}>
             <SettingsIcon />
-            Settings
+            Account Details
           </DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/organisation/billing" />}>
+            <CreditCardIcon />
+            Plans & Billing
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    navigate({
-                      to: "/login",
-                    })
+                    navigate({ to: "/login" })
                   },
                 },
               })
             }}
           >
             <LogOutIcon />
-            Logout
+            Sign Out
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
