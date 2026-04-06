@@ -12,7 +12,7 @@ import Loader from "./loader";
 
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const navigate = useNavigate({
-    from: "/",
+    from: "/login",
   });
   const { isPending } = authClient.useSession();
 

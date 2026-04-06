@@ -19,8 +19,9 @@ export const Route = createFileRoute("/_portal")({
       throw redirect({ to: "/login" })
     }
 
+    const isAdmin = (session as { isAdmin?: boolean })?.isAdmin === true
     const isChoosingPlan = location.pathname === "/choose-plan"
-    if (!isChoosingPlan && session.subscriptionStatus === "none") {
+    if (!isAdmin && !isChoosingPlan && session.subscriptionStatus === "none") {
       throw redirect({ to: "/choose-plan" })
     }
 
