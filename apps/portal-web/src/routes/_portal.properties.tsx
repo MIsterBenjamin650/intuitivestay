@@ -418,9 +418,12 @@ function RouteComponent() {
           </Button>
         ),
         cell: ({ row }) => (
-          <Link to="/properties/$propertyId/dashboard" params={{ propertyId: row.original.id }}>
-            <span className="font-medium hover:underline">{row.original.name}</span>
-          </Link>
+          <a
+            href={`/properties/${row.original.id}/dashboard`}
+            className="font-medium hover:underline"
+          >
+            {row.original.name}
+          </a>
         ),
       },
       {
