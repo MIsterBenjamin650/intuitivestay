@@ -9,4 +9,9 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  ssr: {
+    // These workspace packages use subpath imports that Vite's SSR bundler
+    // cannot resolve at build time — load them as native Node.js modules instead.
+    external: ["@intuitive-stay/auth", "@intuitive-stay/api", "@intuitive-stay/db"],
+  },
 });
