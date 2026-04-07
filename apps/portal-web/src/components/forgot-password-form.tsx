@@ -14,7 +14,7 @@ export default function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
       await authClient.requestPasswordReset(
         {
           email: value.email,
-          redirectTo: "/reset-password",
+          redirectTo: `${window.location.origin}/reset-password`,
         },
         {
           onSuccess: () => {
