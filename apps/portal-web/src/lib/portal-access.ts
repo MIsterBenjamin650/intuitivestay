@@ -1,4 +1,4 @@
-export type PlanTier = "host" | "partner" | "founder"
+export type PlanTier = "member" | "host" | "partner" | "founder"
 
 export type PortalPermission =
   | "view_dashboard"
@@ -27,6 +27,7 @@ export type LockedFeatureKey =
   | "local-market"
 
 const PLAN_WEIGHT: Record<PlanTier, number> = {
+  member: 1,
   host: 1,
   partner: 2,
   founder: 3,
@@ -78,6 +79,10 @@ function normalizePlan(plan: unknown): PlanTier {
 
   if (normalized.includes("partner") || normalized.includes("growth")) {
     return "partner"
+  }
+
+  if (normalized === "member") {
+    return "member"
   }
 
   // "host" is the default — also covers legacy "essentialist" values

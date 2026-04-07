@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IntuItiveStay — Dashboard v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
+
+/* ── SIDEBAR ── */
+.sidebar { width: 210px; flex-shrink: 0; background: linear-gradient(180deg,#1e1b4b 0%,#312e81 100%); display: flex; flex-direction: column; padding: 0 0 20px; }
+.sb-brand { padding: 16px 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15px; font-weight: 700; color: white; letter-spacing: -0.4px; }
+.sb-switcher { margin: 12px 10px 4px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.sb-avatar { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+.sb-name { font-size: 12px; font-weight: 600; color: white; }
+.sb-sublabel { font-size: 10px; color: rgba(255,255,255,0.4); }
+.sb-chevron { margin-left: auto; color: rgba(255,255,255,0.35); }
+.sb-section { margin-top: 16px; padding: 0 10px; }
+.sb-section-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); padding: 0 8px; margin-bottom: 4px; }
+.sb-item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.6); margin-bottom: 1px; cursor: pointer; position: relative; }
+.sb-item:hover { background: rgba(255,255,255,0.07); }
+.sb-item.active { background: rgba(255,255,255,0.12); color: white; font-weight: 600; }
+.sb-item.active::before { content:''; position:absolute; left:0; top:5px; bottom:5px; width:3px; border-radius:0 3px 3px 0; background:#a5b4fc; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── TOPBAR ── */
+.topbar { height: 54px; background: white; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 20px; gap: 10px; position: relative; }
+.topbar-title { font-size: 15px; font-weight: 700; color: #0f172a; flex: 1; }
+.date-range { display: flex; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; overflow: hidden; }
+.dr-tab { padding: 5px 12px; font-size: 11px; font-weight: 500; color: #64748b; cursor: pointer; }
+.dr-tab.active { background: white; color: #6366f1; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.alert-bell { position: relative; width: 36px; height: 36px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.alert-badge { position: absolute; top: -5px; right: -5px; background: #f97316; color: white; font-size: 9px; font-weight: 800; min-width: 17px; height: 17px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 2px solid white; }
+.user-area { position: relative; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; cursor: pointer; }
+.dropdown { position: absolute; top: 44px; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; width: 220px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 100; }
+.dd-head { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px; }
+.dd-av { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+.dd-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+.dd-email { font-size: 11px; color: #94a3b8; }
+.dd-item { display: flex; align-items: center; gap: 9px; padding: 8px; border-radius: 7px; font-size: 12.5px; color: #334155; cursor: pointer; }
+.dd-item:hover { background: #f8fafc; }
+.dd-plan { margin-left: auto; background: linear-gradient(90deg,#6366f1,#8b5cf6); color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.dd-divider { height: 1px; background: #f1f5f9; margin: 5px 0; }
+.dd-item.danger { color: #dc2626; }
+.alert-panel { position: absolute; top: 54px; right: 56px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 100; overflow: hidden; }
+.ap-head { padding: 12px 16px; background: #fff7ed; border-bottom: 1px solid #fed7aa; font-size: 13px; font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 7px; }
+.ap-item { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+.ap-item:last-child { border-bottom: none; }
+.ap-prop { font-size: 12px; font-weight: 600; color: #0f172a; }
+.ap-detail { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.ap-score { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.ap-score.red { background: #fef2f2; color: #dc2626; }
+.ap-score.orange { background: #fff7ed; color: #f97316; }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.card-pad { padding: 18px 20px; }
+.card-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+.card-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+/* TOP ROW */
+.top-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mini-stat { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.mini-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mini-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 2px; }
+.mini-value { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+.mini-trend { font-size: 10px; font-weight: 600; margin-top: 3px; }
+.trend-up { color: #10b981; }
+.trend-down { color: #ef4444; }
+
+/* MIDDLE ROW */
+.mid-row { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
+.gauge-card { padding: 18px; display: flex; flex-direction: column; align-items: center; }
+.gauge-wrap { position: relative; width: 160px; height: 160px; margin: 0 auto 12px; }
+.gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.gauge-score { font-size: 38px; font-weight: 800; color: #0f172a; letter-spacing: -2px; line-height: 1; }
+.gauge-max { font-size: 13px; font-weight: 500; color: #94a3b8; }
+.gauge-label { font-size: 10px; font-weight: 700; color: #6366f1; margin-top: 3px; letter-spacing: 0.06em; text-transform: uppercase; }
+.pillar-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.pillar-row { display: flex; align-items: center; gap: 8px; }
+.pillar-name { font-size: 11px; font-weight: 600; color: #475569; width: 82px; flex-shrink: 0; }
+.pillar-track { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.pillar-fill { height: 100%; border-radius: 3px; }
+.pillar-val { font-size: 12px; font-weight: 700; width: 26px; text-align: right; flex-shrink: 0; }
+
+.trend-card { padding: 18px 20px; }
+
+/* BOTTOM ROW: feedback + staff cloud */
+.bot-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Feedback items — no names, pillar scores + staff + vent */
+.fb-list { display: flex; flex-direction: column; }
+.fb-item { padding: 11px 0; border-bottom: 1px solid #f1f5f9; }
+.fb-item:last-child { border-bottom: none; }
+.fb-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.fb-time-icon { font-size: 11px; }
+.fb-time { font-size: 10px; color: #94a3b8; font-weight: 500; }
+.fb-gcs { margin-left: auto; font-size: 12px; font-weight: 800; }
+.fb-pillars { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px; }
+.fb-pill { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px; display: flex; align-items: center; gap: 3px; }
+.fb-staff { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+.fb-staff-label { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.fb-staff-tag { font-size: 10px; font-weight: 600; background: #ede9fe; color: #6d28d9; padding: 2px 7px; border-radius: 5px; }
+.fb-vent { font-size: 11px; color: #475569; background: #fef9ec; border-left: 3px solid #f59e0b; padding: 5px 8px; border-radius: 0 5px 5px 0; font-style: italic; }
+
+/* Staff Tag Cloud */
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 4px 0; }
+.staff-tag { border-radius: 20px; font-weight: 700; cursor: pointer; transition: transform 0.1s; display: inline-flex; align-items: center; gap: 4px; }
+.staff-tag:hover { transform: scale(1.05); }
+.staff-tag.pos { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.staff-tag.neg { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.staff-tag.neu { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.tag-dot { width: 6px; height: 6px; border-radius: 50%; }
+.cloud-legend { display: flex; gap: 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #64748b; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-brand">Intuitive Stay</div>
+  <div class="sb-switcher">
+    <div class="sb-avatar">M</div>
+    <div><div class="sb-name">Mcdonalds</div><div class="sb-sublabel">Current property</div></div>
+    <div class="sb-chevron">⌄</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-section-label">My Property</div>
+    <div class="sb-item active">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Feedback
+    </div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      QR Codes
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-section-label">Organisation</div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Team
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Dashboard — Mcdonalds</div>
+    <div class="date-range">
+      <div class="dr-tab">7 days</div>
+      <div class="dr-tab active">30 days</div>
+      <div class="dr-tab">6 months</div>
+    </div>
+    <div class="alert-bell" onclick="togglePanel('alertPanel','userDropdown')">
+      <svg width="16" height="16" fill="none" stroke="#f97316" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="alert-badge">3</div>
+    </div>
+    <div class="user-area">
+      <div class="user-avatar" onclick="togglePanel('userDropdown','alertPanel')">DS</div>
+      <div class="dropdown" id="userDropdown" style="display:none">
+        <div class="dd-head">
+          <div class="dd-av">DS</div>
+          <div><div class="dd-name">Derek Smith</div><div class="dd-email">derek@mcdonalds.com</div></div>
+        </div>
+        <div class="dd-item"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Account Details</div>
+        <div class="dd-item"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Plans &amp; Billing <span class="dd-plan">Host</span></div>
+        <div class="dd-divider"></div>
+        <div class="dd-item danger"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</div>
+      </div>
+    </div>
+    <div class="alert-panel" id="alertPanel" style="display:none">
+      <div class="ap-head"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> 3 Active Alerts</div>
+      <div class="ap-item"><div class="ap-prop">Mcdonalds <span class="ap-score red">GCS 4.2</span></div><div class="ap-detail">Resilience pillar below threshold · 2h ago</div></div>
+      <div class="ap-item"><div class="ap-prop">Mcdonalds <span class="ap-score red">GCS 3.8</span></div><div class="ap-detail">Empathy pillar below threshold · 5h ago</div></div>
+      <div class="ap-item"><div class="ap-prop">Mcdonalds <span class="ap-score orange">GCS 4.9</span></div><div class="ap-detail">Recognition below threshold · Yesterday</div></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TOP ROW -->
+    <div class="top-row">
+      <div class="card mini-stat">
+        <div class="mini-icon" style="background:#ede9fe"><svg width="18" height="18" fill="none" stroke="#8b5cf6" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div><div class="mini-label">Total Feedback</div><div class="mini-value" style="color:#8b5cf6">25</div><div class="mini-trend trend-up">↑ 8 this month</div></div>
+      </div>
+      <div class="card mini-stat">
+        <div class="mini-icon" style="background:#ccfbf1"><svg width="18" height="18" fill="none" stroke="#14b8a6" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div><div class="mini-label">Response Rate</div><div class="mini-value" style="color:#14b8a6">68%</div><div class="mini-trend trend-up">↑ 4% vs last month</div></div>
+      </div>
+      <div class="card mini-stat">
+        <div class="mini-icon" style="background:#fff7ed"><svg width="18" height="18" fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div><div class="mini-label">Open Alerts</div><div class="mini-value" style="color:#f97316">3</div><div class="mini-trend trend-down">↓ Needs attention</div></div>
+      </div>
+    </div>
+
+    <!-- MIDDLE ROW: GCS Gauge + Trend -->
+    <div class="mid-row">
+      <div class="card gauge-card">
+        <div class="card-title" style="text-align:center">Guest Comfort Score</div>
+        <div class="card-sub" style="text-align:center;margin-bottom:14px">Last 30 days</div>
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 160 160" width="160" height="160">
+            <circle cx="80" cy="80" r="64" fill="none" stroke="#f1f5f9" stroke-width="13"/>
+            <circle cx="80" cy="80" r="64" fill="none" stroke="#6366f1" stroke-width="13"
+              stroke-dasharray="293 109" stroke-linecap="round" transform="rotate(-90 80 80)"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-score">7.3</div>
+            <div class="gauge-max">/ 10</div>
+            <div class="gauge-label">GCS</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-bottom:14px">
+          <span style="color:#10b981;font-weight:700;font-size:12px">↑ +0.4</span>
+          <span style="color:#94a3b8;font-size:11px"> vs previous period</span>
+        </div>
+        <div class="pillar-list">
+          <div class="pillar-row">
+            <div class="pillar-name">Resilience</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:73%;background:#6366f1"></div></div>
+            <div class="pillar-val" style="color:#6366f1">7.3</div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-name">Empathy</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:81%;background:#14b8a6"></div></div>
+            <div class="pillar-val" style="color:#14b8a6">8.1</div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-name">Anticipation</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:68%;background:#8b5cf6"></div></div>
+            <div class="pillar-val" style="color:#8b5cf6">6.8</div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-name">Recognition</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:76%;background:#f97316"></div></div>
+            <div class="pillar-val" style="color:#f97316">7.6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trend + Score Distribution -->
+      <div class="card trend-card">
+        <div class="card-title">Score Over Time</div>
+        <div class="card-sub" style="margin-bottom:14px">Monthly average GCS</div>
+        <svg viewBox="0 0 460 155" width="100%" height="155" preserveAspectRatio="none" style="display:block">
+          <defs>
+            <linearGradient id="tf" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6366f1" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="31" x2="460" y2="31" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="0" y1="62" x2="460" y2="62" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="0" y1="93" x2="460" y2="93" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="0" y1="124" x2="460" y2="124" stroke="#f1f5f9" stroke-width="1"/>
+          <text x="3" y="29" font-size="8" fill="#94a3b8" font-family="Inter">10</text>
+          <text x="3" y="60" font-size="8" fill="#94a3b8" font-family="Inter">7.5</text>
+          <text x="3" y="91" font-size="8" fill="#94a3b8" font-family="Inter">5</text>
+          <text x="3" y="122" font-size="8" fill="#94a3b8" font-family="Inter">2.5</text>
+          <polygon points="28,155 28,65 108,58 188,50 268,45 348,48 428,40 428,155" fill="url(#tf)"/>
+          <polyline points="28,65 108,58 188,50 268,45 348,48 428,40" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="28"  cy="65" r="3.5" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="108" cy="58" r="3.5" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="188" cy="50" r="3.5" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="268" cy="45" r="3.5" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="348" cy="48" r="3.5" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="428" cy="40" r="3.5" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+          <text x="28"  y="150" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="Inter">Sep</text>
+          <text x="108" y="150" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="Inter">Oct</text>
+          <text x="188" y="150" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="Inter">Nov</text>
+          <text x="268" y="150" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="Inter">Dec</text>
+          <text x="348" y="150" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="Inter">Jan</text>
+          <text x="428" y="150" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="Inter">Mar</text>
+        </svg>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9">
+          <div style="font-size:10px;font-weight:700;color:#475569;margin-bottom:9px;text-transform:uppercase;letter-spacing:0.05em">Score Distribution</div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;color:#94a3b8;width:30px">9–10</div><div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:16%;height:100%;background:#10b981;border-radius:3px"></div></div><div style="font-size:10px;font-weight:600;color:#0f172a;width:16px">4</div></div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;color:#94a3b8;width:30px">7–8</div><div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:52%;height:100%;background:#6366f1;border-radius:3px"></div></div><div style="font-size:10px;font-weight:600;color:#0f172a;width:16px">13</div></div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;color:#94a3b8;width:30px">5–6</div><div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:28%;height:100%;background:#f59e0b;border-radius:3px"></div></div><div style="font-size:10px;font-weight:600;color:#0f172a;width:16px">7</div></div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;color:#94a3b8;width:30px">&lt; 5</div><div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="width:4%;height:100%;background:#ef4444;border-radius:3px"></div></div><div style="font-size:10px;font-weight:600;color:#0f172a;width:16px">1</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: Recent Feedback + Staff Tag Cloud -->
+    <div class="bot-row">
+
+      <!-- Recent Feedback — anonymous, pillar scores, staff mentions, vent -->
+      <div class="card card-pad">
+        <div class="card-title">Recent Feedback</div>
+        <div class="card-sub" style="margin-bottom:10px">Anonymous · pillar scores · staff mentions · visit time</div>
+        <div class="fb-list">
+
+          <!-- Entry 1: high score, staff mention, no vent -->
+          <div class="fb-item">
+            <div class="fb-meta">
+              <span class="fb-time-icon">☀️</span>
+              <span class="fb-time">Afternoon visit · Today 2:14pm</span>
+              <div class="fb-gcs" style="color:#10b981">GCS 8.8</div>
+            </div>
+            <div class="fb-pillars">
+              <span class="fb-pill" style="background:#e0e7ff;color:#4338ca">R <strong>9</strong></span>
+              <span class="fb-pill" style="background:#ccfbf1;color:#0f766e">E <strong>9</strong></span>
+              <span class="fb-pill" style="background:#ede9fe;color:#6d28d9">A <strong>8</strong></span>
+              <span class="fb-pill" style="background:#fff7ed;color:#c2410c">Rec <strong>9</strong></span>
+            </div>
+            <div class="fb-staff">
+              <span class="fb-staff-label">Staff</span>
+              <span class="fb-staff-tag">@Maria</span>
+              <span class="fb-staff-tag">@John</span>
+            </div>
+          </div>
+
+          <!-- Entry 2: low score, vent box, staff mention -->
+          <div class="fb-item">
+            <div class="fb-meta">
+              <span class="fb-time-icon">🌙</span>
+              <span class="fb-time">Evening visit · Today 8:45pm</span>
+              <div class="fb-gcs" style="color:#ef4444">GCS 4.0</div>
+            </div>
+            <div class="fb-pillars">
+              <span class="fb-pill" style="background:#fef2f2;color:#dc2626">R <strong>3</strong></span>
+              <span class="fb-pill" style="background:#fef2f2;color:#dc2626">E <strong>4</strong></span>
+              <span class="fb-pill" style="background:#fff7ed;color:#c2410c">A <strong>5</strong></span>
+              <span class="fb-pill" style="background:#fef2f2;color:#dc2626">Rec <strong>4</strong></span>
+            </div>
+            <div class="fb-staff">
+              <span class="fb-staff-label">Staff</span>
+              <span class="fb-staff-tag">@Dave</span>
+            </div>
+            <div class="fb-vent">"Waited 25 minutes to be acknowledged. Staff seemed disorganised during the rush."</div>
+          </div>
+
+          <!-- Entry 3: mid score, no staff, no vent -->
+          <div class="fb-item">
+            <div class="fb-meta">
+              <span class="fb-time-icon">🌅</span>
+              <span class="fb-time">Morning visit · Yesterday 9:10am</span>
+              <div class="fb-gcs" style="color:#6366f1">GCS 7.3</div>
+            </div>
+            <div class="fb-pillars">
+              <span class="fb-pill" style="background:#e0e7ff;color:#4338ca">R <strong>7</strong></span>
+              <span class="fb-pill" style="background:#ccfbf1;color:#0f766e">E <strong>8</strong></span>
+              <span class="fb-pill" style="background:#ede9fe;color:#6d28d9">A <strong>7</strong></span>
+              <span class="fb-pill" style="background:#fff7ed;color:#c2410c">Rec <strong>7</strong></span>
+            </div>
+          </div>
+
+          <!-- Entry 4: high score, staff, vent -->
+          <div class="fb-item">
+            <div class="fb-meta">
+              <span class="fb-time-icon">☀️</span>
+              <span class="fb-time">Afternoon visit · Yesterday 1:30pm</span>
+              <div class="fb-gcs" style="color:#10b981">GCS 9.5</div>
+            </div>
+            <div class="fb-pillars">
+              <span class="fb-pill" style="background:#e0e7ff;color:#4338ca">R <strong>10</strong></span>
+              <span class="fb-pill" style="background:#ccfbf1;color:#0f766e">E <strong>9</strong></span>
+              <span class="fb-pill" style="background:#ede9fe;color:#6d28d9">A <strong>9</strong></span>
+              <span class="fb-pill" style="background:#fff7ed;color:#c2410c">Rec <strong>10</strong></span>
+            </div>
+            <div class="fb-staff">
+              <span class="fb-staff-label">Staff</span>
+              <span class="fb-staff-tag">@Maria</span>
+            </div>
+            <div class="fb-vent">"Maria went above and beyond — remembered my usual order without being asked."</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Staff Tag Cloud -->
+      <div class="card card-pad">
+        <div class="card-title">Staff Tag Cloud</div>
+        <div class="card-sub" style="margin-bottom:16px">Mentioned in guest feedback · sized by frequency · coloured by sentiment</div>
+        <div class="tag-cloud">
+          <!-- Size = font-size, colour = sentiment -->
+          <span class="staff-tag pos" style="font-size:22px;padding:6px 16px"><span class="tag-dot" style="background:#10b981"></span>Maria</span>
+          <span class="staff-tag neg" style="font-size:17px;padding:5px 13px"><span class="tag-dot" style="background:#ef4444"></span>Dave</span>
+          <span class="staff-tag pos" style="font-size:14px;padding:4px 11px"><span class="tag-dot" style="background:#10b981"></span>John</span>
+          <span class="staff-tag pos" style="font-size:19px;padding:5px 14px"><span class="tag-dot" style="background:#10b981"></span>Priya</span>
+          <span class="staff-tag neu" style="font-size:13px;padding:4px 10px"><span class="tag-dot" style="background:#94a3b8"></span>Kyle</span>
+          <span class="staff-tag neg" style="font-size:15px;padding:4px 12px"><span class="tag-dot" style="background:#ef4444"></span>Tom</span>
+          <span class="staff-tag pos" style="font-size:12px;padding:3px 10px"><span class="tag-dot" style="background:#10b981"></span>Aisha</span>
+          <span class="staff-tag neu" style="font-size:16px;padding:5px 13px"><span class="tag-dot" style="background:#94a3b8"></span>Ben</span>
+          <span class="staff-tag pos" style="font-size:13px;padding:4px 10px"><span class="tag-dot" style="background:#10b981"></span>Sophie</span>
+          <span class="staff-tag neg" style="font-size:12px;padding:3px 10px"><span class="tag-dot" style="background:#ef4444"></span>Liam</span>
+        </div>
+        <div class="cloud-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Positive mentions</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Negative mentions</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div> Mixed / neutral</div>
+          <div class="legend-item" style="color:#94a3b8">Size = frequency</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePanel(show, hide) {
+  var s = document.getElementById(show), h = document.getElementById(hide);
+  if (h) h.style.display = 'none';
+  s.style.display = s.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.user-area') && !e.target.closest('.alert-bell') && !e.target.closest('.alert-panel')) {
+    document.getElementById('userDropdown').style.display = 'none';
+    document.getElementById('alertPanel').style.display = 'none';
+  }
+});
+document.querySelectorAll('.dr-tab').forEach(t => {
+  t.addEventListener('click', function() {
+    document.querySelectorAll('.dr-tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

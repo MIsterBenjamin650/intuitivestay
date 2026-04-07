@@ -5,13 +5,13 @@
       "name": "portal-web",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@intuitive-stay/portal-web", "dev"],
-      "port": 5173
+      "port": 5174
     },
     {
       "name": "portal-server",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@intuitive-stay/portal-server", "dev"],
-      "port": 5174
+      "port": 5173
     }
   ]
 }

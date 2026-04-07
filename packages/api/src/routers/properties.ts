@@ -15,14 +15,15 @@ import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
 const TIER_ORDER = ["7d", "30d", "180d", "365d"] as const
 type TimeRange = (typeof TIER_ORDER)[number]
 
-type Plan = "host" | "partner" | "founder"
-const VALID_PLANS = ["host", "partner", "founder"] as const
+type Plan = "member" | "host" | "partner" | "founder"
+const VALID_PLANS = ["member", "host", "partner", "founder"] as const
 
 function isPlan(p: string): p is Plan {
   return (VALID_PLANS as readonly string[]).includes(p)
 }
 
 const PLAN_MAX_RANGE: Record<Plan, TimeRange> = {
+  member: "7d",
   host: "7d",
   partner: "30d",
   founder: "365d",
@@ -209,6 +210,7 @@ export const propertiesRouter = router({
         ? Math.round((approvedGcsValues.reduce((a, b) => a + b, 0) / approvedGcsValues.length) * 10) / 10
         : null
 
+    const memberCount = rows.filter((r) => r.plan === "member").length
     const hostCount = rows.filter((r) => r.plan === "host").length
     const partnerCount = rows.filter((r) => r.plan === "partner").length
     const founderCount = rows.filter((r) => r.plan === "founder").length
@@ -230,6 +232,7 @@ export const propertiesRouter = router({
         totalCount,
         approvedCount,
         platformAvgGcs,
+        memberCount,
         hostCount,
         partnerCount,
         founderCount,
@@ -744,7 +747,7 @@ export const propertiesRouter = router({
         gapToCityAvg: yourGcs !== null && cityAvgGcs !== null ? Math.round((yourGcs - cityAvgGcs) * 10) / 10 : null,
         withinCityRankings,
         nationalCityRankings,
-        userPlan: isPlan(org.plan) ? org.plan : ("host" as Plan),
+        userPlan: isPlan(org.plan) ? org.plan : ("member" as Plan),
       }
     }),
 

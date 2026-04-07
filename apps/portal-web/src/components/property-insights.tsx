@@ -25,7 +25,7 @@ import { useTRPC } from "@/utils/trpc"
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type TimeRange = "7d" | "30d" | "180d" | "365d"
-type Plan = "host" | "partner" | "founder"
+type Plan = "member" | "host" | "partner" | "founder"
 
 const TIME_RANGE_LABELS: Record<TimeRange, string> = {
   "7d": "Last 7 days",
@@ -35,6 +35,7 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
 }
 
 const PLAN_MAX: Record<Plan, TimeRange> = {
+  member: "7d",
   host: "7d",
   partner: "30d",
   founder: "365d",
@@ -272,7 +273,7 @@ export function PropertyInsights({ propertyId }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <SectionLabel>Score Distribution</SectionLabel>
-          {plan === "host" ? (
+          {(plan === "host" || plan === "member") ? (
             <LockedCard requiredPlan="Partner" />
           ) : (
             <ChartCard>
@@ -331,7 +332,7 @@ export function PropertyInsights({ propertyId }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <SectionLabel>GCS by Meal Time</SectionLabel>
-          {plan === "host" ? (
+          {(plan === "host" || plan === "member") ? (
             <LockedCard requiredPlan="Partner" />
           ) : (
             <ChartCard>
@@ -354,7 +355,7 @@ export function PropertyInsights({ propertyId }: Props) {
 
         <div>
           <SectionLabel>Submissions per Week</SectionLabel>
-          {plan === "host" ? (
+          {(plan === "host" || plan === "member") ? (
             <LockedCard requiredPlan="Partner" />
           ) : (
             <ChartCard>
@@ -418,7 +419,7 @@ export function PropertyInsights({ propertyId }: Props) {
           value={String(data.engagementStats.totalSubmissions)}
           sub="this period"
         />
-        {plan === "host" ? (
+        {(plan === "host" || plan === "member") ? (
           <>
             <LockedCard requiredPlan="Partner" />
             <LockedCard requiredPlan="Partner" />

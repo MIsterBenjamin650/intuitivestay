@@ -1,0 +1,136 @@
+<h2>Dashboard Design Direction</h2>
+<p class="subtitle">Three approaches — same data, different visual style. Pick the one that feels right.</p>
+
+<div class="cards" style="margin-top: 2rem;">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8f7ff; padding: 1rem; border-radius: 8px;">
+      <!-- Colorful stat cards row -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;">
+        <div style="background: linear-gradient(135deg,#6366f1,#8b5cf6); border-radius:8px; padding:10px; color:white;">
+          <div style="font-size:10px; opacity:0.85;">Portfolio GCS</div>
+          <div style="font-size:20px; font-weight:700;">7.7</div>
+        </div>
+        <div style="background: linear-gradient(135deg,#14b8a6,#06b6d4); border-radius:8px; padding:10px; color:white;">
+          <div style="font-size:10px; opacity:0.85;">Properties</div>
+          <div style="font-size:20px; font-weight:700;">3</div>
+        </div>
+        <div style="background: linear-gradient(135deg,#f97316,#f59e0b); border-radius:8px; padding:10px; color:white;">
+          <div style="font-size:10px; opacity:0.85;">Open Alerts</div>
+          <div style="font-size:20px; font-weight:700;">5</div>
+        </div>
+      </div>
+      <!-- Chart card -->
+      <div style="background:white; border-radius:8px; padding:10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:10px; font-weight:600; color:#374151; margin-bottom:6px;">Guest Satisfaction Over Time</div>
+        <div style="height:55px; background: linear-gradient(180deg,rgba(99,102,241,0.15) 0%,transparent 100%); border-radius:4px; position:relative; overflow:hidden;">
+          <svg viewBox="0 0 200 55" style="width:100%;height:100%;">
+            <polyline points="0,45 30,38 60,30 90,35 120,22 150,18 180,12 200,10" fill="none" stroke="#6366f1" stroke-width="2.5"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Gradient Stat Cards</h3>
+      <p>Bold coloured gradient cards for key metrics, white chart cards below. High-energy, iSaas-style feel.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8f7ff; padding: 1rem; border-radius: 8px;">
+      <!-- White cards with coloured left border -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;">
+        <div style="background:white; border-radius:8px; padding:10px; border-left: 4px solid #6366f1; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <div style="font-size:9px; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">Portfolio GCS</div>
+          <div style="font-size:20px; font-weight:700; color:#6366f1;">7.7</div>
+        </div>
+        <div style="background:white; border-radius:8px; padding:10px; border-left: 4px solid #14b8a6; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <div style="font-size:9px; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">Properties</div>
+          <div style="font-size:20px; font-weight:700; color:#14b8a6;">3</div>
+        </div>
+        <div style="background:white; border-radius:8px; padding:10px; border-left: 4px solid #f97316; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <div style="font-size:9px; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">Open Alerts</div>
+          <div style="font-size:20px; font-weight:700; color:#f97316;">5</div>
+        </div>
+      </div>
+      <!-- Pillar mini bars -->
+      <div style="background:white; border-radius:8px; padding:10px; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:10px; font-weight:600; color:#374151; margin-bottom:8px;">Pillar Averages</div>
+        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:6px;">
+          <div style="text-align:center;">
+            <div style="height:35px; background:#f3f4f6; border-radius:4px; position:relative; overflow:hidden;">
+              <div style="position:absolute; bottom:0; left:0; right:0; height:75%; background:#6366f1; border-radius:4px;"></div>
+            </div>
+            <div style="font-size:8px; color:#6b7280; margin-top:3px;">Resilience</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="height:35px; background:#f3f4f6; border-radius:4px; position:relative; overflow:hidden;">
+              <div style="position:absolute; bottom:0; left:0; right:0; height:82%; background:#14b8a6; border-radius:4px;"></div>
+            </div>
+            <div style="font-size:8px; color:#6b7280; margin-top:3px;">Empathy</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="height:35px; background:#f3f4f6; border-radius:4px; position:relative; overflow:hidden;">
+              <div style="position:absolute; bottom:0; left:0; right:0; height:70%; background:#8b5cf6; border-radius:4px;"></div>
+            </div>
+            <div style="font-size:8px; color:#6b7280; margin-top:3px;">Anticipation</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="height:35px; background:#f3f4f6; border-radius:4px; position:relative; overflow:hidden;">
+              <div style="position:absolute; bottom:0; left:0; right:0; height:78%; background:#f97316; border-radius:4px;"></div>
+            </div>
+            <div style="font-size:8px; color:#6b7280; margin-top:3px;">Recognition</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Coloured Accents on White</h3>
+      <p>Clean white cards with strong coloured borders and values. More subtle — professional but still vibrant.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f0e17; padding: 1rem; border-radius: 8px;">
+      <!-- Dark dashboard -->
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px;">
+        <div style="background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); border-radius:8px; padding:10px; color:white;">
+          <div style="font-size:10px; opacity:0.65;">Portfolio GCS</div>
+          <div style="font-size:20px; font-weight:700; color:#a5b4fc;">7.7</div>
+        </div>
+        <div style="background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.4); border-radius:8px; padding:10px; color:white;">
+          <div style="font-size:10px; opacity:0.65;">Properties</div>
+          <div style="font-size:20px; font-weight:700; color:#5eead4;">3</div>
+        </div>
+        <div style="background:rgba(249,115,22,0.2); border:1px solid rgba(249,115,22,0.4); border-radius:8px; padding:10px; color:white;">
+          <div style="font-size:10px; opacity:0.65;">Open Alerts</div>
+          <div style="font-size:20px; font-weight:700; color:#fdba74;">5</div>
+        </div>
+      </div>
+      <!-- Dark chart -->
+      <div style="background:rgba(255,255,255,0.05); border-radius:8px; padding:10px; border:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:10px; font-weight:600; color:rgba(255,255,255,0.7); margin-bottom:6px;">Guest Satisfaction Over Time</div>
+        <div style="height:55px; position:relative; overflow:hidden;">
+          <svg viewBox="0 0 200 55" style="width:100%;height:100%;">
+            <defs>
+              <linearGradient id="grd" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <polygon points="0,55 0,45 30,38 60,30 90,35 120,22 150,18 180,12 200,10 200,55" fill="url(#grd)"/>
+            <polyline points="0,45 30,38 60,30 90,35 120,22 150,18 180,12 200,10" fill="none" stroke="#818cf8" stroke-width="2.5"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Dark Mode Premium</h3>
+      <p>Dark background with glowing coloured accents. Sleek, premium feel — stands out from typical dashboards.</p>
+    </div>
+  </div>
+
+</div>

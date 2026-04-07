@@ -1,0 +1,138 @@
+<h2>Sidebar Cleanup — What Should Stay?</h2>
+<p class="subtitle">Left shows what property owners see today. The two options show what we could simplify to.</p>
+
+<style>
+  .sidebar-wrap { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin-top: 1.5rem; }
+  .sb { background: linear-gradient(180deg,#1e1b4b 0%,#312e81 100%); border-radius: 12px; padding: 16px 0; width: 200px; flex-shrink: 0; font-family: Inter, system-ui, sans-serif; }
+  .sb-title { color: white; font-size: 15px; font-weight: 700; letter-spacing: -0.4px; padding: 0 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sb-section { margin-top: 14px; padding: 0 16px; }
+  .sb-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+  .sb-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.65); margin-bottom: 1px; position: relative; }
+  .sb-item.active { background: rgba(255,255,255,0.12); color: white; }
+  .sb-item.active::before { content:''; position:absolute; left:0; top:4px; bottom:4px; width:3px; border-radius:0 3px 3px 0; background:#a5b4fc; }
+  .sb-item.muted { color: rgba(255,255,255,0.4); }
+  .sb-item.gone { text-decoration: line-through; opacity: 0.35; }
+  .sb-badge { margin-left: auto; background: rgba(249,115,22,0.9); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+  .sb-badge.indigo { background: rgba(99,102,241,0.8); }
+  .sb-badge.host { background: linear-gradient(90deg,#f97316,#f59e0b); color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+  .sb-badge.upgrade { background: linear-gradient(90deg,#f97316,#f59e0b); color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+  .sb-item.problem { outline: 2px solid rgba(239,68,68,0.6); border-radius: 6px; }
+  .caption { text-align: center; font-size: 12px; color: #6b7280; margin-top: 8px; font-family: Inter, system-ui; }
+  .caption strong { color: #374151; }
+  .tag-problem { display:inline-block; background:#fef2f2; color:#dc2626; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; margin-left:4px; }
+  .tag-new { display:inline-block; background:#f0fdf4; color:#16a34a; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; margin-left:4px; }
+  .col-head { text-align:center; font-size:13px; font-weight:700; color:#111827; margin-bottom:8px; font-family:Inter,system-ui; }
+  .col-wrap { display:flex; flex-direction:column; align-items:center; }
+</style>
+
+<div class="sidebar-wrap">
+
+  <!-- CURRENT STATE -->
+  <div class="col-wrap">
+    <div class="col-head">Current <span class="tag-problem">problems</span></div>
+    <div class="sb">
+      <div class="sb-title">Intuitive Stay</div>
+      <div class="sb-section">
+        <div class="sb-label">Workspace</div>
+        <div class="sb-item active">▪ Dashboard</div>
+        <div class="sb-item">▪ Properties</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Current Property</div>
+        <div class="sb-item muted">▪ Dashboard</div>
+        <div class="sb-item muted">▪ Feedback</div>
+        <div class="sb-item muted">▪ Insights</div>
+        <div class="sb-item muted">▪ Advanced Insights</div>
+        <div class="sb-item muted">▪ QR Codes</div>
+        <div class="sb-item muted">▪ Alerts <span class="sb-badge">3</span></div>
+        <div class="sb-item muted problem">▪ Local Market <span class="sb-badge upgrade">Upgrade</span></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Organisation</div>
+        <div class="sb-item muted problem">▪ Members <span style="font-size:9px;color:rgba(255,255,255,0.3)">(empty)</span></div>
+        <div class="sb-item muted problem">▪ Roles &amp; Permissions <span style="font-size:9px;color:rgba(255,255,255,0.3)">(empty)</span></div>
+        <div class="sb-item muted">▪ Alerts <span class="sb-badge">12</span></div>
+        <div class="sb-item muted">▪ Plans &amp; Billing <span class="sb-badge host">Host</span></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Admin</div>
+        <div class="sb-item muted problem">▪ Approvals <span style="font-size:9px;color:rgba(255,255,255,0.3)">(wrong!)</span></div>
+      </div>
+    </div>
+    <div class="caption" style="max-width:200px">
+      <strong>3 issues:</strong> Admin shows for owners, Members/Roles lead to blank pages, two separate Alerts sections is confusing
+    </div>
+  </div>
+
+  <!-- OPTION A: Minimal fix -->
+  <div class="col-wrap">
+    <div class="col-head" style="cursor:pointer" onclick="selectOpt('a')">Option A — Quick Fix</div>
+    <div class="card" data-choice="a" onclick="toggleSelect(this)" style="padding:0;border-radius:12px;overflow:hidden;background:transparent;border:2px solid transparent">
+    <div class="sb">
+      <div class="sb-title">Intuitive Stay</div>
+      <div class="sb-section">
+        <div class="sb-label">Workspace</div>
+        <div class="sb-item active">▪ Dashboard</div>
+        <div class="sb-item">▪ Properties</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Current Property</div>
+        <div class="sb-item muted">▪ Dashboard</div>
+        <div class="sb-item muted">▪ Feedback</div>
+        <div class="sb-item muted">▪ Insights</div>
+        <div class="sb-item muted">▪ Advanced Insights</div>
+        <div class="sb-item muted">▪ QR Codes</div>
+        <div class="sb-item muted">▪ Alerts <span class="sb-badge">3</span></div>
+        <div class="sb-item muted">▪ Local Market <span class="sb-badge upgrade">Upgrade</span></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Organisation</div>
+        <div class="sb-item muted">▪ Members</div>
+        <div class="sb-item muted">▪ Roles &amp; Permissions</div>
+        <div class="sb-item muted">▪ Alerts <span class="sb-badge">12</span></div>
+        <div class="sb-item muted">▪ Plans &amp; Billing <span class="sb-badge host">Host</span></div>
+      </div>
+      <!-- Admin section hidden -->
+    </div>
+    </div>
+    <div class="caption" style="max-width:200px">
+      Hide Admin section from owners. Keep Members &amp; Roles (they'll become real in Spec 2). Keep both Alerts.
+    </div>
+  </div>
+
+  <!-- OPTION B: Cleaner -->
+  <div class="col-wrap">
+    <div class="col-head" style="cursor:pointer" onclick="selectOpt('b')">Option B — Cleaner</div>
+    <div class="card" data-choice="b" onclick="toggleSelect(this)" style="padding:0;border-radius:12px;overflow:hidden;background:transparent;border:2px solid transparent">
+    <div class="sb">
+      <div class="sb-title">Intuitive Stay</div>
+      <div class="sb-section">
+        <div class="sb-label">Workspace</div>
+        <div class="sb-item active">▪ Dashboard</div>
+        <div class="sb-item">▪ Properties</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Current Property</div>
+        <div class="sb-item muted">▪ Dashboard</div>
+        <div class="sb-item muted">▪ Feedback</div>
+        <div class="sb-item muted">▪ Insights</div>
+        <div class="sb-item muted">▪ Advanced Insights</div>
+        <div class="sb-item muted">▪ QR Codes</div>
+        <div class="sb-item muted">▪ Alerts <span class="sb-badge">3</span></div>
+        <div class="sb-item muted">▪ Local Market <span class="sb-badge upgrade">Upgrade</span></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Organisation</div>
+        <div class="sb-item muted">▪ Team <span style="font-size:9px;color:rgba(255,255,255,0.4);margin-left:4px">(new in Spec 2)</span></div>
+        <div class="sb-item muted">▪ Alerts <span class="sb-badge">12</span></div>
+        <div class="sb-item muted">▪ Plans &amp; Billing <span class="sb-badge host">Host</span></div>
+      </div>
+      <!-- Admin hidden, Members/Roles merged into Team -->
+    </div>
+    </div>
+    <div class="caption" style="max-width:200px">
+      Hide Admin. Merge Members + Roles &amp; Permissions into a single <strong>Team</strong> page. Cleaner for owners.
+    </div>
+  </div>
+
+</div>

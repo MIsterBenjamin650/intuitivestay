@@ -7,7 +7,7 @@ export const organisations = pgTable("organisations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
-  plan: text("plan").notNull().default("host"), // 'host' | 'partner' | 'founder'
+  plan: text("plan").notNull().default("member"), // 'member' | 'host' | 'partner' | 'founder'
   subscriptionStatus: text("subscription_status").notNull().default("none"), // 'none' | 'trial' | 'active' | 'grace' | 'expired'
   trialEndsAt: timestamp("trial_ends_at"),
   subscriptionEndsAt: timestamp("subscription_ends_at"),

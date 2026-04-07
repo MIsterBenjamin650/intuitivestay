@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IntuItiveStay — Dashboard v3 (ReviewPro style)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
+
+/* ── SIDEBAR ── */
+.sidebar { width: 210px; flex-shrink: 0; background: linear-gradient(180deg,#1e1b4b 0%,#312e81 100%); display: flex; flex-direction: column; padding: 0 0 20px; overflow-y: auto; }
+.sb-brand { padding: 16px 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15px; font-weight: 700; color: white; letter-spacing: -0.4px; }
+.sb-switcher { margin: 12px 10px 4px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.sb-avatar { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+.sb-name { font-size: 12px; font-weight: 600; color: white; }
+.sb-sublabel { font-size: 10px; color: rgba(255,255,255,0.4); }
+.sb-chevron { margin-left: auto; color: rgba(255,255,255,0.35); }
+.sb-section { margin-top: 16px; padding: 0 10px; }
+.sb-section-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); padding: 0 8px; margin-bottom: 4px; }
+.sb-item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.6); margin-bottom: 1px; cursor: pointer; position: relative; }
+.sb-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.sb-item.active { background: rgba(255,255,255,0.12); color: white; font-weight: 600; }
+.sb-item.active::before { content:''; position:absolute; left:0; top:5px; bottom:5px; width:3px; border-radius:0 3px 3px 0; background:#a5b4fc; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── TOPBAR ── */
+.topbar { height: 54px; background: white; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 20px; gap: 10px; position: relative; }
+.topbar-title { font-size: 15px; font-weight: 700; color: #0f172a; flex: 1; }
+.date-range { display: flex; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; overflow: hidden; font-size: 11px; font-weight: 500; }
+.dr-tab { padding: 5px 12px; color: #64748b; cursor: pointer; }
+.dr-tab.active { background: white; color: #6366f1; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.alert-bell { position: relative; width: 36px; height: 36px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.alert-badge { position: absolute; top: -5px; right: -5px; background: #f97316; color: white; font-size: 9px; font-weight: 800; min-width: 17px; height: 17px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 3px; border: 2px solid white; }
+.user-area { position: relative; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; cursor: pointer; }
+.dropdown { position: absolute; top: 44px; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; width: 220px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 100; }
+.dd-head { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px; }
+.dd-av { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+.dd-name { font-size: 13px; font-weight: 600; color: #0f172a; }
+.dd-email { font-size: 11px; color: #94a3b8; }
+.dd-item { display: flex; align-items: center; gap: 9px; padding: 8px; border-radius: 7px; font-size: 12.5px; color: #334155; cursor: pointer; }
+.dd-item:hover { background: #f8fafc; }
+.dd-plan { margin-left: auto; background: linear-gradient(90deg,#6366f1,#8b5cf6); color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.dd-divider { height: 1px; background: #f1f5f9; margin: 5px 0; }
+.dd-item.danger { color: #dc2626; }
+.alert-panel { position: absolute; top: 54px; right: 56px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 100; overflow: hidden; }
+.ap-head { padding: 12px 16px; background: #fff7ed; border-bottom: 1px solid #fed7aa; font-size: 13px; font-weight: 700; color: #c2410c; display: flex; align-items: center; gap: 7px; }
+.ap-item { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+.ap-item:last-child { border-bottom: none; }
+.ap-item:hover { background: #fafafa; }
+.ap-prop { font-size: 12px; font-weight: 600; color: #0f172a; }
+.ap-detail { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.ap-score { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.ap-score.red { background: #fef2f2; color: #dc2626; }
+.ap-score.orange { background: #fff7ed; color: #f97316; }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── CARDS ── */
+.card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
+.card-pad { padding: 20px 22px; }
+.card-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+.card-sub { font-size: 11px; color: #94a3b8; font-weight: 500; }
+
+/* ── TOP ROW: mini stat pills ── */
+.top-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mini-stat { padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
+.mini-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mini-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 3px; }
+.mini-value { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+.mini-trend { font-size: 10px; font-weight: 600; margin-top: 3px; }
+.trend-up { color: #10b981; }
+.trend-down { color: #ef4444; }
+
+/* ── MIDDLE ROW ── */
+.mid-row { display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+
+/* GCS Gauge card */
+.gauge-card { padding: 22px; display: flex; flex-direction: column; align-items: center; }
+.gauge-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto 16px; }
+.gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.gauge-score { font-size: 42px; font-weight: 800; color: #0f172a; letter-spacing: -2px; line-height: 1; }
+.gauge-max { font-size: 14px; font-weight: 500; color: #94a3b8; margin-top: 2px; }
+.gauge-label { font-size: 11px; font-weight: 600; color: #6366f1; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+.gauge-meta { text-align: center; font-size: 12px; color: #64748b; margin-bottom: 16px; }
+.pillar-list { width: 100%; display: flex; flex-direction: column; gap: 9px; }
+.pillar-row { display: flex; align-items: center; gap: 10px; }
+.pillar-name { font-size: 11px; font-weight: 600; color: #475569; width: 90px; flex-shrink: 0; }
+.pillar-track { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.pillar-fill { height: 100%; border-radius: 3px; }
+.pillar-val { font-size: 12px; font-weight: 700; width: 30px; text-align: right; flex-shrink: 0; }
+
+/* Trend chart card */
+.trend-card { padding: 20px 22px; }
+
+/* ── BOTTOM ROW ── */
+.bot-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Recent feedback */
+.feedback-list { display: flex; flex-direction: column; }
+.fb-item { padding: 12px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: flex-start; gap: 12px; }
+.fb-item:last-child { border-bottom: none; }
+.fb-source { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.fb-name { font-size: 12px; font-weight: 600; color: #0f172a; }
+.fb-date { font-size: 10px; color: #94a3b8; margin-left: 6px; }
+.fb-score { font-size: 11px; font-weight: 700; }
+.fb-pillars { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.fb-pill { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 5px; }
+.stars { display: flex; gap: 1px; }
+.star { font-size: 11px; }
+
+/* Locked card */
+.locked-card { position: relative; overflow: hidden; }
+.locked-overlay { position: absolute; inset: 0; backdrop-filter: blur(5px); background: rgba(248,250,252,0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 10; }
+.locked-pill { background: white; border: 1px solid #e0e7ff; border-radius: 20px; padding: 7px 18px; font-size: 12px; font-weight: 700; color: #6366f1; box-shadow: 0 2px 8px rgba(99,102,241,0.15); }
+.locked-sub { font-size: 11px; color: #94a3b8; }
+.lm-bar-row { display: flex; align-items: flex-end; gap: 8px; height: 70px; margin: 12px 0 6px; }
+.lm-bar { flex: 1; border-radius: 5px 5px 0 0; }
+.lm-bar-label { font-size: 9px; text-align: center; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-brand">Intuitive Stay</div>
+  <div class="sb-switcher">
+    <div class="sb-avatar">M</div>
+    <div>
+      <div class="sb-name">Mcdonalds</div>
+      <div class="sb-sublabel">Current property</div>
+    </div>
+    <div class="sb-chevron">⌄</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-section-label">My Property</div>
+    <div class="sb-item active">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Feedback
+    </div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      QR Codes
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-section-label">Organisation</div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Team
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <div class="date-range">
+      <div class="dr-tab">7 days</div>
+      <div class="dr-tab active">30 days</div>
+      <div class="dr-tab">6 months</div>
+    </div>
+    <div class="alert-bell" onclick="togglePanel('alertPanel','userDropdown')">
+      <svg width="16" height="16" fill="none" stroke="#f97316" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="alert-badge">3</div>
+    </div>
+    <div class="user-area">
+      <div class="user-avatar" onclick="togglePanel('userDropdown','alertPanel')">DS</div>
+      <div class="dropdown" id="userDropdown" style="display:none">
+        <div class="dd-head">
+          <div class="dd-av">DS</div>
+          <div><div class="dd-name">Derek Smith</div><div class="dd-email">derek@mcdonalds.com</div></div>
+        </div>
+        <div class="dd-item"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Account Details</div>
+        <div class="dd-item"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Plans &amp; Billing <span class="dd-plan">Host</span></div>
+        <div class="dd-divider"></div>
+        <div class="dd-item danger"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign Out</div>
+      </div>
+    </div>
+    <div class="alert-panel" id="alertPanel" style="display:none">
+      <div class="ap-head"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> 3 Active Alerts</div>
+      <div class="ap-item"><div class="ap-prop">Mcdonalds <span class="ap-score red">GCS 4.2</span></div><div class="ap-detail">Resilience pillar below threshold · 2h ago</div></div>
+      <div class="ap-item"><div class="ap-prop">Mcdonalds <span class="ap-score red">GCS 3.8</span></div><div class="ap-detail">Empathy pillar below threshold · 5h ago</div></div>
+      <div class="ap-item"><div class="ap-prop">Mcdonalds <span class="ap-score orange">GCS 4.9</span></div><div class="ap-detail">Recognition below threshold · Yesterday</div></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TOP ROW: 3 mini stats -->
+    <div class="top-row">
+      <div class="card mini-stat">
+        <div class="mini-icon" style="background:#ede9fe"><svg width="20" height="20" fill="none" stroke="#8b5cf6" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <div>
+          <div class="mini-label">Total Feedback</div>
+          <div class="mini-value" style="color:#8b5cf6">25</div>
+          <div class="mini-trend trend-up">↑ 8 this month</div>
+        </div>
+      </div>
+      <div class="card mini-stat">
+        <div class="mini-icon" style="background:#ccfbf1"><svg width="20" height="20" fill="none" stroke="#14b8a6" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div>
+          <div class="mini-label">Response Rate</div>
+          <div class="mini-value" style="color:#14b8a6">68%</div>
+          <div class="mini-trend trend-up">↑ 4% vs last month</div>
+        </div>
+      </div>
+      <div class="card mini-stat">
+        <div class="mini-icon" style="background:#fff7ed"><svg width="20" height="20" fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div>
+          <div class="mini-label">Open Alerts</div>
+          <div class="mini-value" style="color:#f97316">3</div>
+          <div class="mini-trend trend-down">↓ Needs attention</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDDLE ROW: GCS gauge + Trend chart -->
+    <div class="mid-row">
+
+      <!-- GCS Ring Gauge -->
+      <div class="card gauge-card">
+        <div class="card-title" style="text-align:center;margin-bottom:4px">Guest Comfort Score</div>
+        <div class="card-sub" style="text-align:center;margin-bottom:16px">Mcdonalds · Last 30 days</div>
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 180 180" width="180" height="180">
+            <!-- Track -->
+            <circle cx="90" cy="90" r="72" fill="none" stroke="#f1f5f9" stroke-width="14"/>
+            <!-- Indigo fill: 7.3/10 = 73%, circumference = 452.4, filled = 330.2 -->
+            <circle cx="90" cy="90" r="72" fill="none" stroke="#6366f1" stroke-width="14"
+              stroke-dasharray="330 122" stroke-linecap="round"
+              transform="rotate(-90 90 90)"/>
+            <!-- Teal accent: inner ring -->
+            <circle cx="90" cy="90" r="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-score">7.3</div>
+            <div class="gauge-max">/ 10</div>
+            <div class="gauge-label">GCS</div>
+          </div>
+        </div>
+        <div class="gauge-meta">
+          <span style="color:#10b981;font-weight:700">↑ +0.4</span>
+          <span style="color:#94a3b8"> vs previous period</span>
+        </div>
+
+        <!-- Pillar breakdown -->
+        <div class="pillar-list">
+          <div class="pillar-row">
+            <div class="pillar-name">Resilience</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:73%;background:#6366f1"></div></div>
+            <div class="pillar-val" style="color:#6366f1">7.3</div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-name">Empathy</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:81%;background:#14b8a6"></div></div>
+            <div class="pillar-val" style="color:#14b8a6">8.1</div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-name">Anticipation</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:68%;background:#8b5cf6"></div></div>
+            <div class="pillar-val" style="color:#8b5cf6">6.8</div>
+          </div>
+          <div class="pillar-row">
+            <div class="pillar-name">Recognition</div>
+            <div class="pillar-track"><div class="pillar-fill" style="width:76%;background:#f97316"></div></div>
+            <div class="pillar-val" style="color:#f97316">7.6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trend chart -->
+      <div class="card trend-card">
+        <div class="card-title">Score Over Time</div>
+        <div class="card-sub" style="margin-bottom:16px">Monthly average GCS</div>
+        <svg viewBox="0 0 480 180" width="100%" height="180" preserveAspectRatio="none" style="display:block">
+          <defs>
+            <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6366f1" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="36" x2="480" y2="36" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="0" y1="72" x2="480" y2="72" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="0" y1="108" x2="480" y2="108" stroke="#f1f5f9" stroke-width="1"/>
+          <line x1="0" y1="144" x2="480" y2="144" stroke="#f1f5f9" stroke-width="1"/>
+          <text x="4" y="34" font-size="9" fill="#94a3b8" font-family="Inter">10</text>
+          <text x="4" y="70" font-size="9" fill="#94a3b8" font-family="Inter">7.5</text>
+          <text x="4" y="106" font-size="9" fill="#94a3b8" font-family="Inter">5.0</text>
+          <text x="4" y="142" font-size="9" fill="#94a3b8" font-family="Inter">2.5</text>
+          <!-- scores: 5.8 6.2 6.8 7.1 6.9 7.4 7.3 — y = 180-(score/10*180) -->
+          <!-- 5.8→75.6  6.2→68.4  6.8→57.6  7.1→52.2  6.9→55.8  7.4→46.8  7.3→48.6 -->
+          <polygon points="30,180 30,76 110,68 190,58 270,52 350,56 430,47 430,180" fill="url(#trendFill)"/>
+          <polyline points="30,76 110,68 190,58 270,52 350,56 430,47" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="30"  cy="76" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="110" cy="68" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="190" cy="58" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="270" cy="52" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="350" cy="56" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+          <circle cx="430" cy="47" r="4" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+          <text x="30"  y="175" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter">Sep</text>
+          <text x="110" y="175" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter">Oct</text>
+          <text x="190" y="175" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter">Nov</text>
+          <text x="270" y="175" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter">Dec</text>
+          <text x="350" y="175" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter">Jan</text>
+          <text x="430" y="175" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter">Mar</text>
+        </svg>
+
+        <!-- Score distribution -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f1f5f9">
+          <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Score Distribution</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:10px;color:#94a3b8;width:32px">9–10</div>
+              <div style="flex:1;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:16%;height:100%;background:#10b981;border-radius:4px"></div></div>
+              <div style="font-size:10px;font-weight:600;color:#0f172a;width:20px">4</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:10px;color:#94a3b8;width:32px">7–8</div>
+              <div style="flex:1;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:52%;height:100%;background:#6366f1;border-radius:4px"></div></div>
+              <div style="font-size:10px;font-weight:600;color:#0f172a;width:20px">13</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:10px;color:#94a3b8;width:32px">5–6</div>
+              <div style="flex:1;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:28%;height:100%;background:#f59e0b;border-radius:4px"></div></div>
+              <div style="font-size:10px;font-weight:600;color:#0f172a;width:20px">7</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:10px;color:#94a3b8;width:32px">&lt; 5</div>
+              <div style="flex:1;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:4%;height:100%;background:#ef4444;border-radius:4px"></div></div>
+              <div style="font-size:10px;font-weight:600;color:#0f172a;width:20px">1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: Recent feedback + locked Local Market -->
+    <div class="bot-row">
+
+      <!-- Recent Feedback -->
+      <div class="card card-pad">
+        <div class="card-title">Recent Feedback</div>
+        <div class="card-sub" style="margin-bottom:12px">Latest guest submissions</div>
+        <div class="feedback-list">
+          <div class="fb-item">
+            <div class="fb-source" style="background:#fef2f2">📱</div>
+            <div style="flex:1;min-width:0">
+              <div><span class="fb-name">James M.</span><span class="fb-date">Today, 2:14pm</span></div>
+              <div class="stars" style="margin:3px 0">
+                <span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#d1d5db">★</span>
+              </div>
+              <div class="fb-pillars">
+                <span class="fb-pill" style="background:#ede9fe;color:#7c3aed">Resilience 7.0</span>
+                <span class="fb-pill" style="background:#ccfbf1;color:#0f766e">Empathy 8.5</span>
+              </div>
+            </div>
+            <div class="fb-score" style="color:#6366f1">8.0</div>
+          </div>
+          <div class="fb-item">
+            <div class="fb-source" style="background:#f0fdf4">📱</div>
+            <div style="flex:1;min-width:0">
+              <div><span class="fb-name">Sarah K.</span><span class="fb-date">Today, 11:02am</span></div>
+              <div class="stars" style="margin:3px 0">
+                <span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span>
+              </div>
+              <div class="fb-pillars">
+                <span class="fb-pill" style="background:#e0e7ff;color:#4338ca">Resilience 9.0</span>
+                <span class="fb-pill" style="background:#fff7ed;color:#c2410c">Recognition 8.0</span>
+              </div>
+            </div>
+            <div class="fb-score" style="color:#10b981">9.2</div>
+          </div>
+          <div class="fb-item">
+            <div class="fb-source" style="background:#fff7ed">📱</div>
+            <div style="flex:1;min-width:0">
+              <div><span class="fb-name">Anonymous</span><span class="fb-date">Yesterday, 7:45pm</span></div>
+              <div class="stars" style="margin:3px 0">
+                <span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#d1d5db">★</span><span class="star" style="color:#d1d5db">★</span>
+              </div>
+              <div class="fb-pillars">
+                <span class="fb-pill" style="background:#fef2f2;color:#dc2626">Empathy 4.2</span>
+                <span class="fb-pill" style="background:#fef2f2;color:#dc2626">Anticipation 3.8</span>
+              </div>
+            </div>
+            <div class="fb-score" style="color:#ef4444">4.2</div>
+          </div>
+          <div class="fb-item">
+            <div class="fb-source" style="background:#ede9fe">📱</div>
+            <div style="flex:1;min-width:0">
+              <div><span class="fb-name">Tom R.</span><span class="fb-date">Yesterday, 3:22pm</span></div>
+              <div class="stars" style="margin:3px 0">
+                <span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#d1d5db">★</span>
+              </div>
+              <div class="fb-pillars">
+                <span class="fb-pill" style="background:#ede9fe;color:#7c3aed">Resilience 7.5</span>
+                <span class="fb-pill" style="background:#ccfbf1;color:#0f766e">Empathy 8.0</span>
+              </div>
+            </div>
+            <div class="fb-score" style="color:#6366f1">7.4</div>
+          </div>
+          <div class="fb-item">
+            <div class="fb-source" style="background:#f0fdf4">📱</div>
+            <div style="flex:1;min-width:0">
+              <div><span class="fb-name">Lisa W.</span><span class="fb-date">2 days ago</span></div>
+              <div class="stars" style="margin:3px 0">
+                <span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span><span class="star" style="color:#f59e0b">★</span>
+              </div>
+              <div class="fb-pillars">
+                <span class="fb-pill" style="background:#e0e7ff;color:#4338ca">Recognition 9.5</span>
+                <span class="fb-pill" style="background:#ccfbf1;color:#0f766e">Empathy 9.0</span>
+              </div>
+            </div>
+            <div class="fb-score" style="color:#10b981">9.5</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Local Market — locked -->
+      <div class="card card-pad locked-card">
+        <div class="card-title">Local Market</div>
+        <div class="card-sub">How you rank against similar properties nearby</div>
+        <div class="lm-bar-row">
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="lm-bar" style="height:60%;background:#ddd8fe;width:100%"></div>
+            <div class="lm-bar-label" style="margin-top:4px">Prop A</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="lm-bar" style="height:85%;background:#6366f1;width:100%"></div>
+            <div class="lm-bar-label" style="margin-top:4px;color:#6366f1;font-weight:700">You</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="lm-bar" style="height:72%;background:#ddd8fe;width:100%"></div>
+            <div class="lm-bar-label" style="margin-top:4px">Prop B</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="lm-bar" style="height:55%;background:#ddd8fe;width:100%"></div>
+            <div class="lm-bar-label" style="margin-top:4px">Prop C</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="lm-bar" style="height:78%;background:#ddd8fe;width:100%"></div>
+            <div class="lm-bar-label" style="margin-top:4px">Prop D</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div class="lm-bar" style="height:48%;background:#ddd8fe;width:100%"></div>
+            <div class="lm-bar-label" style="margin-top:4px">Prop E</div>
+          </div>
+        </div>
+        <div style="height:40px"></div>
+        <div class="locked-overlay">
+          <div class="locked-pill">🔒 Unlock Local Market</div>
+          <div class="locked-sub">Available on Founder plan</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePanel(show, hide) {
+  var s = document.getElementById(show), h = document.getElementById(hide);
+  if (h) h.style.display = 'none';
+  s.style.display = s.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.user-area') && !e.target.closest('.alert-bell') && !e.target.closest('.alert-panel')) {
+    document.getElementById('userDropdown').style.display = 'none';
+    document.getElementById('alertPanel').style.display = 'none';
+  }
+});
+document.querySelectorAll('.dr-tab').forEach(t => {
+  t.addEventListener('click', function() {
+    document.querySelectorAll('.dr-tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

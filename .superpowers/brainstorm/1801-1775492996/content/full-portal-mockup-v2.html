@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IntuItiveStay Portal — Mockup v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 210px; flex-shrink: 0;
+  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+  display: flex; flex-direction: column;
+  padding: 0 0 20px;
+  overflow-y: auto;
+}
+.sb-brand {
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 15px; font-weight: 700;
+  color: white; letter-spacing: -0.4px;
+}
+.sb-property-switcher {
+  margin: 12px 10px 4px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer;
+}
+.sb-prop-avatar {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.sb-prop-name { font-size: 12px; font-weight: 600; color: white; line-height: 1.2; }
+.sb-prop-label { font-size: 10px; color: rgba(255,255,255,0.4); }
+.sb-prop-chevron { margin-left: auto; color: rgba(255,255,255,0.35); font-size: 11px; }
+
+.sb-section { margin-top: 16px; padding: 0 10px; }
+.sb-section-label {
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.35);
+  padding: 0 8px; margin-bottom: 4px;
+}
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 8px; border-radius: 7px;
+  font-size: 12.5px; font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 1px; cursor: pointer;
+  position: relative; transition: background 0.15s;
+}
+.sb-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.sb-item.active {
+  background: rgba(255,255,255,0.12); color: white; font-weight: 600;
+}
+.sb-item.active::before {
+  content: ''; position: absolute;
+  left: 0; top: 5px; bottom: 5px;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: #a5b4fc;
+}
+.sb-item svg { opacity: 0.7; flex-shrink: 0; }
+.sb-item.active svg { opacity: 1; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 54px; background: white; flex-shrink: 0;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 10px;
+  position: relative;
+}
+.topbar-title { font-size: 15px; font-weight: 700; color: #111827; flex: 1; }
+
+.alert-bell {
+  position: relative; width: 36px; height: 36px;
+  background: #fff7ed; border: 1px solid #fed7aa;
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.alert-badge {
+  position: absolute; top: -5px; right: -5px;
+  background: #f97316; color: white;
+  font-size: 9px; font-weight: 800;
+  min-width: 17px; height: 17px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px; border: 2px solid white;
+}
+.user-area { position: relative; }
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white; cursor: pointer;
+}
+.dropdown {
+  position: absolute; top: 44px; right: 0;
+  background: white; border: 1px solid #e5e7eb;
+  border-radius: 12px; padding: 8px; width: 220px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 100;
+}
+.dd-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px;
+}
+.dd-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
+}
+.dd-name { font-size: 13px; font-weight: 600; color: #111827; }
+.dd-email { font-size: 11px; color: #9ca3af; }
+.dd-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px; border-radius: 7px;
+  font-size: 12.5px; color: #374151; cursor: pointer;
+}
+.dd-item:hover { background: #f9fafb; }
+.dd-plan { margin-left: auto; background: linear-gradient(90deg,#6366f1,#8b5cf6); color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.dd-divider { height: 1px; background: #f3f4f6; margin: 5px 0; }
+.dd-item.danger { color: #dc2626; }
+
+.alert-panel {
+  position: absolute; top: 54px; right: 56px;
+  background: white; border: 1px solid #e5e7eb;
+  border-radius: 12px; width: 300px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 100; overflow: hidden;
+}
+.ap-head {
+  padding: 12px 16px; background: #fff7ed; border-bottom: 1px solid #fed7aa;
+  font-size: 13px; font-weight: 700; color: #c2410c;
+  display: flex; align-items: center; gap: 7px;
+}
+.ap-item { padding: 11px 16px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+.ap-item:hover { background: #fafafa; }
+.ap-item:last-child { border-bottom: none; }
+.ap-property { font-size: 12px; font-weight: 600; color: #111827; }
+.ap-detail { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.ap-score { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.ap-score.red { background: #fef2f2; color: #dc2626; }
+.ap-score.orange { background: #fff7ed; color: #f97316; }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.page-header { margin-bottom: 18px; }
+.page-header h1 { font-size: 20px; font-weight: 800; color: #111827; }
+.page-header p { font-size: 13px; color: #6b7280; margin-top: 3px; }
+
+.time-tabs { display: flex; background: #f3f4f6; border-radius: 9px; padding: 3px; gap: 2px; width: fit-content; margin-bottom: 18px; }
+.time-tab { padding: 5px 14px; border-radius: 7px; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; }
+.time-tab.active { background: white; color: #6366f1; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 18px; }
+.stat-card {
+  background: white; border-radius: 12px; padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin-bottom: 8px; }
+.stat-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.stat-sub { font-size: 11px; color: #9ca3af; font-weight: 500; margin-top: 6px; }
+.stat-card.indigo { border-left: 5px solid #6366f1; } .stat-card.indigo .stat-value { color: #6366f1; }
+.stat-card.teal { border-left: 5px solid #14b8a6; } .stat-card.teal .stat-value { color: #14b8a6; }
+.stat-card.orange { border-left: 5px solid #f97316; } .stat-card.orange .stat-value { color: #f97316; }
+
+.chart-card {
+  background: white; border-radius: 12px; padding: 20px 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 18px;
+}
+.chart-title { font-size: 14px; font-weight: 700; color: #111827; }
+.chart-sub { font-size: 11px; color: #9ca3af; font-weight: 500; margin-top: 2px; margin-bottom: 16px; }
+
+/* Two-column locked cards row */
+.locked-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.locked-card {
+  background: white; border-radius: 12px; padding: 20px 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  position: relative; overflow: hidden;
+}
+.locked-overlay {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(5px);
+  background: rgba(255,255,255,0.5);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; z-index: 10;
+}
+.locked-pill {
+  background: white; border: 1px solid #e0e7ff;
+  border-radius: 20px; padding: 6px 16px;
+  font-size: 12px; font-weight: 700; color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+  display: flex; align-items: center; gap: 6px;
+}
+.locked-sub { font-size: 11px; color: #9ca3af; }
+
+.pillar-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 12px; }
+.pillar-card { background: #f9fafb; border-radius: 8px; padding: 12px; text-align: center; }
+.pillar-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin-bottom: 7px; }
+.pillar-bar-track { height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin-bottom: 7px; }
+.pillar-bar-fill { height: 100%; border-radius: 3px; }
+.pillar-score { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+
+.lm-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; margin-top: 12px; }
+.lm-bar { flex: 1; border-radius: 4px 4px 0 0; }
+.lm-labels { display: flex; gap: 6px; margin-top: 5px; }
+.lm-label { flex: 1; font-size: 9px; text-align: center; color: #9ca3af; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sb-brand">Intuitive Stay</div>
+
+  <div class="sb-property-switcher">
+    <div class="sb-prop-avatar">M</div>
+    <div>
+      <div class="sb-prop-name">Mcdonalds</div>
+      <div class="sb-prop-label">Current property</div>
+    </div>
+    <div class="sb-prop-chevron">⌄</div>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-section-label">My Property</div>
+    <div class="sb-item active">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Feedback
+    </div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      QR Codes
+    </div>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-section-label">Organisation</div>
+    <div class="sb-item">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Team
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+
+    <div class="alert-bell" onclick="togglePanel('alertPanel','userDropdown')">
+      <svg width="16" height="16" fill="none" stroke="#f97316" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="alert-badge">3</div>
+    </div>
+
+    <div class="user-area">
+      <div class="user-avatar" onclick="togglePanel('userDropdown','alertPanel')">DS</div>
+      <div class="dropdown" id="userDropdown" style="display:none">
+        <div class="dd-head">
+          <div class="dd-avatar">DS</div>
+          <div>
+            <div class="dd-name">Derek Smith</div>
+            <div class="dd-email">derek@mcdonalds.com</div>
+          </div>
+        </div>
+        <div class="dd-item">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Account Details
+        </div>
+        <div class="dd-item">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Plans &amp; Billing <span class="dd-plan">Host</span>
+        </div>
+        <div class="dd-divider"></div>
+        <div class="dd-item danger">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </div>
+      </div>
+    </div>
+
+    <div class="alert-panel" id="alertPanel" style="display:none">
+      <div class="ap-head">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        3 Active Alerts
+      </div>
+      <div class="ap-item">
+        <div class="ap-property">Mcdonalds <span class="ap-score red">GCS 4.2</span></div>
+        <div class="ap-detail">Resilience pillar below threshold · 2 hours ago</div>
+      </div>
+      <div class="ap-item">
+        <div class="ap-property">Mcdonalds <span class="ap-score red">GCS 3.8</span></div>
+        <div class="ap-detail">Empathy pillar below threshold · 5 hours ago</div>
+      </div>
+      <div class="ap-item">
+        <div class="ap-property">Mcdonalds <span class="ap-score orange">GCS 4.9</span></div>
+        <div class="ap-detail">Recognition below threshold · Yesterday</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="page-header">
+      <h1>Good morning, Derek 👋</h1>
+      <p>Here's how Mcdonalds is performing.</p>
+    </div>
+
+    <div class="time-tabs">
+      <div class="time-tab">7 days</div>
+      <div class="time-tab active">30 days</div>
+      <div class="time-tab">6 months</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card indigo">
+        <div class="stat-label">GCS Score</div>
+        <div class="stat-value">7.3</div>
+        <div class="stat-sub">Guest Comfort Score</div>
+      </div>
+      <div class="stat-card teal">
+        <div class="stat-label">Total Feedback</div>
+        <div class="stat-value">25</div>
+        <div class="stat-sub">All time submissions</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Open Alerts</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Scores below threshold</div>
+      </div>
+    </div>
+
+    <!-- GCS Chart -->
+    <div class="chart-card">
+      <div class="chart-title">Guest Satisfaction Over Time</div>
+      <div class="chart-sub">Monthly average GCS</div>
+      <svg viewBox="0 0 660 140" width="100%" height="140" preserveAspectRatio="none" style="display:block">
+        <defs>
+          <linearGradient id="gcsFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="28" x2="660" y2="28" stroke="#f3f4f6" stroke-width="1"/>
+        <line x1="0" y1="56" x2="660" y2="56" stroke="#f3f4f6" stroke-width="1"/>
+        <line x1="0" y1="84" x2="660" y2="84" stroke="#f3f4f6" stroke-width="1"/>
+        <line x1="0" y1="112" x2="660" y2="112" stroke="#f3f4f6" stroke-width="1"/>
+        <text x="4" y="26" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">10</text>
+        <text x="4" y="54" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">7.5</text>
+        <text x="4" y="82" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">5</text>
+        <text x="4" y="110" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">2.5</text>
+        <!-- scores: 6.2 6.8 7.1 6.9 7.4 7.3 → y = 140-(score/10*140) -->
+        <polygon points="44,140 44,53 154,45 264,41 374,43 484,37 594,38 594,140" fill="url(#gcsFill)"/>
+        <polyline points="44,53 154,45 264,41 374,43 484,37 594,38" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="44" cy="53" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+        <circle cx="154" cy="45" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+        <circle cx="264" cy="41" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+        <circle cx="374" cy="43" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+        <circle cx="484" cy="37" r="4" fill="white" stroke="#6366f1" stroke-width="2.5"/>
+        <circle cx="594" cy="38" r="4" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+        <text x="44" y="135" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">Oct</text>
+        <text x="154" y="135" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">Nov</text>
+        <text x="264" y="135" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">Dec</text>
+        <text x="374" y="135" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">Jan</text>
+        <text x="484" y="135" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">Feb</text>
+        <text x="594" y="135" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="Inter,sans-serif">Mar</text>
+      </svg>
+    </div>
+
+    <!-- Locked charts row -->
+    <div class="locked-row">
+
+      <!-- Advanced Insights — locked for Host -->
+      <div class="locked-card">
+        <div class="chart-title">Advanced Insights</div>
+        <div class="chart-sub">Pillar trend analysis &amp; predictive scoring</div>
+        <div class="pillar-grid">
+          <div class="pillar-card">
+            <div class="pillar-label">Resilience</div>
+            <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:73%;background:#6366f1"></div></div>
+            <div class="pillar-score" style="color:#6366f1">7.3</div>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-label">Empathy</div>
+            <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:81%;background:#14b8a6"></div></div>
+            <div class="pillar-score" style="color:#14b8a6">8.1</div>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-label">Anticipation</div>
+            <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:68%;background:#8b5cf6"></div></div>
+            <div class="pillar-score" style="color:#8b5cf6">6.8</div>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-label">Recognition</div>
+            <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:76%;background:#f97316"></div></div>
+            <div class="pillar-score" style="color:#f97316">7.6</div>
+          </div>
+        </div>
+        <div class="locked-overlay">
+          <div class="locked-pill">🔒 Unlock Advanced Insights</div>
+          <div class="locked-sub">Available on Partner &amp; Founder plans</div>
+        </div>
+      </div>
+
+      <!-- Local Market — locked for Host -->
+      <div class="locked-card">
+        <div class="chart-title">Local Market</div>
+        <div class="chart-sub">How you compare to similar properties nearby</div>
+        <div class="lm-bars" style="margin-top:12px">
+          <div class="lm-bar" style="height:70%;background:#e0e7ff"></div>
+          <div class="lm-bar" style="height:85%;background:#6366f1"></div>
+          <div class="lm-bar" style="height:60%;background:#e0e7ff"></div>
+          <div class="lm-bar" style="height:75%;background:#e0e7ff"></div>
+          <div class="lm-bar" style="height:55%;background:#e0e7ff"></div>
+          <div class="lm-bar" style="height:80%;background:#e0e7ff"></div>
+        </div>
+        <div class="lm-labels">
+          <div class="lm-label">Prop A</div>
+          <div class="lm-label" style="color:#6366f1;font-weight:600">You</div>
+          <div class="lm-label">Prop B</div>
+          <div class="lm-label">Prop C</div>
+          <div class="lm-label">Prop D</div>
+          <div class="lm-label">Prop E</div>
+        </div>
+        <div class="locked-overlay">
+          <div class="locked-pill">🔒 Unlock Local Market</div>
+          <div class="locked-sub">Available on Founder plan</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePanel(show, hide) {
+  var s = document.getElementById(show);
+  var h = document.getElementById(hide);
+  if (h) h.style.display = 'none';
+  s.style.display = s.style.display === 'block' ? 'none' : 'block';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.user-area') && !e.target.closest('.alert-bell') && !e.target.closest('.alert-panel')) {
+    document.getElementById('userDropdown').style.display = 'none';
+    document.getElementById('alertPanel').style.display = 'none';
+  }
+});
+document.querySelectorAll('.time-tab').forEach(t => {
+  t.addEventListener('click', function() {
+    document.querySelectorAll('.time-tab').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

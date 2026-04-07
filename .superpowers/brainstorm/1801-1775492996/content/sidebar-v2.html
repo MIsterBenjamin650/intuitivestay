@@ -1,0 +1,170 @@
+<h2>Revised Navigation Structure</h2>
+<p class="subtitle">Billing moves to profile menu · Alerts gets topbar prominence · Sidebar varies by plan · Insights lives inside the dashboard</p>
+
+<style>
+  body { font-family: Inter, system-ui, sans-serif; }
+  .layout { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; margin-top: 1.5rem; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .col-head { font-size: 13px; font-weight: 700; color: #111827; text-align: center; }
+  .col-sub { font-size: 11px; color: #6b7280; text-align: center; max-width: 220px; }
+
+  /* Topbar */
+  .topbar { background: white; border: 1px solid #e5e7eb; border-radius: 10px 10px 0 0; height: 44px; display: flex; align-items: center; padding: 0 14px; gap: 10px; width: 220px; box-sizing: border-box; }
+  .topbar-title { font-size: 13px; font-weight: 700; color: #111827; flex: 1; }
+  .topbar-bell { position: relative; width: 28px; height: 28px; background: #fff7ed; border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #fed7aa; }
+  .topbar-bell-icon { font-size: 14px; }
+  .topbar-bell-badge { position: absolute; top: -4px; right: -4px; background: #f97316; color: white; font-size: 9px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .topbar-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; cursor: pointer; }
+
+  /* Sidebar */
+  .sb { background: linear-gradient(180deg,#1e1b4b 0%,#312e81 100%); border-radius: 0 0 0 10px; padding: 14px 0; width: 220px; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.06); }
+  .sb-section { margin-top: 12px; padding: 0 14px; }
+  .sb-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+  .sb-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.65); margin-bottom: 1px; position: relative; }
+  .sb-item.active { background: rgba(255,255,255,0.12); color: white; }
+  .sb-item.active::before { content:''; position:absolute; left:0; top:4px; bottom:4px; width:3px; border-radius:0 3px 3px 0; background:#a5b4fc; }
+  .sb-badge { margin-left: auto; background: rgba(249,115,22,0.9); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+  .sb-badge.upgrade { background: linear-gradient(90deg,#f97316,#f59e0b); }
+  .sb-badge.locked { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); }
+
+  /* Profile dropdown */
+  .dropdown { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px; width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .dd-header { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px; }
+  .dd-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+  .dd-name { font-size: 12px; font-weight: 600; color: #111827; }
+  .dd-email { font-size: 10px; color: #9ca3af; }
+  .dd-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 6px; font-size: 12px; color: #374151; cursor: pointer; }
+  .dd-item:hover { background: #f9fafb; }
+  .dd-item .dd-icon { font-size: 13px; opacity: 0.6; }
+  .dd-item.danger { color: #dc2626; }
+  .dd-divider { height: 1px; background: #f3f4f6; margin: 4px 0; }
+  .dd-badge { margin-left: auto; background: linear-gradient(90deg,#6366f1,#8b5cf6); color: white; font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 10px; }
+
+  /* Alert panel hint */
+  .alert-hint { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 12px 14px; width: 220px; box-sizing: border-box; }
+  .ah-head { font-size: 12px; font-weight: 700; color: #c2410c; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .ah-item { font-size: 11px; color: #7c3aed; background: rgba(139,92,246,0.08); padding: 5px 8px; border-radius: 6px; margin-bottom: 4px; }
+  .ah-item span { color: #6b7280; font-size: 10px; }
+
+  /* Insights locked mockup */
+  .insight-hint { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; width: 220px; box-sizing: border-box; }
+  .ih-head { font-size: 11px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+  .ih-chart { height: 50px; background: #f9fafb; border-radius: 6px; position: relative; overflow: hidden; margin-bottom: 6px; display: flex; align-items: flex-end; gap: 4px; padding: 6px; }
+  .ih-bar { flex: 1; border-radius: 3px 3px 0 0; }
+  .ih-blur { position: absolute; inset: 0; backdrop-filter: blur(4px); background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; }
+  .ih-lock { font-size: 11px; font-weight: 600; color: #6366f1; background: white; padding: 3px 8px; border-radius: 20px; border: 1px solid #e0e7ff; }
+
+  .row { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .section-label { font-size: 11px; font-weight: 700; color: #374151; text-align: center; margin-top: 20px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+</style>
+
+<div class="layout">
+
+  <!-- HOST / PARTNER (1 property) -->
+  <div class="col">
+    <div class="col-head">Host &amp; Partner plan</div>
+    <div class="col-sub">1 property · sidebar is focused</div>
+    <div class="topbar">
+      <span class="topbar-title">Dashboard</span>
+      <div class="topbar-bell">
+        <span class="topbar-bell-icon">🔔</span>
+        <span class="topbar-bell-badge">3</span>
+      </div>
+      <div class="topbar-avatar">DS</div>
+    </div>
+    <div class="sb">
+      <div class="sb-section">
+        <div class="sb-label">Workspace</div>
+        <div class="sb-item active">📊 Dashboard</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">My Property</div>
+        <div class="sb-item">📊 Dashboard</div>
+        <div class="sb-item">👥 Feedback</div>
+        <div class="sb-item">📱 QR Codes</div>
+        <div class="sb-item">🏘️ Local Market <span class="sb-badge upgrade">Upgrade</span></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Organisation</div>
+        <div class="sb-item">👤 Team</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOUNDER (multiple properties) -->
+  <div class="col">
+    <div class="col-head">Founder plan</div>
+    <div class="col-sub">Multiple properties · Properties list in nav</div>
+    <div class="topbar">
+      <span class="topbar-title">Dashboard</span>
+      <div class="topbar-bell">
+        <span class="topbar-bell-icon">🔔</span>
+        <span class="topbar-bell-badge">12</span>
+      </div>
+      <div class="topbar-avatar">DS</div>
+    </div>
+    <div class="sb">
+      <div class="sb-section">
+        <div class="sb-label">Workspace</div>
+        <div class="sb-item active">📊 Dashboard</div>
+        <div class="sb-item">🏨 Properties</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Current Property</div>
+        <div class="sb-item">📊 Dashboard</div>
+        <div class="sb-item">👥 Feedback</div>
+        <div class="sb-item">📱 QR Codes</div>
+        <div class="sb-item">🏘️ Local Market</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Organisation</div>
+        <div class="sb-item">👤 Team</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile dropdown -->
+  <div class="col">
+    <div class="col-head">Profile menu</div>
+    <div class="col-sub">Plans &amp; Billing lives here, not in sidebar</div>
+    <div style="height:44px"></div>
+    <div class="dropdown">
+      <div class="dd-header">
+        <div class="dd-avatar">DS</div>
+        <div>
+          <div class="dd-name">Derek Smith</div>
+          <div class="dd-email">derek@mcdonalds.com</div>
+        </div>
+      </div>
+      <div class="dd-item">👤 Account Details</div>
+      <div class="dd-item">💳 Plans &amp; Billing <span class="dd-badge">Host</span></div>
+      <div class="dd-divider"></div>
+      <div class="dd-item danger">↩ Sign Out</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-label">Alerts — prominent in topbar, full page when clicked</div>
+<div class="row">
+  <div class="alert-hint">
+    <div class="ah-head">🔔 Active Alerts (3)</div>
+    <div class="ah-item">Mcdonalds · GCS 4.2 <span>— Resilience below threshold</span></div>
+    <div class="ah-item">Mcdonalds · GCS 3.8 <span>— Empathy below threshold</span></div>
+    <div class="ah-item">Mcdonalds · GCS 4.9 <span>— Recognition below threshold</span></div>
+  </div>
+
+  <div class="insight-hint">
+    <div class="ih-head">📈 Advanced Insights — locked by tier</div>
+    <div class="ih-chart">
+      <div class="ih-bar" style="height:80%;background:#6366f1"></div>
+      <div class="ih-bar" style="height:60%;background:#14b8a6"></div>
+      <div class="ih-bar" style="height:90%;background:#8b5cf6"></div>
+      <div class="ih-bar" style="height:50%;background:#f97316"></div>
+      <div class="ih-bar" style="height:70%;background:#6366f1"></div>
+      <div class="ih-bar" style="height:40%;background:#14b8a6"></div>
+      <div class="ih-blur"><span class="ih-lock">🔒 Upgrade to unlock</span></div>
+    </div>
+    <div style="font-size:10px;color:#9ca3af">Advanced charts live inside the dashboard, blurred/locked for lower tiers. No separate nav item needed.</div>
+  </div>
+</div>

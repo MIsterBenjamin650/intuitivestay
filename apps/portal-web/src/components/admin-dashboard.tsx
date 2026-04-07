@@ -76,6 +76,7 @@ function statusBadge(status: string) {
 
 function planBadge(plan: string) {
   const styles: Record<string, string> = {
+    member: "bg-gray-100 text-gray-600",
     host: "bg-slate-100 text-slate-700",
     partner: "bg-blue-100 text-blue-700",
     founder: "bg-purple-100 text-purple-700",
@@ -269,7 +270,13 @@ export function AdminDashboard() {
       {/* Stats — Row 2: Plan Distribution */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plan Distribution</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card size="sm" className="bg-gray-50">
+            <CardHeader>
+              <CardDescription className="text-gray-600">Member</CardDescription>
+              <CardTitle className="text-gray-800">{isLoading ? "—" : (stats?.memberCount ?? 0)}</CardTitle>
+            </CardHeader>
+          </Card>
           <Card size="sm" className="bg-slate-50">
             <CardHeader>
               <CardDescription className="text-slate-600">Host</CardDescription>

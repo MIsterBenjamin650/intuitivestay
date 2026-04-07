@@ -155,7 +155,7 @@ function RouteComponent() {
   const { propertyId } = Route.useParams()
   const { session } = useRouteContext({ from: "/_portal" })
   const plan = (session as { plan?: string | null } | null)?.plan ?? null
-  const canSeeLeaderboard = plan === "host" || plan === "partner"
+  const canSeeLeaderboard = plan === "member" || plan === "host" || plan === "partner"
 
   const [days, setDays] = React.useState<Days>(30)
   const trpc = useTRPC()

@@ -56,7 +56,7 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
       id: orgId,
       name: `${input.ownerName}'s Organisation`,
       slug,
-      plan: "host",
+      plan: "member",
       ownerId: userId,
       createdAt: new Date(),
       updatedAt: new Date(),
