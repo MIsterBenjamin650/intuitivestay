@@ -1,6 +1,7 @@
 import { db } from "@intuitive-stay/db"
-import { organisations, user } from "@intuitive-stay/db/schema"
+import { organisations, properties, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
+import { sendSubscriptionNotificationEmail } from "@intuitive-stay/api/lib/email"
 import { eq } from "drizzle-orm"
 import type { Context } from "hono"
 import Stripe from "stripe"
@@ -171,6 +172,23 @@ export async function stripeWebhookHandler(c: Context) {
         await applyMilestoneDiscounts(sub)
       } catch (err) {
         console.error("[milestone-discount] Failed to apply milestone discount:", err)
+      }
+
+      try {
+        const property = await db.query.properties.findFirst({
+          where: eq(properties.organisationId, orgId),
+        })
+        if (property) {
+          await sendSubscriptionNotificationEmail(
+            property.ownerEmail,
+            property.ownerName,
+            property.name,
+            plan,
+            isTrialing,
+          )
+        }
+      } catch (err) {
+        console.error("[subscription-notify] Failed to send admin notification:", err)
       }
     }
   }

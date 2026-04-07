@@ -162,6 +162,30 @@ export async function sendContactEmail(
   })
 }
 
+export async function sendSubscriptionNotificationEmail(
+  ownerEmail: string,
+  ownerName: string,
+  propertyName: string,
+  plan: string,
+  isTrialing: boolean,
+) {
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1)
+  const statusLabel = isTrialing ? "started a free trial" : "subscribed"
+  await resend.emails.send({
+    from: FROM,
+    to: env.ADMIN_EMAIL,
+    subject: `🎉 ${ownerName} ${statusLabel} — ${planLabel} plan`,
+    html: `<h2>New ${isTrialing ? "Trial" : "Subscription"}</h2>
+<table style="border-collapse:collapse;width:100%;max-width:500px">
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Owner</td><td style="padding:8px">${ownerName}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Email</td><td style="padding:8px">${ownerEmail}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Property</td><td style="padding:8px">${propertyName}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Plan</td><td style="padding:8px">${planLabel}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Status</td><td style="padding:8px">${isTrialing ? "Trial started" : "Active subscription"}</td></tr>
+</table>`,
+  })
+}
+
 export async function sendStaffInviteEmail(
   invitedEmail: string,
   propertyName: string,
