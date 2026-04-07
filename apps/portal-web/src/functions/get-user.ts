@@ -13,11 +13,9 @@ export const getUser = createServerFn({ method: "GET" })
     //   { session, user }                  — direct format (with throw:true)
     // Handle both so we are not relying on an assumed internal format.
     const raw = context.session as Record<string, unknown> | null
-    console.log("[get-user] raw session:", JSON.stringify(raw))
     if (!raw) return null
     const sessionData = (raw.data as Record<string, unknown> | null | undefined) ?? raw
     const user = sessionData?.user as { id: string; email: string; name: string } | undefined
-    console.log("[get-user] user:", JSON.stringify(user))
     if (!user?.id) return null
 
     const userId = user.id
