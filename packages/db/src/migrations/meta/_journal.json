@@ -8,6 +8,13 @@
       "when": 1775475114908,
       "tag": "0000_foamy_silvermane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775497716548,
+      "tag": "0001_smart_paper_doll",
+      "breakpoints": true
     }
   ]
 }

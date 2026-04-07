@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InviteRouteImport } from './routes/invite'
 import { Route as PortalRouteImport } from './routes/_portal'
 import { Route as PortalIndexRouteImport } from './routes/_portal.index'
 import { Route as FUniqueCodeRouteImport } from './routes/f.$uniqueCode'
@@ -22,6 +23,7 @@ import { Route as PortalOrganisationMembersRouteImport } from './routes/_portal.
 import { Route as PortalOrganisationBillingRouteImport } from './routes/_portal.organisation.billing'
 import { Route as PortalOrganisationAlertsRouteImport } from './routes/_portal.organisation.alerts'
 import { Route as PortalAdminApprovalsRouteImport } from './routes/_portal.admin.approvals'
+import { Route as PortalPropertiesPropertyIdTeamRouteImport } from './routes/_portal.properties.$propertyId.team'
 import { Route as PortalPropertiesPropertyIdQrFormRouteImport } from './routes/_portal.properties.$propertyId.qr-form'
 import { Route as PortalPropertiesPropertyIdLocalMarketRouteImport } from './routes/_portal.properties.$propertyId.local-market'
 import { Route as PortalPropertiesPropertyIdInsightsRouteImport } from './routes/_portal.properties.$propertyId.insights'
@@ -39,6 +41,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalRoute = PortalRouteImport.update({
@@ -99,6 +106,12 @@ const PortalAdminApprovalsRoute = PortalAdminApprovalsRouteImport.update({
   path: '/admin/approvals',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalPropertiesPropertyIdTeamRoute =
+  PortalPropertiesPropertyIdTeamRouteImport.update({
+    id: '/$propertyId/team',
+    path: '/$propertyId/team',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
 const PortalPropertiesPropertyIdQrFormRoute =
   PortalPropertiesPropertyIdQrFormRouteImport.update({
     id: '/$propertyId/qr-form',
@@ -150,6 +163,7 @@ const PortalAdminPropertiesPropertyIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof PortalIndexRoute
+  '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/choose-plan': typeof PortalChoosePlanRoute
@@ -169,8 +183,10 @@ export interface FileRoutesByFullPath {
   '/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
   '/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
   '/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
+  '/properties/$propertyId/team': typeof PortalPropertiesPropertyIdTeamRoute
 }
 export interface FileRoutesByTo {
+  '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/choose-plan': typeof PortalChoosePlanRoute
@@ -191,10 +207,12 @@ export interface FileRoutesByTo {
   '/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
   '/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
   '/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
+  '/properties/$propertyId/team': typeof PortalPropertiesPropertyIdTeamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_portal': typeof PortalRouteWithChildren
+  '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_portal/choose-plan': typeof PortalChoosePlanRoute
@@ -215,11 +233,13 @@ export interface FileRoutesById {
   '/_portal/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
   '/_portal/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
   '/_portal/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
+  '/_portal/properties/$propertyId/team': typeof PortalPropertiesPropertyIdTeamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/invite'
     | '/login'
     | '/reset-password'
     | '/choose-plan'
@@ -239,8 +259,10 @@ export interface FileRouteTypes {
     | '/properties/$propertyId/insights'
     | '/properties/$propertyId/local-market'
     | '/properties/$propertyId/qr-form'
+    | '/properties/$propertyId/team'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/invite'
     | '/login'
     | '/reset-password'
     | '/choose-plan'
@@ -261,9 +283,11 @@ export interface FileRouteTypes {
     | '/properties/$propertyId/insights'
     | '/properties/$propertyId/local-market'
     | '/properties/$propertyId/qr-form'
+    | '/properties/$propertyId/team'
   id:
     | '__root__'
     | '/_portal'
+    | '/invite'
     | '/login'
     | '/reset-password'
     | '/_portal/choose-plan'
@@ -284,10 +308,12 @@ export interface FileRouteTypes {
     | '/_portal/properties/$propertyId/insights'
     | '/_portal/properties/$propertyId/local-market'
     | '/_portal/properties/$propertyId/qr-form'
+    | '/_portal/properties/$propertyId/team'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
+  InviteRoute: typeof InviteRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   FUniqueCodeRoute: typeof FUniqueCodeRoute
@@ -307,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_portal': {
@@ -386,6 +419,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAdminApprovalsRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/_portal/properties/$propertyId/team': {
+      id: '/_portal/properties/$propertyId/team'
+      path: '/$propertyId/team'
+      fullPath: '/properties/$propertyId/team'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdTeamRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
     '/_portal/properties/$propertyId/qr-form': {
       id: '/_portal/properties/$propertyId/qr-form'
       path: '/$propertyId/qr-form'
@@ -453,6 +493,7 @@ interface PortalPropertiesRouteChildren {
   PortalPropertiesPropertyIdInsightsRoute: typeof PortalPropertiesPropertyIdInsightsRoute
   PortalPropertiesPropertyIdLocalMarketRoute: typeof PortalPropertiesPropertyIdLocalMarketRoute
   PortalPropertiesPropertyIdQrFormRoute: typeof PortalPropertiesPropertyIdQrFormRoute
+  PortalPropertiesPropertyIdTeamRoute: typeof PortalPropertiesPropertyIdTeamRoute
 }
 
 const PortalPropertiesRouteChildren: PortalPropertiesRouteChildren = {
@@ -468,6 +509,7 @@ const PortalPropertiesRouteChildren: PortalPropertiesRouteChildren = {
   PortalPropertiesPropertyIdLocalMarketRoute:
     PortalPropertiesPropertyIdLocalMarketRoute,
   PortalPropertiesPropertyIdQrFormRoute: PortalPropertiesPropertyIdQrFormRoute,
+  PortalPropertiesPropertyIdTeamRoute: PortalPropertiesPropertyIdTeamRoute,
 }
 
 const PortalPropertiesRouteWithChildren =
@@ -505,6 +547,7 @@ const PortalRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
+  InviteRoute: InviteRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   FUniqueCodeRoute: FUniqueCodeRoute,
