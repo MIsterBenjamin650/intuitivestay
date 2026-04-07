@@ -13,6 +13,102 @@ const PRICE_TO_PLAN: Record<string, string> = {
   [env.STRIPE_PRICE_FOUNDER]: "founder",
 }
 
+function getMilestoneLevel(count: number): 0 | 1 | 2 | 3 {
+  if (count >= 1000) return 3
+  if (count >= 500) return 2
+  if (count >= 250) return 1
+  return 0
+}
+
+function getCouponId(sub: Stripe.Subscription, milestoneLevel: 0 | 1 | 2 | 3): string | null {
+  if (milestoneLevel === 1) return env.STRIPE_COUPON_M1 ?? null
+  if (milestoneLevel === 2) return env.STRIPE_COUPON_M2 ?? null
+  if (milestoneLevel === 3) {
+    const priceId = sub.items.data[0]?.price.id ?? ""
+    const plan = PRICE_TO_PLAN[priceId] ?? "host"
+    if (plan === "partner") return env.STRIPE_COUPON_M3_PARTNER ?? null
+    if (plan === "founder") return env.STRIPE_COUPON_M3_FOUNDER ?? null
+    return env.STRIPE_COUPON_M3_HOST ?? null
+  }
+  return null
+}
+
+async function countActiveSubscriptions(): Promise<number> {
+  let count = 0
+  let hasMore = true
+  let startingAfter: string | undefined
+
+  while (hasMore) {
+    const page = await stripe.subscriptions.list({
+      status: "active",
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+    count += page.data.length
+    hasMore = page.has_more
+    if (hasMore && page.data.length > 0) {
+      startingAfter = page.data[page.data.length - 1]!.id
+    }
+  }
+
+  // Also count trialing subscriptions
+  hasMore = true
+  startingAfter = undefined
+  while (hasMore) {
+    const page = await stripe.subscriptions.list({
+      status: "trialing",
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+    count += page.data.length
+    hasMore = page.has_more
+    if (hasMore && page.data.length > 0) {
+      startingAfter = page.data[page.data.length - 1]!.id
+    }
+  }
+
+  return count
+}
+
+async function applyMilestoneDiscounts(newSub: Stripe.Subscription): Promise<void> {
+  const totalCount = await countActiveSubscriptions()
+  const previousCount = totalCount - 1
+  const currentMilestone = getMilestoneLevel(totalCount)
+  const previousMilestone = getMilestoneLevel(previousCount)
+  const milestoneJustCrossed = currentMilestone > previousMilestone
+
+  if (milestoneJustCrossed) {
+    // Apply coupon to ALL active+trialing subscriptions
+    for (const status of ["active", "trialing"] as const) {
+      let hasMore = true
+      let startingAfter: string | undefined
+      while (hasMore) {
+        const page = await stripe.subscriptions.list({
+          status,
+          limit: 100,
+          ...(startingAfter ? { starting_after: startingAfter } : {}),
+        })
+        for (const sub of page.data) {
+          const couponId = getCouponId(sub, currentMilestone)
+          if (couponId) {
+            await stripe.subscriptions.update(sub.id, { coupon: couponId })
+          }
+        }
+        hasMore = page.has_more
+        if (hasMore && page.data.length > 0) {
+          startingAfter = page.data[page.data.length - 1]!.id
+        }
+      }
+    }
+  } else if (currentMilestone > 0) {
+    // Apply current milestone coupon only to the new subscription
+    const couponId = getCouponId(newSub, currentMilestone)
+    if (couponId) {
+      await stripe.subscriptions.update(newSub.id, { coupon: couponId })
+    }
+  }
+}
+
 async function findOrgByEmail(email: string): Promise<string | null> {
   const result = await db
     .select({ orgId: organisations.id })
@@ -69,6 +165,14 @@ export async function stripeWebhookHandler(c: Context) {
         stripeCustomerId: sub.customer as string,
       })
       .where(eq(organisations.id, orgId))
+
+    if (event.type === "customer.subscription.created") {
+      try {
+        await applyMilestoneDiscounts(sub)
+      } catch (err) {
+        console.error("[milestone-discount] Failed to apply milestone discount:", err)
+      }
+    }
   }
 
   if (event.type === "customer.subscription.deleted") {
