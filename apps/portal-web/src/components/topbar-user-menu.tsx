@@ -93,7 +93,7 @@ export function TopbarUserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={(event) => event.preventDefault()}>
+          <DropdownMenuItem render={<Link to="/organisation/account" />}>
             <SettingsIcon />
             Account Details
           </DropdownMenuItem>

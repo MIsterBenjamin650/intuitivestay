@@ -3,9 +3,12 @@ import { aiDailySummaries, feedback, organisations, properties, propertyScores, 
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
 import { and, avg, count, desc, eq, gte, inArray, isNotNull, max, sql } from "drizzle-orm"
+import Stripe from "stripe"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
 import { generateMagicLinkUrl } from "../lib/generate-magic-link"
 import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
@@ -1306,4 +1309,21 @@ export const propertiesRouter = router({
         generatedAt: summary.generatedAt,
       }
     }),
+
+  getStripePortalUrl: protectedProcedure.query(async ({ ctx }): Promise<{ url: string | null }> => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+
+    if (!org?.stripeCustomerId) {
+      return { url: null }
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: org.stripeCustomerId,
+      return_url: env.PUBLIC_PORTAL_URL + "/organisation/billing",
+    })
+
+    return { url: session.url }
+  }),
 })
