@@ -96,6 +96,7 @@ export const feedbackRouter = router({
         anticipation: z.number().int().min(1).max(10),
         recognition: z.number().int().min(1).max(10),
         mealTime: z.enum(["breakfast", "lunch", "dinner", "none"]).nullable().optional(),
+        guestEmail: z.string().email().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -120,6 +121,7 @@ export const feedbackRouter = router({
         recognition: input.recognition,
         gcs: gcs.toFixed(2),
         mealTime: input.mealTime ?? null,
+        guestEmail: input.guestEmail ?? null,
         source: "qr_form",
         submittedAt: new Date(),
       })

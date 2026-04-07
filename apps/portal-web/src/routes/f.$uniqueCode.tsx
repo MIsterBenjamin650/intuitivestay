@@ -43,7 +43,7 @@ function SliderInput({
 
   return (
     <div className="space-y-2">
-      <div>
+      <div className="text-center">
         <p className="text-sm font-semibold">{label}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
@@ -54,7 +54,10 @@ function SliderInput({
           className="absolute top-0 pointer-events-none"
           style={{ left: tooltipLeft, transform: "translateX(-50%)" }}
         >
-          <div className="bg-primary text-primary-foreground text-xs font-medium px-2.5 py-1 rounded whitespace-nowrap shadow-sm">
+          <div
+            className="text-xs font-medium px-2.5 py-1 rounded whitespace-nowrap shadow-sm"
+            style={{ background: '#f97316', color: 'white' }}
+          >
             {touched ? RATING_LABELS[value] : "Drag to rate"}
           </div>
           <div
@@ -62,7 +65,7 @@ function SliderInput({
             style={{
               borderLeft: "5px solid transparent",
               borderRight: "5px solid transparent",
-              borderTop: "5px solid var(--primary)",
+              borderTop: "5px solid #f97316",
             }}
           />
         </div>
@@ -77,15 +80,19 @@ function SliderInput({
           onChange={(e) => onChange(Number(e.target.value))}
           className="is-slider w-full h-2 rounded-full appearance-none cursor-pointer outline-none"
           style={{
-            background: `linear-gradient(to right, var(--primary) ${fillPercent}%, var(--muted) ${fillPercent}%)`,
+            background: `linear-gradient(to right, #f97316 ${fillPercent}%, var(--muted) ${fillPercent}%)`,
+            fontFamily: 'Inter, sans-serif',
           }}
         />
 
-        {/* Tick labels */}
-        <div className="flex justify-between mt-1.5 text-xs text-muted-foreground select-none">
-          <span>0</span>
-          <span>5</span>
-          <span>10</span>
+        {/* Tick marks */}
+        <div className="flex justify-between mt-2 px-[1px]">
+          {Array.from({ length: 11 }, (_, i) => (
+            <div key={i} className="flex flex-col items-center gap-0.5">
+              <div className="w-px h-1.5 bg-muted-foreground/40" />
+              <span className="text-[9px] text-muted-foreground/60">{i}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -110,7 +117,7 @@ function FeedbackPage() {
   const [empathy, setEmpathy] = useState(5)
   const [anticipation, setAnticipation] = useState(5)
   const [recognition, setRecognition] = useState(5)
-  const [mealTime, setMealTime] = useState<MealTime>("none")
+  const [mealTime, setMealTime] = useState<MealTime | null>(null)
 
   // Touched tracking — all four must be moved before submit is enabled
   const [resilienceTouched, setResilienceTouched] = useState(false)
@@ -126,8 +133,13 @@ function FeedbackPage() {
   // Optional private message
   const [ventText, setVentText] = useState("")
 
+  // Optional guest email
+  const [guestEmail, setGuestEmail] = useState("")
+
   const allRated =
     resilienceTouched && empathyTouched && anticipationTouched && recognitionTouched
+
+  const canSubmit = allRated && mealTime !== null
 
   // Real-time GCS average — used to adapt the form layout
   const gcs = (resilience + empathy + anticipation + recognition) / 4
@@ -142,7 +154,7 @@ function FeedbackPage() {
   }, [isLowScore])
 
   async function handleSubmit() {
-    if (!allRated || isSubmitting) return
+    if (!allRated || !mealTime || isSubmitting) return
     setIsSubmitting(true)
     setSubmitError(false)
     try {
@@ -154,6 +166,7 @@ function FeedbackPage() {
         anticipation,
         recognition,
         mealTime,
+        guestEmail: guestEmail.trim() || undefined,
       })
 
       // 2. Submit any staff name recognitions
@@ -238,8 +251,8 @@ function FeedbackPage() {
 
         {/* Meal time */}
         <div className="space-y-2">
-          <p className="text-sm font-semibold">Meal time (optional)</p>
-          <div className="flex gap-2 flex-wrap">
+          <p className="text-sm font-semibold text-center">When did you visit?</p>
+          <div className="flex gap-2 flex-wrap justify-center">
             {(["breakfast", "lunch", "dinner", "none"] as MealTime[]).map((m) => (
               <button
                 key={m}
@@ -306,7 +319,10 @@ function FeedbackPage() {
         {/* Staff recognition — hidden when overall score is low */}
         {!isLowScore && <div className="space-y-3">
           <div>
-            <p className="text-sm font-semibold">Recognise a team member</p>
+            <p className="text-sm font-semibold">
+              Did any particular staff members stand out for you today?
+              <span className="ml-2 text-xs font-normal text-muted-foreground">(Optional)</span>
+            </p>
             <p className="text-xs text-muted-foreground">
               Did someone go above and beyond? Let us know their name — all fields are
               optional.
@@ -344,7 +360,7 @@ function FeedbackPage() {
         {/* Private message */}
         <div ref={ventBoxRef} className="space-y-3">
           <div>
-            <p className="text-sm font-semibold">Anything to share privately?</p>
+            <p className="text-sm font-semibold">Give us the opportunity to make it right</p>
             <p className="text-xs text-muted-foreground">
               Your message goes directly to the property owner — not a public review.
               This field is optional.
@@ -353,10 +369,17 @@ function FeedbackPage() {
           <textarea
             value={ventText}
             onChange={(e) => setVentText(e.target.value)}
-            placeholder="Share your thoughts…"
+            placeholder="Share your thoughts"
             rows={4}
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
             maxLength={2000}
+          />
+          <input
+            type="email"
+            value={guestEmail}
+            onChange={(e) => setGuestEmail(e.target.value)}
+            placeholder="Your email (optional — if you'd like a response)"
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -364,10 +387,10 @@ function FeedbackPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!allRated || isSubmitting}
+          disabled={!canSubmit || isSubmitting}
           className={cn(
             "w-full py-3 rounded-lg font-semibold text-sm transition-colors",
-            allRated && !isSubmitting
+            canSubmit && !isSubmitting
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
               : "bg-muted text-muted-foreground cursor-not-allowed",
           )}

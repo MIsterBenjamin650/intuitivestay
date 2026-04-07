@@ -22,6 +22,7 @@ export const feedback = pgTable("feedback", {
   namedStaffMember: text("named_staff_member"),
   ventText: text("vent_text"),
   adjectives: text("adjectives"), // comma-separated guest-chosen words e.g. "clean,friendly,quiet"
+  guestEmail: text("guest_email"),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 },
 (table) => [index("feedback_propertyId_idx").on(table.propertyId)],
