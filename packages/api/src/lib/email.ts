@@ -22,7 +22,7 @@ export async function sendApprovalEmail(
     from: FROM,
     to: ownerEmail,
     subject: `Your property "${propertyName}" has been approved`,
-    html: `<h1>Welcome to IntuItiveStay, ${ownerName}!</h1>
+    html: `<h1>Welcome to IntuitiveStay, ${ownerName}!</h1>
 <p>Your property <strong>${propertyName}</strong> has been approved and is now live.</p>
 <p>Click below to access your dashboard:</p>
 ${loginSection}
@@ -46,9 +46,9 @@ export async function sendRejectionEmail(
   await resend.emails.send({
     from: FROM,
     to: ownerEmail,
-    subject: "Update on your IntuItiveStay application",
+    subject: "Update on your IntuitiveStay application",
     html: `<h1>Hi ${ownerName},</h1>
-<p>Thank you for submitting <strong>${propertyName}</strong> to IntuItiveStay.</p>
+<p>Thank you for submitting <strong>${propertyName}</strong> to IntuitiveStay.</p>
 <p>We need a little more information before we can approve your property. Please reply to this email with any additional details and we'll be in touch shortly.</p>`,
   })
 }
@@ -60,9 +60,9 @@ export async function sendPasswordResetEmail(
   await resend.emails.send({
     from: FROM,
     to: ownerEmail,
-    subject: "Reset your IntuItiveStay password",
+    subject: "Reset your IntuitiveStay password",
     html: `<h1>Reset your password</h1>
-<p>Click the link below to reset your IntuItiveStay password. This link expires in 1 hour.</p>
+<p>Click the link below to reset your IntuitiveStay password. This link expires in 1 hour.</p>
 <p><a href="${resetUrl}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Reset Password →</a></p>
 <p style="font-size:12px;color:#64748b">If you didn't request this, you can safely ignore this email.</p>`,
   })

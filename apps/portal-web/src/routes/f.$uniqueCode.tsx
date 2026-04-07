@@ -227,7 +227,7 @@ function FeedbackPage() {
         {/* Header */}
         <div className="text-center space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            IntuItiveStay
+            IntuitiveStay
           </p>
           <h1 className="text-xl font-bold">{data?.propertyName}</h1>
         </div>
