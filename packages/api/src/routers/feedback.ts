@@ -410,4 +410,46 @@ export const feedbackRouter = router({
         submittedAt: row.submittedAt,
       }))
     }),
+
+  /**
+   * Protected — returns all feedback flagged as uniform score (all 4 pillars identical)
+   * for a property, ordered most recent first. Used on the Alerts page Flagged tab.
+   */
+  getUniformScoreFeedback: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const rows = await db
+        .select()
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.propertyId, input.propertyId),
+            eq(feedback.isUniformScore, true),
+          ),
+        )
+        .orderBy(desc(feedback.submittedAt))
+        .limit(50)
+
+      return rows.map((row) => ({
+        id: row.id,
+        gcs: Number(row.gcs),
+        resilience: row.resilience,
+        empathy: row.empathy,
+        anticipation: row.anticipation,
+        recognition: row.recognition,
+        mealTime: row.mealTime,
+        submittedAt: row.submittedAt,
+      }))
+    }),
 })
