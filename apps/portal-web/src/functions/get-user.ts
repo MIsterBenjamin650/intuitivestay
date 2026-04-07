@@ -8,11 +8,16 @@ import { authMiddleware } from "@/middleware/auth"
 export const getUser = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    if (!context.session || !context.session.user) return null
+    // authClient.getSession returns { data: { session, user } | null, error }
+    // We need to reach into .data to get the actual user object.
+    const sessionData = (context.session as { data?: { user?: { id: string; email: string; name: string } } } | null)?.data
+    if (!sessionData || !sessionData.user) return null
+
+    const userId = sessionData.user.id
 
     // Check if this user is a property owner
     const org = await db.query.organisations.findFirst({
-      where: eq(organisations.ownerId, context.session.user.id),
+      where: eq(organisations.ownerId, userId),
       columns: { id: true, subscriptionStatus: true, plan: true },
     })
 
@@ -25,10 +30,10 @@ export const getUser = createServerFn({ method: "GET" })
       return {
         ...context.session,
         user: {
-          ...context.session.user,
+          ...sessionData.user,
           properties: orgProperties,
         },
-        isAdmin: context.session.user.email === process.env.ADMIN_EMAIL,
+        isAdmin: sessionData.user.email === process.env.ADMIN_EMAIL,
         isStaff: false,
         staffPropertyId: null,
         staffPermissions: null,
@@ -43,7 +48,7 @@ export const getUser = createServerFn({ method: "GET" })
       .from(propertyMembers)
       .where(
         and(
-          eq(propertyMembers.userId, context.session.user.id),
+          eq(propertyMembers.userId, userId),
           eq(propertyMembers.status, "active"),
         ),
       )
@@ -53,7 +58,7 @@ export const getUser = createServerFn({ method: "GET" })
       return {
         ...context.session,
         user: {
-          ...context.session.user,
+          ...sessionData.user,
           properties: [],
         },
         isAdmin: false,
@@ -76,10 +81,10 @@ export const getUser = createServerFn({ method: "GET" })
     return {
       ...context.session,
       user: {
-        ...context.session.user,
+        ...sessionData.user,
         properties: [],
       },
-      isAdmin: context.session.user.email === process.env.ADMIN_EMAIL,
+      isAdmin: sessionData.user.email === process.env.ADMIN_EMAIL,
       isStaff: false,
       staffPropertyId: null,
       staffPermissions: null,
