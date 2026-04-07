@@ -316,7 +316,6 @@ export function AppSidebar({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          )
         )}
       </SidebarContent>
 
