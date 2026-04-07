@@ -260,8 +260,13 @@ export const propertiesRouter = router({
           ownerName: properties.ownerName,
           ownerEmail: properties.ownerEmail,
           createdAt: properties.createdAt,
+          adminNotes: properties.adminNotes,
+          isVip: properties.isVip,
           plan: organisations.plan,
           subscriptionStatus: organisations.subscriptionStatus,
+          trialEndsAt: organisations.trialEndsAt,
+          subscriptionEndsAt: organisations.subscriptionEndsAt,
+          stripeCustomerId: organisations.stripeCustomerId,
           avgGcs: propertyScores.avgGcs,
           avgResilience: propertyScores.avgResilience,
           avgEmpathy: propertyScores.avgEmpathy,
@@ -316,6 +321,11 @@ export const propertiesRouter = router({
           ownerEmail: row.ownerEmail,
           plan: row.plan,
           subscriptionStatus: row.subscriptionStatus,
+          adminNotes: row.adminNotes,
+          isVip: row.isVip,
+          trialEndsAt: row.trialEndsAt,
+          subscriptionEndsAt: row.subscriptionEndsAt,
+          stripeCustomerId: row.stripeCustomerId,
           createdAt: row.createdAt,
         },
         scores: hasScores
@@ -349,6 +359,130 @@ export const propertiesRouter = router({
           mealTime: f.mealTime,
         })),
       }
+    }),
+
+  resendApprovalEmail: adminProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ input }) => {
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+
+      if (!property) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      await sendApprovalEmail(property.ownerEmail, property.ownerName, property.name)
+
+      return { success: true }
+    }),
+
+  deleteProperty: adminProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ input }) => {
+      const [deleted] = await db
+        .delete(properties)
+        .where(eq(properties.id, input.propertyId))
+        .returning()
+
+      if (!deleted) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      return { success: true }
+    }),
+
+  updatePropertyDetails: adminProcedure
+    .input(
+      z.object({
+        propertyId: z.string(),
+        name: z.string().optional(),
+        city: z.string().optional(),
+        country: z.string().optional(),
+        postcode: z.string().optional(),
+        type: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { propertyId, name, city, country, postcode, type } = input
+
+      const [updated] = await db
+        .update(properties)
+        .set({
+          ...(name !== undefined && { name }),
+          ...(city !== undefined && { city }),
+          ...(country !== undefined && { country }),
+          ...(postcode !== undefined && { postcode }),
+          ...(type !== undefined && { type }),
+          updatedAt: new Date(),
+        })
+        .where(eq(properties.id, propertyId))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      return { success: true }
+    }),
+
+  updateAdminNote: adminProcedure
+    .input(z.object({ propertyId: z.string(), note: z.string() }))
+    .mutation(async ({ input }) => {
+      const [updated] = await db
+        .update(properties)
+        .set({ adminNotes: input.note, updatedAt: new Date() })
+        .where(eq(properties.id, input.propertyId))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      return { success: true }
+    }),
+
+  toggleVip: adminProcedure
+    .input(z.object({ propertyId: z.string(), isVip: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const [updated] = await db
+        .update(properties)
+        .set({ isVip: input.isVip, updatedAt: new Date() })
+        .where(eq(properties.id, input.propertyId))
+        .returning()
+
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      return { success: true }
+    }),
+
+  resetOwnerPassword: adminProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ input }) => {
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+
+      if (!property) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      const response = await fetch(`${env.BETTER_AUTH_URL}/api/auth/request-password-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: property.ownerEmail,
+          redirectTo: `${env.PUBLIC_PORTAL_URL}/reset-password`,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to send password reset email" })
+      }
+
+      return { success: true }
     }),
 
   adminUpdatePlan: adminProcedure

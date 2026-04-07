@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { organisations } from "./organisations";
 
@@ -15,6 +15,8 @@ export const properties = pgTable("properties", {
   type: text("type"), // 'hotel' | 'villa' | 'bnb' | 'restaurant' | 'other'
   postcode: text("postcode"),
   status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected'
+  adminNotes: text("admin_notes"),
+  isVip: boolean("is_vip").default(false).notNull(),
   ownerEmail: text("owner_email").notNull(),
   ownerName: text("owner_name").notNull(),
   // ownerEmail/ownerName copied from Wix registration form; add userId FK in a later migration once owner creates their portal account

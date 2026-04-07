@@ -5,10 +5,10 @@ import {
   CardTitle,
 } from "@intuitive-stay/ui/components/card"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
-import { useTRPC } from "@/utils/trpc"
+import { useTRPC, useTRPCClient } from "@/utils/trpc"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -57,6 +57,11 @@ function truncate(text: string | null | undefined, len: number): string {
   return text.length > len ? text.slice(0, len) + "…" : text
 }
 
+function formatDate(d: string | Date | null | undefined): string {
+  if (!d) return "N/A"
+  return new Date(d).toLocaleDateString()
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -97,6 +102,27 @@ export function AdminPropertyDetail({ propertyId }: Props) {
   )
 }
 
+type PropertyShape = {
+  id: string
+  name: string
+  status: string
+  city: string | null
+  country: string | null
+  address: string | null
+  type: string | null
+  postcode?: string | null
+  ownerName: string
+  ownerEmail: string
+  plan: string
+  subscriptionStatus: string
+  adminNotes: string | null
+  isVip: boolean
+  trialEndsAt: string | Date | null
+  subscriptionEndsAt: string | Date | null
+  stripeCustomerId: string | null
+  createdAt: string | Date
+}
+
 function AdminPropertyDetailInner({
   propertyId,
   property,
@@ -107,30 +133,149 @@ function AdminPropertyDetailInner({
   trpc,
 }: {
   propertyId: string
-  property: { id: string; name: string; status: string; city: string | null; country: string | null; address: string | null; type: string | null; ownerName: string; ownerEmail: string; plan: string; subscriptionStatus: string; createdAt: string | Date }
+  property: PropertyShape
   scores: { avgGcs: number; avgResilience: number | null; avgEmpathy: number | null; avgAnticipation: number | null; avgRecognition: number | null; totalFeedback: number } | null
   qrCode: { uniqueCode: string; feedbackUrl: string; createdAt: string | Date } | null
   feedback: { id: string; submittedAt: string | Date; gcs: number; resilience: number; empathy: number; anticipation: number; recognition: number; namedStaffMember: string | null; ventText: string | null; source: string | null; mealTime: string | null }[]
   queryClient: ReturnType<typeof useQueryClient>
   trpc: ReturnType<typeof useTRPC>
 }) {
+  const navigate = useNavigate()
+  const trpcClient = useTRPCClient()
+
+  // Plan management state
   const [selectedPlan, setSelectedPlan] = useState(property.plan as "member" | "host" | "partner" | "founder")
   const [selectedStatus, setSelectedStatus] = useState<"none" | "trial" | "active" | "grace" | "expired">(
     (property.subscriptionStatus as "none" | "trial" | "active" | "grace" | "expired") ?? "none",
   )
   const [planSuccess, setPlanSuccess] = useState(false)
 
+  // Edit property details state
+  const [editName, setEditName] = useState(property.name)
+  const [editCity, setEditCity] = useState(property.city ?? "")
+  const [editCountry, setEditCountry] = useState(property.country ?? "")
+  const [editPostcode, setEditPostcode] = useState(property.postcode ?? "")
+  const [editType, setEditType] = useState(property.type ?? "")
+  const [detailsSuccess, setDetailsSuccess] = useState(false)
+  const [detailsError, setDetailsError] = useState("")
+
+  // Admin notes state
+  const [adminNote, setAdminNote] = useState(property.adminNotes ?? "")
+  const [noteSuccess, setNoteSuccess] = useState(false)
+  const [noteError, setNoteError] = useState("")
+
+  // VIP state
+  const [isVip, setIsVip] = useState(property.isVip)
+
+  // Quick action feedback states
+  const [actionMessage, setActionMessage] = useState<{ text: string; type: "success" | "error" } | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // Loading states for quick actions
+  const [resendEmailPending, setResendEmailPending] = useState(false)
+  const [resetPasswordPending, setResetPasswordPending] = useState(false)
+  const [deletePending, setDeletePending] = useState(false)
+  const [vipPending, setVipPending] = useState(false)
+
+  const invalidate = () =>
+    queryClient.invalidateQueries(
+      trpc.properties.getAdminPropertyDetail.queryOptions({ propertyId }),
+    )
+
+  function showAction(text: string, type: "success" | "error") {
+    setActionMessage({ text, type })
+    setTimeout(() => setActionMessage(null), 4000)
+  }
+
+  // Plan mutation
   const updatePlanMutation = useMutation(
     trpc.properties.adminUpdatePlan.mutationOptions({
       onSuccess: () => {
         setPlanSuccess(true)
         setTimeout(() => setPlanSuccess(false), 3000)
-        void queryClient.invalidateQueries(
-          trpc.properties.getAdminPropertyDetail.queryOptions({ propertyId }),
-        )
+        void invalidate()
       },
     }),
   )
+
+  // Details mutation
+  const updateDetailsMutation = useMutation(
+    trpc.properties.updatePropertyDetails.mutationOptions({
+      onSuccess: () => {
+        setDetailsSuccess(true)
+        setDetailsError("")
+        setTimeout(() => setDetailsSuccess(false), 3000)
+        void invalidate()
+      },
+      onError: () => setDetailsError("Failed to save changes. Please try again."),
+    }),
+  )
+
+  // Note mutation
+  const updateNoteMutation = useMutation(
+    trpc.properties.updateAdminNote.mutationOptions({
+      onSuccess: () => {
+        setNoteSuccess(true)
+        setNoteError("")
+        setTimeout(() => setNoteSuccess(false), 3000)
+        void invalidate()
+      },
+      onError: () => setNoteError("Failed to save note. Please try again."),
+    }),
+  )
+
+  // Quick actions (using trpcClient directly)
+  async function handleResendEmail() {
+    setResendEmailPending(true)
+    try {
+      await trpcClient.properties.resendApprovalEmail.mutate({ propertyId })
+      showAction("Approval email sent.", "success")
+    } catch {
+      showAction("Failed to send email. Please try again.", "error")
+    } finally {
+      setResendEmailPending(false)
+    }
+  }
+
+  async function handleResetPassword() {
+    setResetPasswordPending(true)
+    try {
+      await trpcClient.properties.resetOwnerPassword.mutate({ propertyId })
+      showAction("Password reset email sent to owner.", "success")
+    } catch {
+      showAction("Failed to send password reset. Please try again.", "error")
+    } finally {
+      setResetPasswordPending(false)
+    }
+  }
+
+  async function handleDelete() {
+    setDeletePending(true)
+    try {
+      await trpcClient.properties.deleteProperty.mutate({ propertyId })
+      void navigate({ to: "/" })
+    } catch {
+      showAction("Failed to delete property. Please try again.", "error")
+      setShowDeleteConfirm(false)
+    } finally {
+      setDeletePending(false)
+    }
+  }
+
+  async function handleToggleVip() {
+    setVipPending(true)
+    const newVip = !isVip
+    try {
+      await trpcClient.properties.toggleVip.mutate({ propertyId, isVip: newVip })
+      setIsVip(newVip)
+      showAction(`VIP ${newVip ? "enabled" : "disabled"}.`, "success")
+      void invalidate()
+    } catch {
+      showAction("Failed to update VIP status.", "error")
+    } finally {
+      setVipPending(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -146,12 +291,90 @@ function AdminPropertyDetailInner({
           <h1 className="text-2xl font-bold">{property.name}</h1>
           {statusBadge(property.status)}
           {planBadge(property.plan)}
+          {isVip && (
+            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+              ⭐ VIP
+            </span>
+          )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
           {[property.city, property.country, property.type].filter(Boolean).join(" · ")}
           {" · "}
           Registered {new Date(property.createdAt).toLocaleDateString()}
         </p>
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick Actions</p>
+        <div className="flex flex-wrap gap-2 rounded-lg border p-4">
+          <button
+            onClick={handleResendEmail}
+            disabled={resendEmailPending}
+            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+          >
+            {resendEmailPending ? "Sending…" : "Resend Approval Email"}
+          </button>
+          <button
+            onClick={() => showAction("Coming soon", "success")}
+            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+          >
+            Resend QR Code
+          </button>
+          <button
+            onClick={handleResetPassword}
+            disabled={resetPasswordPending}
+            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+          >
+            {resetPasswordPending ? "Sending…" : "Reset Password"}
+          </button>
+          <button
+            onClick={handleToggleVip}
+            disabled={vipPending}
+            className={`rounded-md border px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${
+              isVip
+                ? "border-yellow-400 bg-yellow-400 text-white hover:bg-yellow-500"
+                : "border-yellow-400 text-yellow-700 hover:bg-yellow-50"
+            }`}
+          >
+            {vipPending ? "Updating…" : isVip ? "⭐ VIP (On)" : "⭐ VIP (Off)"}
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
+          >
+            Delete Property
+          </button>
+        </div>
+
+        {/* Action feedback */}
+        {actionMessage && (
+          <p className={`mt-2 text-sm ${actionMessage.type === "success" ? "text-green-600" : "text-destructive"}`}>
+            {actionMessage.text}
+          </p>
+        )}
+
+        {/* Delete confirmation */}
+        {showDeleteConfirm && (
+          <div className="mt-3 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-sm text-red-700">
+              Are you sure you want to permanently delete <strong>{property.name}</strong>? This cannot be undone.
+            </p>
+            <button
+              onClick={handleDelete}
+              disabled={deletePending}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {deletePending ? "Deleting…" : "Yes, Delete"}
+            </button>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Info cards */}
@@ -185,6 +408,107 @@ function AdminPropertyDetailInner({
             )}
           </CardHeader>
         </Card>
+      </div>
+
+      {/* Edit Property Details */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Edit Property Details</p>
+        <div className="rounded-lg border p-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Property Name</label>
+              <input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">City</label>
+              <input
+                value={editCity}
+                onChange={(e) => setEditCity(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Country</label>
+              <input
+                value={editCountry}
+                onChange={(e) => setEditCountry(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Postcode</label>
+              <input
+                value={editPostcode}
+                onChange={(e) => setEditPostcode(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Type</label>
+              <select
+                value={editType}
+                onChange={(e) => setEditType(e.target.value)}
+                className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">— Select type —</option>
+                <option value="hotel">Hotel</option>
+                <option value="villa">Villa</option>
+                <option value="bnb">B&amp;B</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={() =>
+                updateDetailsMutation.mutate({
+                  propertyId,
+                  name: editName || undefined,
+                  city: editCity || undefined,
+                  country: editCountry || undefined,
+                  postcode: editPostcode || undefined,
+                  type: editType || undefined,
+                })
+              }
+              disabled={updateDetailsMutation.isPending}
+              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {updateDetailsMutation.isPending ? "Saving…" : "Save Changes"}
+            </button>
+            {detailsSuccess && <p className="text-sm text-green-600">Changes saved.</p>}
+            {detailsError && <p className="text-sm text-destructive">{detailsError}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Notes */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Admin Notes</p>
+        <div className="rounded-lg border p-4">
+          <textarea
+            value={adminNote}
+            onChange={(e) => setAdminNote(e.target.value)}
+            rows={4}
+            placeholder="Internal notes about this property…"
+            className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              onClick={() => updateNoteMutation.mutate({ propertyId, note: adminNote })}
+              disabled={updateNoteMutation.isPending}
+              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {updateNoteMutation.isPending ? "Saving…" : "Save Note"}
+            </button>
+            {noteSuccess && <p className="text-sm text-green-600">Note saved.</p>}
+            {noteError && <p className="text-sm text-destructive">{noteError}</p>}
+          </div>
+        </div>
       </div>
 
       {/* Performance scores */}
@@ -254,6 +578,59 @@ function AdminPropertyDetailInner({
           {updatePlanMutation.isError && (
             <p className="text-sm text-destructive">Failed to update plan. Please try again.</p>
           )}
+        </div>
+      </div>
+
+      {/* Subscription History */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Subscription History</p>
+        <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Stripe Customer</p>
+            {property.stripeCustomerId ? (
+              <a
+                href={`https://dashboard.stripe.com/customers/${property.stripeCustomerId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all text-sm font-medium text-indigo-600 underline"
+              >
+                {property.stripeCustomerId}
+              </a>
+            ) : (
+              <p className="text-sm text-muted-foreground">N/A</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Subscription Status</p>
+            <p className="text-sm font-medium">{property.subscriptionStatus}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Trial Ends</p>
+            <p className="text-sm font-medium">{formatDate(property.trialEndsAt)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Subscription Ends</p>
+            <p className="text-sm font-medium">{formatDate(property.subscriptionEndsAt)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Usage Stats */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Usage Stats</p>
+        <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Total Feedback Received</p>
+            <p className="text-sm font-medium">{scores?.totalFeedback ?? 0}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Property Registered</p>
+            <p className="text-sm font-medium">{new Date(property.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Login Tracking</p>
+            <p className="text-sm italic text-muted-foreground">Coming soon</p>
+          </div>
         </div>
       </div>
 
