@@ -273,7 +273,8 @@ function FeedbackPage() {
         return
       }
 
-      const { feedbackId } = result
+      // feedbackId is guaranteed non-null when blocked === false
+      const feedbackId = result.feedbackId as string
 
       // 2. Submit any staff name recognitions (high score path only)
       if (!isLowScore) {

@@ -13,7 +13,12 @@ import type { PropertySummary } from "@/lib/active-property-context";
 
 export const Route = createFileRoute("/_portal")({
   beforeLoad: async ({ location }) => {
-    const session = await getUser()
+    let session: Awaited<ReturnType<typeof getUser>>
+    try {
+      session = await getUser()
+    } catch {
+      throw redirect({ to: "/login" })
+    }
 
     if (!session) {
       throw redirect({ to: "/login" })
