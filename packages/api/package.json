@@ -5,6 +5,9 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./lib/email": {
+      "default": "./src/lib/email.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }
