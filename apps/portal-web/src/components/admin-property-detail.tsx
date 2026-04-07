@@ -173,6 +173,7 @@ function AdminPropertyDetailInner({
 
   // Loading states for quick actions
   const [resendEmailPending, setResendEmailPending] = useState(false)
+  const [resendQrPending, setResendQrPending] = useState(false)
   const [resetPasswordPending, setResetPasswordPending] = useState(false)
   const [deletePending, setDeletePending] = useState(false)
   const [vipPending, setVipPending] = useState(false)
@@ -234,6 +235,18 @@ function AdminPropertyDetailInner({
       showAction("Failed to send email. Please try again.", "error")
     } finally {
       setResendEmailPending(false)
+    }
+  }
+
+  async function handleResendQr() {
+    setResendQrPending(true)
+    try {
+      await trpcClient.properties.resendQrCode.mutate({ propertyId })
+      showAction("QR code PDF sent to owner.", "success")
+    } catch {
+      showAction("Failed to send QR code. Please try again.", "error")
+    } finally {
+      setResendQrPending(false)
     }
   }
 
@@ -316,10 +329,11 @@ function AdminPropertyDetailInner({
             {resendEmailPending ? "Sending…" : "Resend Approval Email"}
           </button>
           <button
-            onClick={() => showAction("Coming soon", "success")}
-            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+            onClick={handleResendQr}
+            disabled={resendQrPending}
+            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
           >
-            Resend QR Code
+            {resendQrPending ? "Sending…" : "Resend QR Code"}
           </button>
           <button
             onClick={handleResetPassword}

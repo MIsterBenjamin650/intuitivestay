@@ -377,6 +377,25 @@ export const propertiesRouter = router({
       return { success: true }
     }),
 
+  resendQrCode: adminProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ input }) => {
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+
+      const qrCode = await db.query.qrCodes.findFirst({
+        where: eq(qrCodes.propertyId, input.propertyId),
+      })
+      if (!qrCode) throw new TRPCError({ code: "NOT_FOUND", message: "No QR code found for this property" })
+
+      const pdfBuffer = await generateQrPdf(qrCode.feedbackUrl, property.name)
+      await sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, pdfBuffer)
+
+      return { success: true }
+    }),
+
   deleteProperty: adminProcedure
     .input(z.object({ propertyId: z.string() }))
     .mutation(async ({ input }) => {
