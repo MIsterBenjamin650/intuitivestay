@@ -12,39 +12,85 @@ export const Route = createFileRoute("/f/$uniqueCode")({
 type Step = "form" | "name-drop" | "vent-box" | "thank-you"
 type MealTime = "breakfast" | "lunch" | "dinner" | "none"
 
-function RatingInput({
+const RATING_LABELS: Record<number, string> = {
+  0: "Very Poor",
+  1: "Poor",
+  2: "Below Average",
+  3: "Disappointing",
+  4: "Fair",
+  5: "Mediocre",
+  6: "Decent",
+  7: "Good",
+  8: "Great",
+  9: "Excellent",
+  10: "Magical",
+}
+
+function SliderInput({
   label,
   description,
   value,
+  touched,
   onChange,
 }: {
   label: string
   description: string
   value: number
+  touched: boolean
   onChange: (v: number) => void
 }) {
+  const fillPercent = (value / 10) * 100
+  // Formula: keeps the tooltip centred over the thumb at both extremes.
+  // thumbWidth ≈ 20px → offset = 10 - value*2
+  const tooltipLeft = `calc(${fillPercent}% + ${10 - value * 2}px)`
+
   return (
     <div className="space-y-2">
       <div>
         <p className="text-sm font-semibold">{label}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <div className="flex gap-1 flex-wrap">
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => onChange(n)}
-            className={cn(
-              "h-10 w-10 rounded-md text-sm font-medium border transition-colors",
-              value === n
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background border-border hover:bg-muted",
-            )}
-          >
-            {n}
-          </button>
-        ))}
+
+      <div className="relative pt-9 pb-4">
+        {/* Floating tooltip bubble */}
+        <div
+          className="absolute top-0 pointer-events-none"
+          style={{ left: tooltipLeft, transform: "translateX(-50%)" }}
+        >
+          <div className="bg-primary text-primary-foreground text-xs font-medium px-2.5 py-1 rounded whitespace-nowrap shadow-sm">
+            {touched ? RATING_LABELS[value] : "Drag to rate"}
+          </div>
+          {/* Caret arrow */}
+          <div
+            className="mx-auto w-0 h-0"
+            style={{
+              borderLeft: "5px solid transparent",
+              borderRight: "5px solid transparent",
+              borderTop: "5px solid var(--primary)",
+            }}
+          />
+        </div>
+
+        {/* Slider */}
+        <input
+          type="range"
+          min={0}
+          max={10}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="is-slider w-full h-2 rounded-full appearance-none cursor-pointer outline-none"
+          style={{
+            background: `linear-gradient(to right, var(--primary) ${fillPercent}%, var(--muted) ${fillPercent}%)`,
+          }}
+        />
+
+        {/* Tick labels */}
+        <div className="flex justify-between mt-1.5 text-xs text-muted-foreground select-none">
+          <span>0</span>
+          <span>5</span>
+          <span>10</span>
+        </div>
       </div>
     </div>
   )
@@ -62,12 +108,18 @@ function FeedbackPage() {
   const [step, setStep] = useState<Step>("form")
   const [feedbackId, setFeedbackId] = useState<string | null>(null)
 
-  // Form state
-  const [resilience, setResilience] = useState(0)
-  const [empathy, setEmpathy] = useState(0)
-  const [anticipation, setAnticipation] = useState(0)
-  const [recognition, setRecognition] = useState(0)
+  // Form state — sliders start at midpoint
+  const [resilience, setResilience] = useState(5)
+  const [empathy, setEmpathy] = useState(5)
+  const [anticipation, setAnticipation] = useState(5)
+  const [recognition, setRecognition] = useState(5)
   const [mealTime, setMealTime] = useState<MealTime>("none")
+
+  // Touched tracking — submit is disabled until every slider has been moved at least once
+  const [resilienceTouched, setResilienceTouched] = useState(false)
+  const [empathyTouched, setEmpathyTouched] = useState(false)
+  const [anticipationTouched, setAnticipationTouched] = useState(false)
+  const [recognitionTouched, setRecognitionTouched] = useState(false)
 
   // Name Drop / Vent Box input state
   const [staffName, setStaffName] = useState("")
@@ -111,7 +163,8 @@ function FeedbackPage() {
     onSuccess: () => setStep("thank-you"),
   })
 
-  const allRated = resilience > 0 && empathy > 0 && anticipation > 0 && recognition > 0
+  const allRated =
+    resilienceTouched && empathyTouched && anticipationTouched && recognitionTouched
 
   if (isLoading) {
     return (
@@ -149,35 +202,10 @@ function FeedbackPage() {
         {step === "form" && (
           <div className="space-y-6">
             <p className="text-sm text-muted-foreground text-center">
-              How was your experience? Rate each area 1–10.
+              How was your experience? Drag each slider to rate from 0–10.
             </p>
 
-            <RatingInput
-              label="Resilience"
-              description="How well did staff handle problems or complaints?"
-              value={resilience}
-              onChange={setResilience}
-            />
-            <RatingInput
-              label="Empathy"
-              description="Did staff make you feel genuinely cared for?"
-              value={empathy}
-              onChange={setEmpathy}
-            />
-            <RatingInput
-              label="Anticipation"
-              description="Did staff anticipate your needs before you had to ask?"
-              value={anticipation}
-              onChange={setAnticipation}
-            />
-            <RatingInput
-              label="Recognition"
-              description="Did staff remember your preferences or make you feel valued?"
-              value={recognition}
-              onChange={setRecognition}
-            />
-
-            {/* Meal time */}
+            {/* Meal time — at the top */}
             <div className="space-y-2">
               <p className="text-sm font-semibold">Meal time (optional)</p>
               <div className="flex gap-2 flex-wrap">
@@ -193,11 +221,52 @@ function FeedbackPage() {
                         : "bg-background border-border hover:bg-muted",
                     )}
                   >
-                    {m === "none" ? "N/A" : m}
+                    {m === "none" ? "Entire Stay" : m}
                   </button>
                 ))}
               </div>
             </div>
+
+            <SliderInput
+              label="Resilience"
+              description="How well did staff handle problems or complaints?"
+              value={resilience}
+              touched={resilienceTouched}
+              onChange={(v) => {
+                setResilience(v)
+                setResilienceTouched(true)
+              }}
+            />
+            <SliderInput
+              label="Empathy"
+              description="Did staff make you feel genuinely cared for?"
+              value={empathy}
+              touched={empathyTouched}
+              onChange={(v) => {
+                setEmpathy(v)
+                setEmpathyTouched(true)
+              }}
+            />
+            <SliderInput
+              label="Anticipation"
+              description="Did staff anticipate your needs before you had to ask?"
+              value={anticipation}
+              touched={anticipationTouched}
+              onChange={(v) => {
+                setAnticipation(v)
+                setAnticipationTouched(true)
+              }}
+            />
+            <SliderInput
+              label="Recognition"
+              description="Did staff remember your preferences or make you feel valued?"
+              value={recognition}
+              touched={recognitionTouched}
+              onChange={(v) => {
+                setRecognition(v)
+                setRecognitionTouched(true)
+              }}
+            />
 
             <button
               type="button"
