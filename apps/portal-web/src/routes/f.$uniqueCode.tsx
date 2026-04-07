@@ -1,7 +1,7 @@
 import { cn } from "@intuitive-stay/ui/lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { useTRPC, useTRPCClient } from "@/utils/trpc"
 
@@ -128,6 +128,18 @@ function FeedbackPage() {
 
   const allRated =
     resilienceTouched && empathyTouched && anticipationTouched && recognitionTouched
+
+  // Real-time GCS average — used to adapt the form layout
+  const gcs = (resilience + empathy + anticipation + recognition) / 4
+  const isLowScore = allRated && gcs <= 5
+
+  // Scroll vent box into view when score drops into low range
+  const ventBoxRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (isLowScore) {
+      ventBoxRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [isLowScore])
 
   async function handleSubmit() {
     if (!allRated || isSubmitting) return
@@ -289,10 +301,10 @@ function FeedbackPage() {
         />
 
         {/* Divider */}
-        <div className="border-t border-border" />
+        {!isLowScore && <div className="border-t border-border" />}
 
-        {/* Staff recognition */}
-        <div className="space-y-3">
+        {/* Staff recognition — hidden when overall score is low */}
+        {!isLowScore && <div className="space-y-3">
           <div>
             <p className="text-sm font-semibold">Recognise a team member</p>
             <p className="text-xs text-muted-foreground">
@@ -324,13 +336,13 @@ function FeedbackPage() {
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             maxLength={100}
           />
-        </div>
+        </div>}
 
         {/* Divider */}
         <div className="border-t border-border" />
 
         {/* Private message */}
-        <div className="space-y-3">
+        <div ref={ventBoxRef} className="space-y-3">
           <div>
             <p className="text-sm font-semibold">Anything to share privately?</p>
             <p className="text-xs text-muted-foreground">
