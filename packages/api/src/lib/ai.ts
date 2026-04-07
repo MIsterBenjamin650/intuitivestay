@@ -46,7 +46,8 @@ Respond with valid JSON only, no markdown:
     messages: [{ role: "user", content: prompt }],
   })
 
-  const text = message.content[0]?.type === "text" ? message.content[0].text : ""
+  const raw = message.content[0]?.type === "text" ? message.content[0].text : ""
+  const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim()
   const parsed = JSON.parse(text) as DailySummaryResult
   return parsed
 }
