@@ -13,6 +13,7 @@ export const properties = pgTable("properties", {
   city: text("city").notNull(),
   country: text("country").notNull(),
   type: text("type"), // 'hotel' | 'villa' | 'bnb' | 'restaurant' | 'other'
+  postcode: text("postcode"),
   status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected'
   ownerEmail: text("owner_email").notNull(),
   ownerName: text("owner_name").notNull(),

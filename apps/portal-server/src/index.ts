@@ -77,6 +77,8 @@ app.post("/api/properties/register", async (c) => {
 
   const propertyAddress =
     typeof body.propertyAddress === "string" ? body.propertyAddress.trim() : undefined
+  const propertyPostcode =
+    typeof body.propertyPostcode === "string" ? body.propertyPostcode.trim() : undefined
   const propertyType =
     typeof body.propertyType === "string" ? body.propertyType.trim() : undefined
 
@@ -88,6 +90,7 @@ app.post("/api/properties/register", async (c) => {
       propertyName,
       propertyAddress,
       propertyCity,
+      propertyPostcode,
       propertyCountry,
       propertyType,
     })

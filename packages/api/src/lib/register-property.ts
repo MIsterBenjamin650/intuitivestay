@@ -8,6 +8,7 @@ export type RegisterPropertyInput = {
   propertyName: string
   propertyAddress?: string
   propertyCity: string
+  propertyPostcode?: string
   propertyCountry: string
   propertyType?: string
 }
@@ -70,6 +71,7 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
       name: input.propertyName,
       address: input.propertyAddress ?? null,
       city: input.propertyCity,
+      postcode: input.propertyPostcode ?? null,
       country: input.propertyCountry,
       type: input.propertyType ?? null,
       status: "pending",
