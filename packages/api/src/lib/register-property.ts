@@ -1,6 +1,8 @@
 import { db } from "@intuitive-stay/db"
 import { organisations, properties, user } from "@intuitive-stay/db/schema"
+import { env } from "@intuitive-stay/env/server"
 import { eq } from "drizzle-orm"
+import { sendNewPropertyNotificationEmail } from "./email"
 
 export type RegisterPropertyInput = {
   ownerName: string
@@ -81,6 +83,20 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
       updatedAt: new Date(),
     })
     .returning()
+
+  // 4. Notify admin of new submission
+  try {
+    await sendNewPropertyNotificationEmail(
+      input.ownerName,
+      input.ownerEmail,
+      input.propertyName,
+      input.propertyCity,
+      input.propertyCountry,
+      env.PUBLIC_PORTAL_URL,
+    )
+  } catch (err) {
+    console.error("Failed to send admin notification email:", err)
+  }
 
   return property
 }

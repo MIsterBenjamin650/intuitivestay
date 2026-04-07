@@ -118,6 +118,32 @@ export async function sendDailySummaryEmail(
   })
 }
 
+export async function sendNewPropertyNotificationEmail(
+  ownerName: string,
+  ownerEmail: string,
+  propertyName: string,
+  propertyCity: string,
+  propertyCountry: string,
+  portalUrl: string,
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: env.ADMIN_EMAIL,
+    subject: `New property registration: ${propertyName}`,
+    html: `<h1>New Property Registration</h1>
+<p>A new property has been submitted for approval.</p>
+<table style="border-collapse:collapse;width:100%;max-width:500px">
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Owner</td><td style="padding:8px">${ownerName}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Email</td><td style="padding:8px">${ownerEmail}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Property</td><td style="padding:8px">${propertyName}</td></tr>
+  <tr><td style="padding:8px;font-weight:bold;color:#64748b">Location</td><td style="padding:8px">${propertyCity}, ${propertyCountry}</td></tr>
+</table>
+<p style="margin-top:24px">
+  <a href="${portalUrl}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Review in Portal →</a>
+</p>`,
+  })
+}
+
 export async function sendStaffInviteEmail(
   invitedEmail: string,
   propertyName: string,
