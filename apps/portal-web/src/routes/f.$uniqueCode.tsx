@@ -140,6 +140,30 @@ function SliderInput({
   )
 }
 
+/**
+ * Generates a lightweight device fingerprint from stable browser attributes.
+ * This is not cryptographically strong but is sufficient for casual deduplication.
+ */
+function generateFingerprint(): string {
+  const parts = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width,
+    screen.height,
+    screen.colorDepth,
+    new Date().getTimezoneOffset(),
+    navigator.hardwareConcurrency ?? 0,
+    (navigator as { deviceMemory?: number }).deviceMemory ?? 0,
+  ]
+  const raw = parts.join("|")
+  // Simple hash: sum of char codes mod 2^32, returned as hex
+  let hash = 0
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0
+  }
+  return (hash >>> 0).toString(16)
+}
+
 function FeedbackPage() {
   const { uniqueCode } = Route.useParams()
   const trpc = useTRPC()
@@ -149,7 +173,17 @@ function FeedbackPage() {
     trpc.feedback.getFeedbackFormData.queryOptions({ uniqueCode }),
   )
 
+  // Device fingerprint generated once on mount for duplicate detection
+  const [fingerprint] = useState<string>(() => {
+    try {
+      return generateFingerprint()
+    } catch {
+      return ""
+    }
+  })
+
   const [submitted, setSubmitted] = useState(false)
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(false)
 
@@ -220,8 +254,8 @@ function FeedbackPage() {
     setIsSubmitting(true)
     setSubmitError(false)
     try {
-      // 1. Submit core feedback
-      const { feedbackId } = await trpcClient.feedback.submitFeedback.mutate({
+      // 1. Submit core feedback (with device fingerprint for deduplication)
+      const result = await trpcClient.feedback.submitFeedback.mutate({
         uniqueCode,
         resilience,
         empathy,
@@ -230,7 +264,16 @@ function FeedbackPage() {
         mealTime,
         guestEmail: guestEmail.trim() || undefined,
         adjectives: selectedAdjectives.length > 0 ? selectedAdjectives.join(',') : undefined,
+        fingerprint: fingerprint || undefined,
       })
+
+      // Device already submitted in the last 24 hours — show friendly block screen
+      if (result.blocked) {
+        setAlreadySubmitted(true)
+        return
+      }
+
+      const { feedbackId } = result
 
       // 2. Submit any staff name recognitions (high score path only)
       if (!isLowScore) {
@@ -276,6 +319,21 @@ function FeedbackPage() {
           <p className="font-semibold">Invalid feedback link</p>
           <p className="text-sm text-muted-foreground">
             This QR code is not recognised. Please ask staff for a new one.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Already Submitted (24-hour block) ───
+  if (alreadySubmitted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center space-y-4 px-6">
+          <div className="text-5xl">✅</div>
+          <h2 className="text-xl font-bold">Already received!</h2>
+          <p className="text-sm text-muted-foreground">
+            We've already recorded your feedback today. Thank you — we really appreciate it!
           </p>
         </div>
       </div>

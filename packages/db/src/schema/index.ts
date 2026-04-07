@@ -4,6 +4,7 @@ export * from "./properties";
 export * from "./property-members";
 export * from "./qr-codes";
 export * from "./feedback";
+export * from "./feedback-fingerprints";
 export * from "./property-scores";
 export * from "./ai-daily-summaries";
 export * from "./property-tiers";

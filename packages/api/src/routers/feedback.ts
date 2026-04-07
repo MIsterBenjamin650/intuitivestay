@@ -1,11 +1,11 @@
 import { db } from "@intuitive-stay/db"
-import { feedback, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
+import { feedback, feedbackFingerprints, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
 import { TRPCError } from "@trpc/server"
-import { and, count, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
+import { and, count, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure, router } from "../index"
-import { sendAlertEmail } from "../lib/email"
+import { sendAlertEmail, sendVelocityAlertEmail } from "../lib/email"
 
 /**
  * Recalculates running averages for a property after new feedback is submitted.
@@ -98,6 +98,8 @@ export const feedbackRouter = router({
         mealTime: z.enum(["breakfast", "lunch", "dinner", "none"]).nullable().optional(),
         guestEmail: z.string().email().optional(),
         adjectives: z.string().optional(),
+        /** Browser-derived device fingerprint for duplicate prevention */
+        fingerprint: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -109,7 +111,34 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Invalid feedback link" })
       }
 
+      // --- FRAUD CHECK 1: Device fingerprint deduplication (24-hour window) ---
+      if (input.fingerprint) {
+        const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        const [existing] = await db
+          .select({ id: feedbackFingerprints.id })
+          .from(feedbackFingerprints)
+          .where(
+            and(
+              eq(feedbackFingerprints.propertyId, qrCode.propertyId),
+              eq(feedbackFingerprints.fingerprint, input.fingerprint),
+              gt(feedbackFingerprints.submittedAt, windowStart),
+            ),
+          )
+          .limit(1)
+
+        if (existing) {
+          // Already submitted from this device in the last 24 hours — silently block
+          return { feedbackId: null, gcs: null, blocked: true }
+        }
+      }
+
       const gcs = (input.resilience + input.empathy + input.anticipation + input.recognition) / 4
+
+      // --- FRAUD CHECK 2: Uniform score detection ---
+      const isUniformScore =
+        input.resilience === input.empathy &&
+        input.empathy === input.anticipation &&
+        input.anticipation === input.recognition
 
       const feedbackId = crypto.randomUUID()
       await db.insert(feedback).values({
@@ -124,9 +153,20 @@ export const feedbackRouter = router({
         mealTime: input.mealTime ?? null,
         guestEmail: input.guestEmail ?? null,
         adjectives: input.adjectives ?? null,
+        isUniformScore,
         source: "qr_form",
         submittedAt: new Date(),
       })
+
+      // Save fingerprint to prevent duplicate submissions within 24 hours
+      if (input.fingerprint) {
+        await db.insert(feedbackFingerprints).values({
+          id: crypto.randomUUID(),
+          propertyId: qrCode.propertyId,
+          fingerprint: input.fingerprint,
+          submittedAt: new Date(),
+        })
+      }
 
       // Update running averages — awaited to keep scores fresh
       await updatePropertyScores(qrCode.propertyId, {
@@ -153,7 +193,34 @@ export const feedbackRouter = router({
         }
       }
 
-      return { feedbackId, gcs }
+      // --- FRAUD CHECK 3: Submission velocity alert (5+ in 30 minutes) ---
+      const VELOCITY_WINDOW_MINUTES = 30
+      const VELOCITY_THRESHOLD = 5
+      const velocityWindowStart = new Date(Date.now() - VELOCITY_WINDOW_MINUTES * 60 * 1000)
+      const [velocityResult] = await db
+        .select({ total: count() })
+        .from(feedback)
+        .where(
+          and(
+            eq(feedback.propertyId, qrCode.propertyId),
+            gt(feedback.submittedAt, velocityWindowStart),
+          ),
+        )
+
+      const recentCount = velocityResult?.total ?? 0
+      // Alert on the exact threshold and every 5 after (5, 10, 15…) to avoid email spam
+      if (recentCount >= VELOCITY_THRESHOLD && recentCount % VELOCITY_THRESHOLD === 0) {
+        const property = await db.query.properties.findFirst({
+          where: eq(properties.id, qrCode.propertyId),
+        })
+        if (property) {
+          sendVelocityAlertEmail(property.name, recentCount, VELOCITY_WINDOW_MINUTES).catch(
+            (err) => console.error("Failed to send velocity alert email:", err),
+          )
+        }
+      }
+
+      return { feedbackId, gcs, blocked: false }
     }),
 
   /** Public — saves staff name nomination from Name Drop™ screen (GCS ≥ 8). */
@@ -339,6 +406,7 @@ export const feedbackRouter = router({
         anticipation: row.anticipation,
         recognition: row.recognition,
         ventText: row.ventText,
+        isUniformScore: row.isUniformScore,
         submittedAt: row.submittedAt,
       }))
     }),

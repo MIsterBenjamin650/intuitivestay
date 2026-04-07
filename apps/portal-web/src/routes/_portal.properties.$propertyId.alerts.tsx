@@ -59,14 +59,21 @@ function RouteComponent() {
           {alerts.map((alert) => (
             <Card key={alert.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <CardTitle className="text-sm">
                     GCS:{" "}
                     <span className="text-destructive font-bold">
                       {alert.gcs.toFixed(2)}
                     </span>
                   </CardTitle>
-                  <Badge variant="destructive">Low Score</Badge>
+                  <div className="flex items-center gap-2">
+                    {alert.isUniformScore && (
+                      <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50">
+                        ⚠ Uniform score
+                      </Badge>
+                    )}
+                    <Badge variant="destructive">Low Score</Badge>
+                  </div>
                 </div>
                 <CardDescription>
                   {new Date(alert.submittedAt).toLocaleString("en-GB", {

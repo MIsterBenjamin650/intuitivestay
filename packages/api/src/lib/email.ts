@@ -186,6 +186,22 @@ export async function sendSubscriptionNotificationEmail(
   })
 }
 
+export async function sendVelocityAlertEmail(
+  propertyName: string,
+  submissionCount: number,
+  windowMinutes: number,
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: env.ADMIN_EMAIL,
+    subject: `🚨 Submission spike at ${propertyName}`,
+    html: `<h1>Submission Velocity Alert</h1>
+<p><strong>${submissionCount}</strong> feedback submissions have been received from <strong>${propertyName}</strong> in the last <strong>${windowMinutes} minutes</strong>.</p>
+<p>This may indicate misuse of the QR code. Please log in to review the submissions:</p>
+<p><a href="${env.PUBLIC_PORTAL_URL}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Open Admin Portal →</a></p>`,
+  })
+}
+
 export async function sendStaffInviteEmail(
   invitedEmail: string,
   propertyName: string,

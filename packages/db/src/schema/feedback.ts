@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, integer, numeric, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, numeric, index, boolean } from "drizzle-orm/pg-core";
 
 import { properties } from "./properties";
 import { qrCodes } from "./qr-codes";
@@ -23,6 +23,7 @@ export const feedback = pgTable("feedback", {
   ventText: text("vent_text"),
   adjectives: text("adjectives"), // comma-separated guest-chosen words e.g. "clean,friendly,quiet"
   guestEmail: text("guest_email"),
+  isUniformScore: boolean("is_uniform_score").default(false).notNull(), // true if all 4 pillars rated identically — flagged as low confidence
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 },
 (table) => [index("feedback_propertyId_idx").on(table.propertyId)],
