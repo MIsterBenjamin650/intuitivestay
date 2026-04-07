@@ -8,7 +8,7 @@ import { authMiddleware } from "@/middleware/auth"
 export const getUser = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    if (!context.session) return null
+    if (!context.session || !context.session.user) return null
 
     // Check if this user is a property owner
     const org = await db.query.organisations.findFirst({
