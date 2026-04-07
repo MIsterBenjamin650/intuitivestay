@@ -924,7 +924,7 @@ export const propertiesRouter = router({
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
       const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-      const bucketExpr = input.days >= 14
+      const bucketExpr = input.days > 30
         ? sql<string>`to_char(date_trunc('week', ${feedback.submittedAt}), 'YYYY-MM-DD')`
         : sql<string>`to_char(${feedback.submittedAt}, 'YYYY-MM-DD')`
       const rows = await db
