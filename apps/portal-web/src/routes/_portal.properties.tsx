@@ -238,7 +238,10 @@ function RequiredMark() {
 }
 
 export const Route = createFileRoute("/_portal/properties")({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
+    // Only guard the exact /properties listing page — child routes like
+    // /properties/$id/dashboard must not be caught here or we get a redirect loop.
+    if (location.pathname !== "/properties") return
     const session = context.session as {
       plan?: string | null
       user?: { properties?: Array<{ id: string }> }
