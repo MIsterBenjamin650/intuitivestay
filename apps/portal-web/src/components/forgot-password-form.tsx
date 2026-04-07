@@ -11,7 +11,7 @@ export default function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
   const form = useForm({
     defaultValues: { email: "" },
     onSubmit: async ({ value }) => {
-      await authClient.forgetPassword(
+      await authClient.requestPasswordReset(
         {
           email: value.email,
           redirectTo: "/reset-password",
