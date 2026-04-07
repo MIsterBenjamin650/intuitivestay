@@ -21,7 +21,6 @@ import {
   useLocation,
 } from "@tanstack/react-router"
 import {
-  Building2Icon,
   LayoutDashboardIcon,
   QrCodeIcon,
   ShieldCheckIcon,
@@ -247,8 +246,6 @@ export function AppSidebar({
     )
   }
 
-  const isFounder = plan === "founder"
-
   return (
     <Sidebar
       collapsible="icon"
@@ -259,32 +256,13 @@ export function AppSidebar({
         <div className="flex h-16 items-center border-b border-sidebar-border p-2">
           <SidebarBrand />
         </div>
-        {!isFounder && (
-          <div className="p-2">
-            <PropertySwitcher />
-          </div>
-        )}
+        <div className="p-2">
+          <PropertySwitcher />
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
-        {isFounder ? (
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">
-              My Properties
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarLinkItem
-                  label="All Properties"
-                  icon={<Building2Icon />}
-                  link={<AppSidebarLink to="/properties" />}
-                  isActive={isRouteActive(location.pathname, "/properties")}
-                />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          hasProperties && (
+        {hasProperties && (
             <SidebarGroup>
               <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">
                 My Property

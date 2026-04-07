@@ -169,7 +169,7 @@ function RouteComponent() {
         params: { propertyId: staffPropertyId },
         replace: true,
       })
-    } else if (!isAdmin && (plan === "host" || plan === "partner") && properties.length > 0) {
+    } else if (!isAdmin && properties.length > 0) {
       const firstProperty = properties[0]
       if (firstProperty) {
         void navigate({
@@ -179,10 +179,10 @@ function RouteComponent() {
         })
       }
     }
-  }, [isAdmin, isStaff, staffPropertyId, plan, properties, navigate])
+  }, [isAdmin, isStaff, staffPropertyId, properties, navigate])
 
   if (isAdmin) return <AdminDashboard />
   if (isStaff && staffPropertyId) return null
-  if ((plan === "host" || plan === "partner") && properties.length > 0) return null
+  if (!isAdmin && properties.length > 0) return null
   return <PortfolioDashboard />
 }

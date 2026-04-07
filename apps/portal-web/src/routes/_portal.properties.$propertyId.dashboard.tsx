@@ -259,7 +259,8 @@ function RouteComponent() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                 <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }} />
+                <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
+                  formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
                 <Line type="monotone" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={false} name="Resilience" />
                 <Line type="monotone" dataKey="empathy" stroke={PILLAR_COLORS.empathy} strokeWidth={2} dot={false} name="Empathy" />
