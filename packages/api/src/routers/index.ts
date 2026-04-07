@@ -1,5 +1,6 @@
 import { protectedProcedure, publicProcedure, router } from "../index"
 import { aiRouter } from "./ai"
+import { contactRouter } from "./contact"
 import { feedbackRouter } from "./feedback"
 import { inviteRouter } from "./invite"
 import { propertiesRouter } from "./properties"
@@ -20,6 +21,7 @@ export const appRouter = router({
   ai: aiRouter,
   team: teamRouter,
   invite: inviteRouter,
+  contact: contactRouter,
 })
 
 export type AppRouter = typeof appRouter

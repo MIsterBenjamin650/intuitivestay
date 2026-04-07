@@ -1,10 +1,12 @@
 import { env } from "@intuitive-stay/env/web"
+import { useState } from "react"
+
+import { useTRPCClient } from "@/utils/trpc"
 
 const PLANS = [
   {
     key: "host" as const,
     name: "Host",
-    price: "Contact us",
     trial: "30-day free trial",
     trialBadgeStyle: "bg-green-50 text-green-700 border border-green-200",
     popular: false,
@@ -28,7 +30,6 @@ const PLANS = [
   {
     key: "partner" as const,
     name: "Partner",
-    price: "Contact us",
     trial: "14-day free trial",
     trialBadgeStyle: "bg-green-50 text-green-700 border border-green-200",
     popular: true,
@@ -52,7 +53,6 @@ const PLANS = [
   {
     key: "founder" as const,
     name: "Founder",
-    price: "Contact us",
     trial: "No free trial",
     trialBadgeStyle: "bg-slate-50 text-slate-400 border border-slate-200",
     popular: false,
@@ -77,8 +77,35 @@ const PLAN_URLS: Record<"host" | "partner" | "founder", string> = {
 }
 
 export function ChoosePlan() {
+  const trpcClient = useTRPCClient()
+
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [message, setMessage] = useState("")
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [sendError, setSendError] = useState(false)
+
+  async function handleContactSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (sending) return
+    setSending(true)
+    setSendError(false)
+    try {
+      await trpcClient.contact.sendMessage.mutate({ name, email, message })
+      setSent(true)
+      setName("")
+      setEmail("")
+      setMessage("")
+    } catch {
+      setSendError(true)
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
-    <div className="flex min-h-[calc(100vh-64px)] flex-col items-center justify-center px-6 py-12">
+    <div className="flex min-h-[calc(100vh-64px)] flex-col items-center px-6 py-12">
       <div className="mb-10 text-center">
         <h1 className="text-2xl font-bold tracking-tight">Choose your plan</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -103,7 +130,6 @@ export function ChoosePlan() {
             <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
               {plan.name}
             </p>
-            <p className="mt-1 text-2xl font-bold">{plan.price}</p>
 
             <span
               className={`mt-2 inline-block w-fit rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${plan.trialBadgeStyle}`}
@@ -138,6 +164,73 @@ export function ChoosePlan() {
             </a>
           </div>
         ))}
+      </div>
+
+      {/* How it works link */}
+      <div className="mt-8 text-center">
+        <a
+          href="https://www.intuitivestay.com/how-it-works"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-indigo-600 hover:underline"
+        >
+          How does IntuitiveStay work? →
+        </a>
+      </div>
+
+      {/* Contact form */}
+      <div className="mt-10 w-full max-w-md">
+        <div className="mb-4 text-center">
+          <h2 className="text-base font-semibold">Have a question?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Send us a message and we'll get back to you.
+          </p>
+        </div>
+
+        {sent ? (
+          <div className="rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-center text-sm text-green-700">
+            Message sent! We'll be in touch shortly.
+          </div>
+        ) : (
+          <form onSubmit={handleContactSubmit} className="space-y-3">
+            <input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              maxLength={100}
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              type="email"
+              placeholder="Your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <textarea
+              placeholder="Your message…"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+              rows={4}
+              maxLength={2000}
+              className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            {sendError && (
+              <p className="text-sm text-destructive">Something went wrong. Please try again.</p>
+            )}
+            <button
+              type="submit"
+              disabled={sending}
+              className="w-full rounded-lg bg-indigo-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-600 disabled:opacity-50"
+            >
+              {sending ? "Sending…" : "Send Message"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )

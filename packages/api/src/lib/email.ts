@@ -144,6 +144,24 @@ export async function sendNewPropertyNotificationEmail(
   })
 }
 
+export async function sendContactEmail(
+  senderName: string,
+  senderEmail: string,
+  message: string,
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: env.ADMIN_EMAIL,
+    replyTo: senderEmail,
+    subject: `Portal enquiry from ${senderName}`,
+    html: `<h2>New enquiry from the portal</h2>
+<p><strong>Name:</strong> ${senderName}</p>
+<p><strong>Email:</strong> ${senderEmail}</p>
+<p><strong>Message:</strong></p>
+<p style="white-space:pre-wrap">${message}</p>`,
+  })
+}
+
 export async function sendStaffInviteEmail(
   invitedEmail: string,
   propertyName: string,
