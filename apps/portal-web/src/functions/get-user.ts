@@ -8,12 +8,17 @@ import { authMiddleware } from "@/middleware/auth"
 export const getUser = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    // authClient.getSession returns { data: { session, user } | null, error }
-    // We need to reach into .data to get the actual user object.
-    const sessionData = (context.session as { data?: { user?: { id: string; email: string; name: string } } } | null)?.data
-    if (!sessionData || !sessionData.user) return null
+    // authClient.getSession may return either:
+    //   { data: { session, user }, error } — wrapped format
+    //   { session, user }                  — direct format (with throw:true)
+    // Handle both so we are not relying on an assumed internal format.
+    const raw = context.session as Record<string, unknown> | null
+    if (!raw) return null
+    const sessionData = (raw.data as Record<string, unknown> | null | undefined) ?? raw
+    const user = sessionData?.user as { id: string; email: string; name: string } | undefined
+    if (!user?.id) return null
 
-    const userId = sessionData.user.id
+    const userId = user.id
 
     // Check if this user is a property owner
     const org = await db.query.organisations.findFirst({
@@ -30,10 +35,10 @@ export const getUser = createServerFn({ method: "GET" })
       return {
         ...context.session,
         user: {
-          ...sessionData.user,
+          ...user,
           properties: orgProperties,
         },
-        isAdmin: sessionData.user.email === process.env.ADMIN_EMAIL,
+        isAdmin: user.email === process.env.ADMIN_EMAIL,
         isStaff: false,
         staffPropertyId: null,
         staffPermissions: null,
@@ -58,7 +63,7 @@ export const getUser = createServerFn({ method: "GET" })
       return {
         ...context.session,
         user: {
-          ...sessionData.user,
+          ...user,
           properties: [],
         },
         isAdmin: false,
@@ -81,10 +86,10 @@ export const getUser = createServerFn({ method: "GET" })
     return {
       ...context.session,
       user: {
-        ...sessionData.user,
+        ...user,
         properties: [],
       },
-      isAdmin: sessionData.user.email === process.env.ADMIN_EMAIL,
+      isAdmin: user.email === process.env.ADMIN_EMAIL,
       isStaff: false,
       staffPropertyId: null,
       staffPermissions: null,
