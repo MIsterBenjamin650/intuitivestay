@@ -14,9 +14,9 @@ export async function sendApprovalEmail(
 ) {
   const loginSection = magicLinkUrl
     ? `<p><a href="${magicLinkUrl}" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Open My Dashboard →</a></p>
-<p style="font-size:12px;color:#64748b">This link expires in 24 hours. After that, use the Forgot Password option on the login page.</p>`
-    : `<p><a href="${env.PUBLIC_PORTAL_URL}">${env.PUBLIC_PORTAL_URL}</a></p>
-<p>If you haven't set a password yet, use the "Forgot password" option on the login page.</p>`
+<p style="font-size:12px;color:#64748b">This link expires in 24 hours. After that, <a href="${env.PUBLIC_PORTAL_URL}/login" style="color:#6366f1">log in here</a> using your email address. Use "Forgot password" if you haven't set one yet.</p>`
+    : `<p><a href="${env.PUBLIC_PORTAL_URL}/login" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Log in to your dashboard →</a></p>
+<p style="font-size:12px;color:#64748b">If you haven't set a password yet, use the "Forgot password" option on the login page.</p>`
 
   await resend.emails.send({
     from: FROM,
