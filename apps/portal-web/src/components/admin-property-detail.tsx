@@ -4,8 +4,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@intuitive-stay/ui/components/card"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
+import { useState } from "react"
 
 import { useTRPC } from "@/utils/trpc"
 
@@ -64,6 +65,7 @@ interface Props {
 
 export function AdminPropertyDetail({ propertyId }: Props) {
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const { data, isLoading, isError } = useQuery(
     trpc.properties.getAdminPropertyDetail.queryOptions({ propertyId }),
   )
@@ -81,6 +83,54 @@ export function AdminPropertyDetail({ propertyId }: Props) {
   }
 
   const { property, scores, qrCode, feedback } = data
+
+  return (
+    <AdminPropertyDetailInner
+      propertyId={propertyId}
+      property={property}
+      scores={scores}
+      qrCode={qrCode}
+      feedback={feedback}
+      queryClient={queryClient}
+      trpc={trpc}
+    />
+  )
+}
+
+function AdminPropertyDetailInner({
+  propertyId,
+  property,
+  scores,
+  qrCode,
+  feedback,
+  queryClient,
+  trpc,
+}: {
+  propertyId: string
+  property: { id: string; name: string; status: string; city: string | null; country: string | null; address: string | null; type: string | null; ownerName: string; ownerEmail: string; plan: string; subscriptionStatus: string; createdAt: string | Date }
+  scores: { avgGcs: number; avgResilience: number | null; avgEmpathy: number | null; avgAnticipation: number | null; avgRecognition: number | null; totalFeedback: number } | null
+  qrCode: { uniqueCode: string; feedbackUrl: string; createdAt: string | Date } | null
+  feedback: { id: string; submittedAt: string | Date; gcs: number; resilience: number; empathy: number; anticipation: number; recognition: number; namedStaffMember: string | null; ventText: string | null; source: string | null; mealTime: string | null }[]
+  queryClient: ReturnType<typeof useQueryClient>
+  trpc: ReturnType<typeof useTRPC>
+}) {
+  const [selectedPlan, setSelectedPlan] = useState(property.plan as "member" | "host" | "partner" | "founder")
+  const [selectedStatus, setSelectedStatus] = useState<"none" | "trial" | "active" | "grace" | "expired">(
+    (property.subscriptionStatus as "none" | "trial" | "active" | "grace" | "expired") ?? "none",
+  )
+  const [planSuccess, setPlanSuccess] = useState(false)
+
+  const updatePlanMutation = useMutation(
+    trpc.properties.adminUpdatePlan.mutationOptions({
+      onSuccess: () => {
+        setPlanSuccess(true)
+        setTimeout(() => setPlanSuccess(false), 3000)
+        void queryClient.invalidateQueries(
+          trpc.properties.getAdminPropertyDetail.queryOptions({ propertyId }),
+        )
+      },
+    }),
+  )
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -152,6 +202,59 @@ export function AdminPropertyDetail({ propertyId }: Props) {
             {scoreCard("Recognition", scores.avgRecognition)}
           </div>
         )}
+      </div>
+
+      {/* Plan Management */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plan Management</p>
+        <div className="flex flex-wrap items-end gap-4 rounded-lg border p-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Plan</label>
+            <select
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value as typeof selectedPlan)}
+              className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="member">Member</option>
+              <option value="host">Host</option>
+              <option value="partner">Partner</option>
+              <option value="founder">Founder</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Subscription Status</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value as typeof selectedStatus)}
+              className="rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="none">None</option>
+              <option value="trial">Trial</option>
+              <option value="active">Active</option>
+              <option value="grace">Grace</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+          <button
+            onClick={() =>
+              updatePlanMutation.mutate({
+                propertyId,
+                plan: selectedPlan,
+                subscriptionStatus: selectedStatus,
+              })
+            }
+            disabled={updatePlanMutation.isPending}
+            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {updatePlanMutation.isPending ? "Updating…" : "Update Plan"}
+          </button>
+          {planSuccess && (
+            <p className="text-sm text-green-600">Plan updated successfully.</p>
+          )}
+          {updatePlanMutation.isError && (
+            <p className="text-sm text-destructive">Failed to update plan. Please try again.</p>
+          )}
+        </div>
       </div>
 
       {/* Feedback history */}

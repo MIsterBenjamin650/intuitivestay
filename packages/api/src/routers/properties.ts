@@ -261,6 +261,7 @@ export const propertiesRouter = router({
           ownerEmail: properties.ownerEmail,
           createdAt: properties.createdAt,
           plan: organisations.plan,
+          subscriptionStatus: organisations.subscriptionStatus,
           avgGcs: propertyScores.avgGcs,
           avgResilience: propertyScores.avgResilience,
           avgEmpathy: propertyScores.avgEmpathy,
@@ -314,6 +315,7 @@ export const propertiesRouter = router({
           ownerName: row.ownerName,
           ownerEmail: row.ownerEmail,
           plan: row.plan,
+          subscriptionStatus: row.subscriptionStatus,
           createdAt: row.createdAt,
         },
         scores: hasScores
@@ -347,6 +349,37 @@ export const propertiesRouter = router({
           mealTime: f.mealTime,
         })),
       }
+    }),
+
+  adminUpdatePlan: adminProcedure
+    .input(
+      z.object({
+        propertyId: z.string(),
+        plan: z.enum(["member", "host", "partner", "founder"]),
+        subscriptionStatus: z.enum(["none", "trial", "active", "grace", "expired"]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // Look up the property to get its organisationId
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+
+      if (!property) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      }
+
+      const [org] = await db
+        .update(organisations)
+        .set({ plan: input.plan, subscriptionStatus: input.subscriptionStatus, updatedAt: new Date() })
+        .where(eq(organisations.id, property.organisationId))
+        .returning()
+
+      if (!org) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Organisation not found" })
+      }
+
+      return org
     }),
 
   getMyProperties: protectedProcedure.query(async ({ ctx }) => {
