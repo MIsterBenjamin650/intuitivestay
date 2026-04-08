@@ -249,11 +249,11 @@ export function AppSidebar({
   return (
     <Sidebar
       collapsible="icon"
-      className="[background:linear-gradient(180deg,#1e1b4b_0%,#312e81_100%)] border-r-0"
+      className="border-r border-[#e8ddd0] bg-[#faf6f0]"
       {...props}
     >
       <SidebarHeader className="gap-0 p-0">
-        <div className="flex h-16 items-center border-b border-sidebar-border p-2">
+        <div className="flex h-16 items-center border-b border-[#e8ddd0] p-2">
           <SidebarBrand />
         </div>
         <div className="p-2">
