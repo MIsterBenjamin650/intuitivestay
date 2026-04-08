@@ -7,11 +7,11 @@ import Stripe from "stripe"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
-
-const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 import { generateAndActivateProperty } from "../lib/activate-property"
 import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
 import { generateQrPdf } from "../lib/generate-qr"
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 // ─── Insights helpers ─────────────────────────────────────────────────────────
 
