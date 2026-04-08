@@ -14,6 +14,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -472,68 +473,83 @@ function RouteComponent() {
             City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
           </p>
           {leaderboard?.rows.length ? (() => {
-            const maxGcs = Math.max(...leaderboard.rows.map((r) => r.avgGcs ?? 0), 1)
             const cityAvg = leaderboard.cityAvg ?? null
-            const avgPct = cityAvg != null ? Math.max((cityAvg / maxGcs) * 100, 0) : null
+            // Convert GCS (0–10) to percentage (0–100) for the Y axis
+            const chartData = leaderboard.rows.map((row) => ({
+              label: row.isOwn ? (row.name ?? "You") : `#${row.rank}`,
+              score: row.avgGcs != null ? Math.round(row.avgGcs * 10) : 0,
+              isOwn: row.isOwn,
+              rank: row.rank,
+              rawGcs: row.avgGcs,
+            }))
+            const cityAvgPct = cityAvg != null ? Math.round(cityAvg * 10) : null
             return (
-              <div className="flex flex-col gap-2">
-                {/* Average label above bars */}
-                {avgPct != null && (
-                  <div className="flex items-center gap-3">
-                    <span className="w-5 shrink-0" />
-                    <span className="w-28 shrink-0" />
-                    <div className="relative flex-1">
-                      <div className="absolute -top-1" style={{ left: `${avgPct}%`, transform: "translateX(-50%)" }}>
-                        <span className="whitespace-nowrap rounded-full bg-gray-700 px-1.5 py-0.5 text-[9px] font-semibold text-white">
-                          City avg {cityAvg.toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="w-8 shrink-0" />
-                  </div>
-                )}
-                {leaderboard.rows.map((row) => {
-                  const gcs = row.avgGcs ?? 0
-                  const pct = Math.max((gcs / maxGcs) * 100, 2)
-                  const isOwn = row.isOwn
-                  return (
-                    <div key={row.propertyId} className="flex items-center gap-3">
-                      {/* Rank */}
-                      <span className="w-5 shrink-0 text-right text-[11px] font-bold text-gray-400">{row.rank}</span>
-                      {/* Name */}
-                      <span className={`w-28 shrink-0 truncate text-xs font-semibold ${isOwn ? "text-orange-500" : "text-gray-500"}`}>
-                        {isOwn ? row.name : `Property #${row.rank}`}
-                      </span>
-                      {/* Bar with average line overlay */}
-                      <div className="relative flex-1 h-7 rounded-lg bg-gray-100 overflow-hidden">
-                        {/* Fill */}
-                        <div
-                          className="absolute inset-y-0 left-0 rounded-lg flex items-center justify-end pr-2.5 transition-all duration-700"
-                          style={{
-                            width: `${pct}%`,
-                            background: isOwn
-                              ? "linear-gradient(90deg, #fb923c, #f97316)"
-                              : "linear-gradient(90deg, #d1d5db, #9ca3af)",
-                          }}
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={chartData} barCategoryGap="25%" margin={{ top: 16, right: 8, bottom: 8, left: 0 }}>
+                  <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={({ x, y, payload, index }) => {
+                      const d = chartData[index]
+                      return (
+                        <text
+                          x={x}
+                          y={y + 10}
+                          textAnchor="middle"
+                          fontSize={10}
+                          fontWeight={d?.isOwn ? 700 : 400}
+                          fill={d?.isOwn ? "#f97316" : "#9ca3af"}
                         >
-                          <span className="text-[11px] font-bold text-white leading-none">
-                            {gcs.toFixed(1)}
-                          </span>
-                        </div>
-                        {/* City average line */}
-                        {avgPct != null && (
-                          <div
-                            className="absolute inset-y-0 w-0.5 bg-gray-600 opacity-50 z-10"
-                            style={{ left: `${avgPct}%` }}
-                          />
-                        )}
-                      </div>
-                      {/* Submissions */}
-                      <span className="w-8 shrink-0 text-right text-[11px] text-gray-400">{row.submissions}</span>
-                    </div>
-                  )
-                })}
-              </div>
+                          {payload.value}
+                        </text>
+                      )
+                    }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                    tick={{ fontSize: 9, fill: "#9ca3af" }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={28}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                    contentStyle={{ borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 11 }}
+                    formatter={(value: unknown, _name: unknown, props: { payload?: { rawGcs?: number | null } }) => {
+                      const gcs = props.payload?.rawGcs
+                      return [`${value}% (GCS ${gcs != null ? gcs.toFixed(1) : "—"})`, "Score"]
+                    }}
+                    labelStyle={{ fontWeight: 600, color: "#1c1917" }}
+                  />
+                  {cityAvgPct != null && (
+                    <ReferenceLine
+                      y={cityAvgPct}
+                      stroke="#374151"
+                      strokeDasharray="4 3"
+                      strokeWidth={1.5}
+                      label={{
+                        value: `City avg ${cityAvgPct}%`,
+                        position: "insideTopRight",
+                        fontSize: 9,
+                        fill: "#374151",
+                        fontWeight: 600,
+                        dy: -6,
+                      }}
+                    />
+                  )}
+                  <Bar dataKey="score" radius={[5, 5, 0, 0]} maxBarSize={52}>
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={index}
+                        fill={entry.isOwn ? "#f97316" : "#e5e7eb"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             )
           })() : (
             <p className="text-sm text-gray-400">No other properties found in your city yet.</p>
