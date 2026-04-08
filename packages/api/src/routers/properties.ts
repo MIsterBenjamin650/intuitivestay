@@ -1,5 +1,5 @@
 import { db } from "@intuitive-stay/db"
-import { aiDailySummaries, feedback, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
+import { aiDailySummaries, feedback, leaderboardCache, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
 import { and, avg, count, desc, eq, gte, inArray, isNotNull, max, sql } from "drizzle-orm"
@@ -1226,18 +1226,40 @@ export const propertiesRouter = router({
   getCityLeaderboardLive: protectedProcedure
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
-      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
       const prop = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
         columns: { city: true, name: true },
       })
-      if (!prop) return { city: "", rows: [] }
+      if (!prop) return { city: "", rows: [], cityAvg: null }
+
+      // ── Check weekly cache ──────────────────────────────────────────────────
+      const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+      const cached = await db.query.leaderboardCache.findFirst({
+        where: eq(leaderboardCache.city, prop.city),
+      })
+      if (cached) {
+        const age = Date.now() - new Date(cached.cachedAt).getTime()
+        if (age < SEVEN_DAYS_MS) {
+          // Serve from cache — re-mark own property in the cached rows
+          const cachedData = cached.data as { rows: Array<{ propertyId: string; name: string | null; avgGcs: number | null; avgResilience: number | null; avgEmpathy: number | null; avgAnticipation: number | null; avgRecognition: number | null; submissions: number; rank: number }>; cityAvg: number | null }
+          const rows = cachedData.rows.map((r) => ({
+            ...r,
+            isOwn: r.propertyId === input.propertyId,
+            name: r.propertyId === input.propertyId ? prop.name : null,
+          }))
+          return { city: prop.city, rows, cityAvg: cachedData.cityAvg }
+        }
+      }
+
+      // ── Recompute ───────────────────────────────────────────────────────────
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // always 30-day window for leaderboard
       const cityProperties = await db
         .select({ id: properties.id, name: properties.name })
         .from(properties)
         .where(and(eq(properties.city, prop.city), eq(properties.status, "approved")))
       const cityPropertyIds = cityProperties.map((p) => p.id)
-      if (!cityPropertyIds.length) return { city: prop.city, rows: [] }
+      if (!cityPropertyIds.length) return { city: prop.city, rows: [], cityAvg: null }
+
       const agg = await db
         .select({
           propertyId: feedback.propertyId,
@@ -1251,14 +1273,14 @@ export const propertiesRouter = router({
         .from(feedback)
         .where(and(inArray(feedback.propertyId, cityPropertyIds), gte(feedback.submittedAt, since)))
         .groupBy(feedback.propertyId)
+
       const aggMap = Object.fromEntries(agg.map((r) => [r.propertyId, r]))
-      const rows = cityProperties
+      const allRows = cityProperties
         .map((p) => {
           const r = aggMap[p.id]
           return {
             propertyId: p.id,
-            isOwn: p.id === input.propertyId,
-            name: p.id === input.propertyId ? p.name : null,
+            name: null as string | null,  // stripped from cache for privacy
             avgGcs: r?.avgGcs != null ? Number(r.avgGcs) : null,
             avgResilience: r?.avgResilience != null ? Number(r.avgResilience) : null,
             avgEmpathy: r?.avgEmpathy != null ? Number(r.avgEmpathy) : null,
@@ -1275,19 +1297,33 @@ export const propertiesRouter = router({
         })
         .map((row, idx) => ({ ...row, rank: idx + 1 }))
 
-      // City average across all properties with data
-      const withData = rows.filter((r) => r.avgGcs != null)
+      const withData = allRows.filter((r) => r.avgGcs != null)
       const cityAvg = withData.length
         ? withData.reduce((sum, r) => sum + (r.avgGcs ?? 0), 0) / withData.length
         : null
 
-      // Top 10, always include own property even if outside top 10
-      const top10 = rows.slice(0, 10)
-      const ownInTop10 = top10.some((r) => r.isOwn)
-      const finalRows = ownInTop10
+      // Top 10 for cache, own property always included
+      const top10 = allRows.slice(0, 10)
+      const ownInTop10 = top10.some((r) => r.propertyId === input.propertyId)
+      const cacheRows = ownInTop10
         ? top10
-        : [...top10.slice(0, 9), rows.find((r) => r.isOwn)].filter(Boolean) as typeof rows
+        : [...top10.slice(0, 9), allRows.find((r) => r.propertyId === input.propertyId)].filter(Boolean) as typeof allRows
 
+      // Persist to cache
+      await db
+        .insert(leaderboardCache)
+        .values({ city: prop.city, data: { rows: cacheRows, cityAvg }, cachedAt: new Date() })
+        .onConflictDoUpdate({
+          target: leaderboardCache.city,
+          set: { data: { rows: cacheRows, cityAvg }, cachedAt: new Date() },
+        })
+
+      // Return with own-property flag and name populated
+      const finalRows = cacheRows.map((r) => ({
+        ...r,
+        isOwn: r.propertyId === input.propertyId,
+        name: r.propertyId === input.propertyId ? prop.name : null,
+      }))
       return { city: prop.city, rows: finalRows, cityAvg }
     }),
 
