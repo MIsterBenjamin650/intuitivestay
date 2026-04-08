@@ -17,6 +17,9 @@ export const properties = pgTable("properties", {
   status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected'
   adminNotes: text("admin_notes"),
   isVip: boolean("is_vip").default(false).notNull(),
+  paymentStatus: text("payment_status"), // null | 'pending' | 'paid' | 'cancelling' | 'cancelled'
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   tripAdvisorUrl: text("tripadvisor_url"),
   googlePlaceId: text("google_place_id"),
   ownerEmail: text("owner_email").notNull(),
