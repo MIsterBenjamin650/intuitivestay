@@ -468,36 +468,49 @@ function RouteComponent() {
       {/* Row 7: City leaderboard */}
       {canSeeLeaderboard ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">
             City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
           </p>
-          {leaderboard?.rows.length ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    {["#", "Property", "GCS", "R", "E", "A", "Rec", "Submissions"].map((h) => (
-                      <th key={h} className="py-3 pr-4 text-left font-semibold text-gray-500 last:text-right">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.rows.map((row) => (
-                    <tr key={row.propertyId} className={row.isOwn ? "bg-orange-50" : "border-b border-gray-50"} style={row.isOwn ? { borderLeft: "3px solid #f97316" } : undefined}>
-                      <td className="py-3 pr-4 font-bold text-gray-500">{row.rank}</td>
-                      <td className="py-3 pr-4 font-semibold text-gray-800">{row.isOwn ? row.name : `Property #${row.rank}`}</td>
-                      <td className="py-3 pr-4 font-bold text-orange-500">{row.avgGcs != null ? row.avgGcs.toFixed(1) : "—"}</td>
-                      <td className="py-3 pr-4 text-gray-500">{row.avgResilience?.toFixed(1) ?? "—"}</td>
-                      <td className="py-3 pr-4 text-gray-500">{row.avgEmpathy?.toFixed(1) ?? "—"}</td>
-                      <td className="py-3 pr-4 text-gray-500">{row.avgAnticipation?.toFixed(1) ?? "—"}</td>
-                      <td className="py-3 pr-4 text-gray-500">{row.avgRecognition?.toFixed(1) ?? "—"}</td>
-                      <td className="py-3 text-right text-gray-500">{row.submissions}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
+          {leaderboard?.rows.length ? (() => {
+            const maxGcs = Math.max(...leaderboard.rows.map((r) => r.avgGcs ?? 0), 1)
+            return (
+              <div className="flex flex-col gap-3">
+                {leaderboard.rows.map((row) => {
+                  const gcs = row.avgGcs ?? 0
+                  const pct = Math.max((gcs / maxGcs) * 100, 2)
+                  const isOwn = row.isOwn
+                  return (
+                    <div key={row.propertyId} className="flex items-center gap-3">
+                      {/* Rank */}
+                      <span className="w-5 shrink-0 text-right text-[11px] font-bold text-gray-400">{row.rank}</span>
+                      {/* Name */}
+                      <span className={`w-28 shrink-0 truncate text-xs font-semibold ${isOwn ? "text-orange-500" : "text-gray-500"}`}>
+                        {isOwn ? row.name : `Property #${row.rank}`}
+                      </span>
+                      {/* Bar */}
+                      <div className="flex-1 h-7 rounded-lg bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-lg flex items-center justify-end pr-2.5 transition-all duration-700"
+                          style={{
+                            width: `${pct}%`,
+                            background: isOwn
+                              ? "linear-gradient(90deg, #fb923c, #f97316)"
+                              : "linear-gradient(90deg, #d1d5db, #9ca3af)",
+                          }}
+                        >
+                          <span className="text-[11px] font-bold text-white leading-none">
+                            {gcs.toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Submissions */}
+                      <span className="w-8 shrink-0 text-right text-[11px] text-gray-400">{row.submissions}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })() : (
             <p className="text-sm text-gray-400">No other properties found in your city yet.</p>
           )}
         </div>
