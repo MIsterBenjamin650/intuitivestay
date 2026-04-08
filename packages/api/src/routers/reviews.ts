@@ -72,7 +72,7 @@ export const reviewsRouter = router({
       z.object({
         propertyId: z.string(),
         tripAdvisorUrl: z.string().url().nullable(),
-        googlePlaceId: z.string().nullable(),
+        googlePlaceId: z.string().url().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -205,7 +205,7 @@ export const reviewsRouter = router({
       if (canScrapeGoogle && googlePlaceId) {
         try {
           const runId = await apifyRun(token, "compass/google-maps-reviews-scraper", {
-            placeIds: [googlePlaceId],
+            startUrls: [{ url: googlePlaceId }],
             maxReviews: 50,
             language: "en",
           })

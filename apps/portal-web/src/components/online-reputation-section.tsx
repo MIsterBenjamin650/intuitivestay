@@ -182,16 +182,16 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-600">Google Place ID</label>
+            <label className="text-xs font-medium text-gray-600">Google Maps URL</label>
             <input
-              type="text"
+              type="url"
               value={googleId}
               onChange={(e) => setGoogleId(e.target.value)}
-              placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
+              placeholder="https://www.google.com/maps/place/Your+Business+Name/..."
               className="mt-1 w-full rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"
             />
             <p className="mt-1 text-[10px] text-gray-400">
-              Find your Place ID at developers.google.com/maps/documentation/javascript/examples/places-placeid-finder
+              Open your Google Maps listing, copy the URL from your browser address bar and paste it here.
             </p>
           </div>
           <button
