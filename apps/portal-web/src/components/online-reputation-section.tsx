@@ -91,29 +91,36 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
   const onCooldown = hasSetup && taAge < 7 && gAge < 7
   const lastUpdated = Math.min(taAge, gAge)
 
-  // Pick best available online review pillars (prefer TripAdvisor, fall back to Google)
+  // Pick best available online review pillars for summary (prefer TripAdvisor, fall back to Google)
   const onlinePillars = data?.tripadvisor ?? data?.google ?? null
+
+  const ta = data?.tripadvisor ?? null
+  const g = data?.google ?? null
 
   const radarData = [
     {
       subject: "Resilience",
       GCS: gcs.resilience ?? 0,
-      "Online Reviews": onlinePillars ? Number(onlinePillars.pillarResilience) : null,
+      TripAdvisor: ta ? Number(ta.pillarResilience) : undefined,
+      Google: g ? Number(g.pillarResilience) : undefined,
     },
     {
       subject: "Empathy",
       GCS: gcs.empathy ?? 0,
-      "Online Reviews": onlinePillars ? Number(onlinePillars.pillarEmpathy) : null,
+      TripAdvisor: ta ? Number(ta.pillarEmpathy) : undefined,
+      Google: g ? Number(g.pillarEmpathy) : undefined,
     },
     {
       subject: "Anticipation",
       GCS: gcs.anticipation ?? 0,
-      "Online Reviews": onlinePillars ? Number(onlinePillars.pillarAnticipation) : null,
+      TripAdvisor: ta ? Number(ta.pillarAnticipation) : undefined,
+      Google: g ? Number(g.pillarAnticipation) : undefined,
     },
     {
       subject: "Recognition",
       GCS: gcs.recognition ?? 0,
-      "Online Reviews": onlinePillars ? Number(onlinePillars.pillarRecognition) : null,
+      TripAdvisor: ta ? Number(ta.pillarRecognition) : undefined,
+      Google: g ? Number(g.pillarRecognition) : undefined,
     },
   ]
 
@@ -291,17 +298,28 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
                 <Radar
                   name="GCS Score"
                   dataKey="GCS"
-                  stroke="#6366f1"
-                  fill="#6366f1"
-                  fillOpacity={0.25}
-                />
-                <Radar
-                  name="Online Reviews"
-                  dataKey="Online Reviews"
                   stroke="#f97316"
                   fill="#f97316"
-                  fillOpacity={0.15}
+                  fillOpacity={0.2}
                 />
+                {ta && (
+                  <Radar
+                    name="TripAdvisor"
+                    dataKey="TripAdvisor"
+                    stroke="#22c55e"
+                    fill="#22c55e"
+                    fillOpacity={0.15}
+                  />
+                )}
+                {g && (
+                  <Radar
+                    name="Google"
+                    dataKey="Google"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.15}
+                  />
+                )}
                 <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
                 <Tooltip
                   contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
@@ -313,25 +331,25 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
             </ResponsiveContainer>
 
             <div className="flex flex-col gap-3 justify-center min-w-[140px]">
-              {data?.tripadvisor && (
-                <div className="rounded-lg border p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+              {ta && (
+                <div className="rounded-lg border border-green-100 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#22c55e" }}>
                     TripAdvisor
                   </p>
-                  <StarRating value={Number(data.tripadvisor.avgRating)} />
+                  <StarRating value={Number(ta.avgRating)} />
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {data.tripadvisor.reviewCount} reviews
+                    {ta.reviewCount} reviews
                   </p>
                 </div>
               )}
-              {data?.google && (
-                <div className="rounded-lg border p-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+              {g && (
+                <div className="rounded-lg border border-blue-100 p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#3b82f6" }}>
                     Google
                   </p>
-                  <StarRating value={Number(data.google.avgRating)} />
+                  <StarRating value={Number(g.avgRating)} />
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {data.google.reviewCount} reviews
+                    {g.reviewCount} reviews
                   </p>
                 </div>
               )}
