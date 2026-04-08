@@ -67,6 +67,12 @@ async function countActiveSubscriptions(): Promise<number> {
 }
 
 async function applyMilestoneDiscounts(newSub: Stripe.Subscription): Promise<void> {
+  // Never apply milestone discounts to additional-property add-on subscriptions
+  const isAdditional = newSub.items.data.some(
+    (item) => item.price.id === env.STRIPE_PRICE_ADDITIONAL_PROPERTY,
+  )
+  if (isAdditional) return
+
   const totalCount = await countActiveSubscriptions()
   const previousCount = totalCount - 1
   const currentMilestone = getMilestoneLevel(totalCount)
