@@ -2,7 +2,7 @@
 
 /* ── Transparent warm sidebar theme ─────────────────────────────────────── */
 :root {
-  --sidebar-background: transparent;
+  --sidebar: transparent;
   --sidebar-foreground: #1c1917;
   --sidebar-border: rgba(249, 115, 22, 0.15);
   --sidebar-accent: rgba(249, 115, 22, 0.10);
@@ -10,6 +10,7 @@
   --sidebar-primary: #f97316;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-ring: #f97316;
+  --color-sidebar: transparent;
 }
 
 /* Slider thumb styling for the guest feedback form */
