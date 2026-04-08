@@ -497,6 +497,7 @@ export const feedbackRouter = router({
         anticipation: row.anticipation,
         recognition: row.recognition,
         ventText: row.ventText,
+        guestEmail: row.guestEmail,
         isUniformScore: row.isUniformScore,
         submittedAt: row.submittedAt,
       }))

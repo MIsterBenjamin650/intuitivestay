@@ -199,6 +199,17 @@ function RouteComponent() {
                         <p className="text-sm">{alert.ventText}</p>
                       </div>
                     )}
+                    {alert.guestEmail && (
+                      <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-2">
+                        <span className="text-xs text-muted-foreground">Guest email:</span>
+                        <a
+                          href={`mailto:${alert.guestEmail}`}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          {alert.guestEmail}
+                        </a>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
