@@ -1,5 +1,5 @@
 import { db } from "@intuitive-stay/db"
-import { aiDailySummaries, feedback, leaderboardCache, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
+import { aiDailySummaries, dashboardCache, feedback, leaderboardCache, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
 import { and, avg, count, desc, eq, gte, inArray, isNotNull, max, sql } from "drizzle-orm"
@@ -83,6 +83,123 @@ function extractKeywords(texts: (string | null)[]): { word: string; count: numbe
     .sort((a, b) => b[1] - a[1])
     .slice(0, 20)
     .map(([word, count]) => ({ word, count }))
+}
+
+// ─── Dashboard cache helpers ──────────────────────────────────────────────────
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000  // 24 hours
+
+type DashboardCachePayload = {
+  stats:        { totalFeedback: number; avgGcs: number | null }
+  gcsHistory:   Array<{ bucket: string; gcs: number | null; resilience: number | null; empathy: number | null; anticipation: number | null; recognition: number | null }>
+  wordCloud:    Array<{ word: string; count: number }>
+  staffBubbles: Array<{ name: string; count: number; sentiment: "positive" | "neutral" | "negative" }>
+}
+
+export async function computeDashboardCache(propertyId: string, days: number): Promise<DashboardCachePayload> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+
+  // Stats
+  const [statsRow] = await db
+    .select({ totalFeedback: count(), avgGcs: avg(feedback.gcs) })
+    .from(feedback)
+    .where(and(eq(feedback.propertyId, propertyId), gte(feedback.submittedAt, since)))
+  const stats = {
+    totalFeedback: statsRow?.totalFeedback ?? 0,
+    avgGcs: statsRow?.avgGcs != null ? Number(statsRow.avgGcs) : null,
+  }
+
+  // GCS history
+  const bucketExpr = days > 30
+    ? sql<string>`to_char(date_trunc('week', ${feedback.submittedAt}), 'YYYY-MM-DD')`
+    : sql<string>`to_char(${feedback.submittedAt}, 'YYYY-MM-DD')`
+  const historyRows = await db
+    .select({
+      bucket: bucketExpr,
+      gcs: avg(feedback.gcs),
+      resilience: avg(sql<number>`${feedback.resilience}::numeric`),
+      empathy: avg(sql<number>`${feedback.empathy}::numeric`),
+      anticipation: avg(sql<number>`${feedback.anticipation}::numeric`),
+      recognition: avg(sql<number>`${feedback.recognition}::numeric`),
+    })
+    .from(feedback)
+    .where(and(eq(feedback.propertyId, propertyId), gte(feedback.submittedAt, since)))
+    .groupBy(bucketExpr)
+    .orderBy(bucketExpr)
+  const gcsHistory = historyRows.map((r) => ({
+    bucket: r.bucket ?? "",
+    gcs: r.gcs != null ? Number(r.gcs) : null,
+    resilience: r.resilience != null ? Number(r.resilience) : null,
+    empathy: r.empathy != null ? Number(r.empathy) : null,
+    anticipation: r.anticipation != null ? Number(r.anticipation) : null,
+    recognition: r.recognition != null ? Number(r.recognition) : null,
+  }))
+
+  // Word cloud
+  const adjRows = await db
+    .select({ adjectives: feedback.adjectives })
+    .from(feedback)
+    .where(and(eq(feedback.propertyId, propertyId), gte(feedback.submittedAt, since), isNotNull(feedback.adjectives)))
+  const freq: Record<string, number> = {}
+  for (const row of adjRows) {
+    if (!row.adjectives) continue
+    for (const word of row.adjectives.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)) {
+      freq[word] = (freq[word] ?? 0) + 1
+    }
+  }
+  const wordCloud = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 30).map(([word, c]) => ({ word, count: c }))
+
+  // Staff bubbles
+  const staffRows = await db
+    .select({ name: feedback.namedStaffMember, gcs: feedback.gcs })
+    .from(feedback)
+    .where(and(eq(feedback.propertyId, propertyId), gte(feedback.submittedAt, since), isNotNull(feedback.namedStaffMember)))
+  const staffMap: Record<string, { count: number; totalGcs: number }> = {}
+  for (const row of staffRows) {
+    if (!row.name) continue
+    const entry = staffMap[row.name] ?? { count: 0, totalGcs: 0 }
+    entry.count += 1
+    entry.totalGcs += Number(row.gcs)
+    staffMap[row.name] = entry
+  }
+  const staffBubbles = Object.entries(staffMap).map(([name, { count, totalGcs }]) => {
+    const avgGcs = totalGcs / count
+    const sentiment: "positive" | "neutral" | "negative" = avgGcs >= 7 ? "positive" : avgGcs < 6 ? "negative" : "neutral"
+    return { name, count, sentiment }
+  })
+
+  const payload: DashboardCachePayload = { stats, gcsHistory, wordCloud, staffBubbles }
+
+  // Persist to cache
+  const cacheId = `${propertyId}:${days}`
+  await db
+    .insert(dashboardCache)
+    .values({ id: cacheId, propertyId, days, stats, gcsHistory, wordCloud, staffBubbles, computedAt: new Date() })
+    .onConflictDoUpdate({
+      target: dashboardCache.id,
+      set: { stats, gcsHistory, wordCloud, staffBubbles, computedAt: new Date() },
+    })
+
+  return payload
+}
+
+async function getCachedOrCompute(propertyId: string, days: number): Promise<DashboardCachePayload> {
+  const cached = await db.query.dashboardCache.findFirst({
+    where: eq(dashboardCache.id, `${propertyId}:${days}`),
+  })
+
+  if (cached) {
+    const age = Date.now() - new Date(cached.computedAt).getTime()
+    if (age < CACHE_TTL_MS) {
+      return cached as unknown as DashboardCachePayload
+    }
+    // Stale — trigger background refresh, return stale data immediately
+    void computeDashboardCache(propertyId, days).catch(console.error)
+    return cached as unknown as DashboardCachePayload
+  }
+
+  // No cache — compute now (first load or new property)
+  return computeDashboardCache(propertyId, days)
 }
 
 export const propertiesRouter = router({
@@ -1098,48 +1215,15 @@ export const propertiesRouter = router({
   getDashboardStats: protectedProcedure
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
-      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-      const [row] = await db
-        .select({
-          totalFeedback: count(),
-          avgGcs: avg(feedback.gcs),
-        })
-        .from(feedback)
-        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
-      return {
-        totalFeedback: row?.totalFeedback ?? 0,
-        avgGcs: row?.avgGcs != null ? Number(row.avgGcs) : null,
-      }
+      const { stats } = await getCachedOrCompute(input.propertyId, input.days)
+      return stats
     }),
 
   getGcsHistory: protectedProcedure
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
-      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-      const bucketExpr = input.days > 30
-        ? sql<string>`to_char(date_trunc('week', ${feedback.submittedAt}), 'YYYY-MM-DD')`
-        : sql<string>`to_char(${feedback.submittedAt}, 'YYYY-MM-DD')`
-      const rows = await db
-        .select({
-          bucket: bucketExpr,
-          gcs: avg(feedback.gcs),
-          resilience: avg(sql<number>`${feedback.resilience}::numeric`),
-          empathy: avg(sql<number>`${feedback.empathy}::numeric`),
-          anticipation: avg(sql<number>`${feedback.anticipation}::numeric`),
-          recognition: avg(sql<number>`${feedback.recognition}::numeric`),
-        })
-        .from(feedback)
-        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
-        .groupBy(bucketExpr)
-        .orderBy(bucketExpr)
-      return rows.map((r) => ({
-        bucket: r.bucket ?? "",
-        gcs: r.gcs != null ? Number(r.gcs) : null,
-        resilience: r.resilience != null ? Number(r.resilience) : null,
-        empathy: r.empathy != null ? Number(r.empathy) : null,
-        anticipation: r.anticipation != null ? Number(r.anticipation) : null,
-        recognition: r.recognition != null ? Number(r.recognition) : null,
-      }))
+      const { gcsHistory } = await getCachedOrCompute(input.propertyId, input.days)
+      return gcsHistory
     }),
 
   getRecentFeedback: protectedProcedure
@@ -1169,58 +1253,15 @@ export const propertiesRouter = router({
   getWordCloud: protectedProcedure
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
-      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-      const rows = await db
-        .select({ adjectives: feedback.adjectives })
-        .from(feedback)
-        .where(
-          and(
-            eq(feedback.propertyId, input.propertyId),
-            gte(feedback.submittedAt, since),
-            isNotNull(feedback.adjectives),
-          ),
-        )
-      const freq: Record<string, number> = {}
-      for (const row of rows) {
-        if (!row.adjectives) continue
-        for (const word of row.adjectives.split(",").map((w) => w.trim().toLowerCase()).filter(Boolean)) {
-          freq[word] = (freq[word] ?? 0) + 1
-        }
-      }
-      return Object.entries(freq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 30)
-        .map(([word, count]) => ({ word, count }))
+      const { wordCloud } = await getCachedOrCompute(input.propertyId, input.days)
+      return wordCloud
     }),
 
   getStaffBubbles: protectedProcedure
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
-      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-      const rows = await db
-        .select({ name: feedback.namedStaffMember, gcs: feedback.gcs })
-        .from(feedback)
-        .where(
-          and(
-            eq(feedback.propertyId, input.propertyId),
-            gte(feedback.submittedAt, since),
-            isNotNull(feedback.namedStaffMember),
-          ),
-        )
-      const map: Record<string, { count: number; totalGcs: number }> = {}
-      for (const row of rows) {
-        if (!row.name) continue
-        const entry = map[row.name] ?? { count: 0, totalGcs: 0 }
-        entry.count += 1
-        entry.totalGcs += Number(row.gcs)
-        map[row.name] = entry
-      }
-      return Object.entries(map).map(([name, { count, totalGcs }]) => {
-        const avgGcs = totalGcs / count
-        const sentiment: "positive" | "neutral" | "negative" =
-          avgGcs >= 7 ? "positive" : avgGcs < 6 ? "negative" : "neutral"
-        return { name, count, sentiment }
-      })
+      const { staffBubbles } = await getCachedOrCompute(input.propertyId, input.days)
+      return staffBubbles
     }),
 
   getCityLeaderboardLive: protectedProcedure

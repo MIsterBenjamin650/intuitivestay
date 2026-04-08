@@ -3,6 +3,7 @@ import { createContext } from "@intuitive-stay/api/context";
 import { generatePropertySummary } from "@intuitive-stay/api/lib/ai";
 import { sendDailySummaryEmail } from "@intuitive-stay/api/lib/email";
 import { registerPropertyFromWix } from "@intuitive-stay/api/lib/register-property";
+import { computeDashboardCache } from "@intuitive-stay/api/routers/properties";
 import { appRouter } from "@intuitive-stay/api/routers/index";
 import { auth } from "@intuitive-stay/auth";
 import { db } from "@intuitive-stay/db";
@@ -108,6 +109,44 @@ app.post("/api/properties/register", async (c) => {
 })
 
 app.post("/webhooks/stripe", stripeWebhookHandler)
+
+// ─── Nightly dashboard pre-compute ──────────────────────────────────────────
+// Called by external cron (e.g. cron-job.org) at 02:00 UTC every night.
+// Computes stats/history/wordcloud/staffbubbles for every approved property
+// across all 3 time windows and stores results in dashboard_cache.
+app.get("/api/cron/precompute-dashboard", async (c) => {
+  const secret = c.req.header("x-cron-secret")
+  if (!env.CRON_SECRET || !secret || secret !== env.CRON_SECRET) {
+    return c.json({ error: "Unauthorized" }, 401)
+  }
+
+  const allProperties = await db
+    .select({ id: properties.id })
+    .from(properties)
+    .where(eq(properties.status, "approved"))
+
+  const PERIODS = [7, 30, 90] as const
+  const results: { propertyId: string; days: number; status: string }[] = []
+
+  for (const prop of allProperties) {
+    for (const days of PERIODS) {
+      try {
+        await computeDashboardCache(prop.id, days)
+        results.push({ propertyId: prop.id, days, status: "ok" })
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        results.push({ propertyId: prop.id, days, status: `error: ${msg}` })
+      }
+    }
+  }
+
+  const errors = results.filter((r) => r.status.startsWith("error"))
+  return c.json({
+    computed: results.length,
+    errors: errors.length,
+    ...(errors.length ? { errorDetails: errors } : {}),
+  })
+})
 
 app.get("/api/cron/daily-summaries", async (c) => {
   const cronSecret = env.CRON_SECRET
