@@ -5,6 +5,11 @@ const resend = new Resend(env.RESEND_API_KEY)
 
 const FROM = "IntuitiveStay <noreply@intuitivestay.com>"
 
+function addPrices(basePrice: string, addOn: number): string {
+  const base = parseFloat(basePrice.replace(/[^0-9.]/g, ""))
+  return `£${(base + addOn).toFixed(2)}`
+}
+
 export async function sendApprovalEmail(
   ownerEmail: string,
   ownerName: string,
@@ -35,6 +40,47 @@ ${loginSection}
           },
         ]
       : undefined,
+  })
+}
+
+export async function sendAdditionalPropertyPaymentEmail(
+  ownerEmail: string,
+  ownerName: string,
+  propertyName: string,
+  checkoutUrl: string,
+  basePlan: string,
+  basePrice: string,
+) {
+  const planLabel = basePlan.charAt(0).toUpperCase() + basePlan.slice(1)
+
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `Your property "${propertyName}" has been approved — complete payment to activate`,
+    html: `<h1>Hi ${ownerName},</h1>
+<p>Great news — your property <strong>${propertyName}</strong> has been approved!</p>
+<p>As this is an additional property beyond your plan allowance, a monthly add-on fee applies:</p>
+<table style="border-collapse:collapse;width:100%;max-width:400px;margin:16px 0">
+  <tr>
+    <td style="padding:8px;color:#64748b">${planLabel} plan (base)</td>
+    <td style="padding:8px;text-align:right">${basePrice}/month</td>
+  </tr>
+  <tr>
+    <td style="padding:8px;color:#64748b">Additional property</td>
+    <td style="padding:8px;text-align:right">£25.00/month</td>
+  </tr>
+  <tr style="border-top:2px solid #e2e8f0;font-weight:bold">
+    <td style="padding:8px">New monthly total</td>
+    <td style="padding:8px;text-align:right">${addPrices(basePrice, 25.00)}/month</td>
+  </tr>
+</table>
+<p>No setup fees. Cancel at any time from your billing dashboard. Your QR code will be sent once payment is confirmed.</p>
+<p style="margin-top:24px">
+  <a href="${checkoutUrl}" style="display:inline-block;background:#f97316;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px">Complete Payment →</a>
+</p>
+<p style="font-size:12px;color:#64748b;margin-top:12px">
+  This link expires in 24 hours. If it stops working, log in to your portal and click <strong>Complete Payment</strong> on the property card to get a fresh link.
+</p>`,
   })
 }
 
