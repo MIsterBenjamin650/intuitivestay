@@ -165,7 +165,7 @@ function RouteComponent() {
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
@@ -473,21 +473,21 @@ function RouteComponent() {
                 <thead>
                   <tr className="border-b border-gray-100">
                     {["#", "Property", "GCS", "R", "E", "A", "Rec", "Submissions"].map((h) => (
-                      <th key={h} className="py-2 pr-3 text-left font-semibold text-gray-500 last:text-right">{h}</th>
+                      <th key={h} className="py-3 pr-4 text-left font-semibold text-gray-500 last:text-right">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {leaderboard.rows.map((row) => (
                     <tr key={row.propertyId} className={row.isOwn ? "bg-orange-50" : "border-b border-gray-50"} style={row.isOwn ? { borderLeft: "3px solid #f97316" } : undefined}>
-                      <td className="py-2 pr-3 font-bold text-gray-500">{row.rank}</td>
-                      <td className="py-2 pr-3 font-semibold text-gray-800">{row.isOwn ? row.name : `Property #${row.rank}`}</td>
-                      <td className="py-2 pr-3 font-bold text-orange-500">{row.avgGcs != null ? row.avgGcs.toFixed(1) : "—"}</td>
-                      <td className="py-2 pr-3 text-gray-500">{row.avgResilience?.toFixed(1) ?? "—"}</td>
-                      <td className="py-2 pr-3 text-gray-500">{row.avgEmpathy?.toFixed(1) ?? "—"}</td>
-                      <td className="py-2 pr-3 text-gray-500">{row.avgAnticipation?.toFixed(1) ?? "—"}</td>
-                      <td className="py-2 pr-3 text-gray-500">{row.avgRecognition?.toFixed(1) ?? "—"}</td>
-                      <td className="py-2 text-right text-gray-500">{row.submissions}</td>
+                      <td className="py-3 pr-4 font-bold text-gray-500">{row.rank}</td>
+                      <td className="py-3 pr-4 font-semibold text-gray-800">{row.isOwn ? row.name : `Property #${row.rank}`}</td>
+                      <td className="py-3 pr-4 font-bold text-orange-500">{row.avgGcs != null ? row.avgGcs.toFixed(1) : "—"}</td>
+                      <td className="py-3 pr-4 text-gray-500">{row.avgResilience?.toFixed(1) ?? "—"}</td>
+                      <td className="py-3 pr-4 text-gray-500">{row.avgEmpathy?.toFixed(1) ?? "—"}</td>
+                      <td className="py-3 pr-4 text-gray-500">{row.avgAnticipation?.toFixed(1) ?? "—"}</td>
+                      <td className="py-3 pr-4 text-gray-500">{row.avgRecognition?.toFixed(1) ?? "—"}</td>
+                      <td className="py-3 text-right text-gray-500">{row.submissions}</td>
                     </tr>
                   ))}
                 </tbody>

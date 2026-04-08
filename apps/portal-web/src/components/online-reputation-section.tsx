@@ -332,7 +332,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
                     fillOpacity={0.15}
                   />
                 )}
-                <Legend iconSize={14} iconType="line" wrapperStyle={{ fontSize: 11 }} />
+                <Legend iconSize={14} iconType="line" wrapperStyle={{ fontSize: 11, display: "flex", gap: "16px", justifyContent: "center", paddingTop: "8px" }} />
                 <Tooltip
                   contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
                   formatter={(v: unknown) =>
