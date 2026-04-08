@@ -17,6 +17,7 @@ export const env = createEnv({
     STRIPE_PRICE_HOST: z.string().min(1),
     STRIPE_PRICE_PARTNER: z.string().min(1),
     STRIPE_PRICE_FOUNDER: z.string().min(1),
+    STRIPE_PRICE_ADDITIONAL_PROPERTY: z.string().min(1),
     STRIPE_WEBHOOK_SECRET: z.string().min(1),
     ANTHROPIC_API_KEY: z.string().min(1),
     APIFY_API_TOKEN: z.string().min(1).optional(),
