@@ -1,4 +1,16 @@
-import { useQuery } from "@tanstack/react-query"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@intuitive-stay/ui/components/alert-dialog"
+import { Badge } from "@intuitive-stay/ui/components/badge"
+import { Button } from "@intuitive-stay/ui/components/button"
 import {
   Card,
   CardContent,
@@ -6,128 +18,151 @@ import {
   CardHeader,
   CardTitle,
 } from "@intuitive-stay/ui/components/card"
-import { Button } from "@intuitive-stay/ui/components/button"
-import { createFileRoute, useRouteContext } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
+import { ExternalLinkIcon } from "lucide-react"
+import { toast } from "sonner"
 
 import { useTRPC } from "@/utils/trpc"
 
-type BillingSearch = {
-  upgrade?: string
-  from?: string
-}
-
 export const Route = createFileRoute("/_portal/organisation/billing")({
-  validateSearch: (search: Record<string, unknown>): BillingSearch => ({
-    upgrade: typeof search.upgrade === "string" ? search.upgrade : undefined,
-    from: typeof search.from === "string" ? search.from : undefined,
-  }),
   component: RouteComponent,
 })
 
-type SubscriptionStatus = "active" | "trial" | "expired" | "grace" | "none" | string
-
-function statusBadge(status: SubscriptionStatus) {
-  const map: Record<string, { label: string; className: string }> = {
-    active: { label: "Active", className: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
-    trial: { label: "Trial", className: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
-    expired: { label: "Expired", className: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300" },
-    grace: { label: "Grace Period", className: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300" },
-    none: { label: "None", className: "bg-muted text-muted-foreground" },
-  }
-  const { label, className } = map[status] ?? { label: status, className: "bg-muted text-muted-foreground" }
-  return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>
-      {label}
-    </span>
-  )
-}
-
 function RouteComponent() {
-  const search = Route.useSearch()
-  const { session } = useRouteContext({ from: "/_portal" })
-
   const trpc = useTRPC()
-  const { data: portfolio } = useQuery(trpc.properties.getPortfolioDashboard.queryOptions())
-  const { data: stripeData } = useQuery(trpc.properties.getStripePortalUrl.queryOptions())
+  const queryClient = useQueryClient()
 
-  const rawPlan = (session as { plan?: string } | null)?.plan ?? null
-  const subscriptionStatus: SubscriptionStatus =
-    (session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"
+  const { data: additionalProperties = [], isLoading } = useQuery(
+    trpc.properties.getMyAdditionalProperties.queryOptions(),
+  )
 
-  const planLabel = rawPlan
-    ? rawPlan.charAt(0).toUpperCase() + rawPlan.slice(1)
-    : "Free"
+  const { data: portalData } = useQuery(
+    trpc.properties.getStripePortalUrl.queryOptions(),
+  )
 
-  const activeCount = portfolio?.activeCount ?? 0
-  const stripeUrl = stripeData?.url ?? null
+  const { mutate: cancelProperty, isPending: isCancelling } = useMutation(
+    trpc.properties.cancelAdditionalProperty.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.properties.getMyAdditionalProperties.queryFilter())
+        toast.success("Property cancellation scheduled. You'll retain access until the end of your billing period.")
+      },
+      onError: (err) => {
+        toast.error(err.message)
+      },
+    }),
+  )
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <Card>
+    <div className="flex flex-col gap-6 p-6">
+      <div>
+        <h1 className="text-2xl font-bold">Billing</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your subscription and additional properties.
+        </p>
+      </div>
+
+      {/* Stripe billing portal link */}
+      <Card size="sm">
         <CardHeader>
-          <CardTitle>Billing</CardTitle>
+          <CardTitle className="text-sm">Plan subscription</CardTitle>
           <CardDescription>
-            Subscription plan, usage, and invoice history in one place.
+            Manage your base plan, payment method, and invoices through the Stripe billing portal.
           </CardDescription>
         </CardHeader>
-        {search.upgrade ? (
-          <CardContent className="text-sm text-muted-foreground">
-            Upgrade requested for:{" "}
-            <span className="font-medium text-foreground">{search.upgrade}</span>
-            {search.from ? (
-              <>
-                {" "}
-                (from <span className="font-medium text-foreground">{search.from}</span>)
-              </>
-            ) : null}
-          </CardContent>
-        ) : null}
+        <CardContent>
+          {portalData?.url ? (
+            <Button variant="outline" size="sm" asChild>
+              <a href={portalData.url} target="_blank" rel="noreferrer">
+                <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                Open billing portal
+              </a>
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">No active subscription found.</p>
+          )}
+        </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Current Plan */}
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-sm">Current Plan</CardTitle>
-            <CardDescription className="flex items-center gap-2">
-              <span className="font-medium text-foreground">{planLabel}</span>
-              {statusBadge(subscriptionStatus)}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      {/* Additional properties */}
+      <div>
+        <h2 className="text-lg font-semibold mb-3">Additional properties</h2>
 
-        {/* Usage */}
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-sm">Active Properties</CardTitle>
-            <CardDescription>
-              {activeCount === 1 ? "1 active property" : `${activeCount} active properties`}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
-        {/* Manage Subscription */}
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle className="text-sm">Manage Subscription</CardTitle>
-            <CardDescription>
-              {stripeUrl
-                ? "Access invoices, payment methods, and plan changes."
-                : "No active subscription."}
-            </CardDescription>
-          </CardHeader>
-          {stripeUrl ? (
-            <CardContent>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(stripeUrl, "_blank")}
-              >
-                Open Billing Portal
-              </Button>
-            </CardContent>
-          ) : null}
-        </Card>
+        {!isLoading && additionalProperties.length === 0 && (
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle className="text-sm">No additional properties</CardTitle>
+              <CardDescription>
+                Properties included in your plan appear here once you add paid add-ons.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {!isLoading && additionalProperties.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {additionalProperties.map((property) => (
+              <Card key={property.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-sm">{property.name}</CardTitle>
+                      <CardDescription>
+                        {property.city}, {property.country} · £25.00/month
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {property.paymentStatus === "cancelling" ? (
+                        <Badge variant="outline" className="text-orange-600 border-orange-400 bg-orange-50">
+                          Cancellation pending
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">
+                          Active
+                        </Badge>
+                      )}
+
+                      {property.paymentStatus === "paid" && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive border-destructive/30 hover:bg-destructive/5"
+                              disabled={isCancelling}
+                            >
+                              Remove property
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove {property.name}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This property will be deactivated at the end of your current billing period.
+                                Your other properties won't be affected. This cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep property</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => cancelProperty({ propertyId: property.id })}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Yes, remove it
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -21,6 +21,7 @@ import {
   useLocation,
 } from "@tanstack/react-router"
 import {
+  CreditCardIcon,
   LayoutDashboardIcon,
   QrCodeIcon,
   ShieldCheckIcon,
@@ -317,6 +318,22 @@ export function AppSidebar({
               </SidebarGroupContent>
             </SidebarGroup>
         )}
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground/40">
+            Account
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarLinkItem
+                label="Billing"
+                icon={<CreditCardIcon />}
+                link={<AppSidebarLink to="/organisation/billing" />}
+                isActive={isRouteActive(location.pathname, "/organisation/billing")}
+              />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarRail />
