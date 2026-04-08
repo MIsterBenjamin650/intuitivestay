@@ -6,9 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@intuitive-stay/ui/components/card"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useTRPC } from "@/utils/trpc"
 
@@ -59,6 +59,7 @@ function PillarGrid({
 function RouteComponent() {
   const { propertyId } = Route.useParams()
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<Tab>("low-scores")
 
   const {
@@ -72,6 +73,22 @@ function RouteComponent() {
     isLoading: flaggedLoading,
     isError: flaggedError,
   } = useQuery(trpc.feedback.getUniformScoreFeedback.queryOptions({ propertyId }))
+
+  // Mark all low-score alerts for this property as seen when the page loads.
+  // This clears the red badge in the notification bell.
+  const { mutate: markRead } = useMutation(
+    trpc.feedback.markAlertsRead.mutationOptions({
+      onSuccess: () => {
+        // Invalidate the badge count and the recent-alerts list so the bell updates
+        queryClient.invalidateQueries(trpc.feedback.getRedAlertCount.queryFilter())
+        queryClient.invalidateQueries(trpc.feedback.getRecentUnreadAlerts.queryFilter())
+      },
+    }),
+  )
+
+  useEffect(() => {
+    markRead({ propertyId })
+  }, [propertyId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isLoading = alertsLoading || flaggedLoading
   const isError = alertsError || flaggedError
@@ -148,7 +165,8 @@ function RouteComponent() {
           ) : (
             <div className="flex flex-col gap-4">
               {alerts.map((alert) => (
-                <Card key={alert.id}>
+                // id attribute enables deep-linking from email / notification bell
+                <Card key={alert.id} id={alert.id} className="scroll-mt-6">
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-sm">
@@ -209,7 +227,7 @@ function RouteComponent() {
           ) : (
             <div className="flex flex-col gap-4">
               {flagged.map((row) => (
-                <Card key={row.id} className="border-amber-200">
+                <Card key={row.id} id={row.id} className="border-amber-200 scroll-mt-6">
                   <CardHeader>
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-sm">

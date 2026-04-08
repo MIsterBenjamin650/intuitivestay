@@ -184,12 +184,20 @@ export const feedbackRouter = router({
         })
 
         if (property) {
-          sendAlertEmail(property.ownerEmail, property.ownerName, property.name, gcs, {
-            resilience: input.resilience,
-            empathy: input.empathy,
-            anticipation: input.anticipation,
-            recognition: input.recognition,
-          }).catch((err) => console.error("Failed to send alert email:", err))
+          sendAlertEmail(
+            property.ownerEmail,
+            property.ownerName,
+            property.name,
+            property.id,
+            feedbackId,
+            gcs,
+            {
+              resilience: input.resilience,
+              empathy: input.empathy,
+              anticipation: input.anticipation,
+              recognition: input.recognition,
+            },
+          ).catch((err) => console.error("Failed to send alert email:", err))
         }
       }
 
@@ -306,11 +314,94 @@ export const feedbackRouter = router({
         and(
           inArray(feedback.propertyId, propertyIds),
           sql`${feedback.gcs}::numeric <= 5`,
+          eq(feedback.seenByOwner, false),
         ),
       )
 
     return result?.total ?? 0
   }),
+
+  /**
+   * Protected — returns the most recent unread low-score alerts (GCS ≤ 5, seenByOwner = false)
+   * across all of the owner's properties. Used by the notification bell popover.
+   * Capped at 10 entries.
+   */
+  getRecentUnreadAlerts: protectedProcedure.query(async ({ ctx }) => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+    if (!org) return []
+
+    const userProperties = await db
+      .select({ id: properties.id, name: properties.name })
+      .from(properties)
+      .where(eq(properties.organisationId, org.id))
+
+    if (userProperties.length === 0) return []
+
+    const propertyIds = userProperties.map((p) => p.id)
+    const propertyNameMap = Object.fromEntries(userProperties.map((p) => [p.id, p.name]))
+
+    const rows = await db
+      .select({
+        id: feedback.id,
+        propertyId: feedback.propertyId,
+        gcs: feedback.gcs,
+        ventText: feedback.ventText,
+        submittedAt: feedback.submittedAt,
+      })
+      .from(feedback)
+      .where(
+        and(
+          inArray(feedback.propertyId, propertyIds),
+          sql`${feedback.gcs}::numeric <= 5`,
+          eq(feedback.seenByOwner, false),
+        ),
+      )
+      .orderBy(desc(feedback.submittedAt))
+      .limit(10)
+
+    return rows.map((row) => ({
+      id: row.id,
+      propertyId: row.propertyId,
+      propertyName: propertyNameMap[row.propertyId] ?? "Unknown",
+      gcs: Number(row.gcs),
+      ventText: row.ventText,
+      submittedAt: row.submittedAt,
+    }))
+  }),
+
+  /**
+   * Protected — marks all low-score alerts (GCS ≤ 5) as seen for a property.
+   * Called when the owner visits a property's Alerts page, clearing the badge count.
+   */
+  markAlertsRead: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      await db
+        .update(feedback)
+        .set({ seenByOwner: true })
+        .where(
+          and(
+            eq(feedback.propertyId, input.propertyId),
+            sql`${feedback.gcs}::numeric <= 5`,
+            eq(feedback.seenByOwner, false),
+          ),
+        )
+
+      return { ok: true }
+    }),
 
   getPropertyFeedbackSummary: protectedProcedure
     .input(z.object({ propertyId: z.string() }))

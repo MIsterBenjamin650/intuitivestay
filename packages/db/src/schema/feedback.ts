@@ -24,6 +24,7 @@ export const feedback = pgTable("feedback", {
   adjectives: text("adjectives"), // comma-separated guest-chosen words e.g. "clean,friendly,quiet"
   guestEmail: text("guest_email"),
   isUniformScore: boolean("is_uniform_score").default(false).notNull(), // true if all 4 pillars rated identically — flagged as low confidence
+  seenByOwner: boolean("seen_by_owner").default(false).notNull(), // cleared to true when owner visits Alerts page — drives the notification badge
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 },
 (table) => [
@@ -35,6 +36,8 @@ export const feedback = pgTable("feedback", {
   index("feedback_submittedAt_idx").on(table.submittedAt),
   // Low GCS alert queries
   index("feedback_gcs_idx").on(table.gcs),
+  // Unread alert count queries (property_id + seen_by_owner)
+  index("feedback_propertyId_seen_idx").on(table.propertyId, table.seenByOwner),
 ],
 );
 

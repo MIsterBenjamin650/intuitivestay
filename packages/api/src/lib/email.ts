@@ -72,9 +72,13 @@ export async function sendAlertEmail(
   ownerEmail: string,
   ownerName: string,
   propertyName: string,
+  propertyId: string,
+  feedbackId: string,
   gcs: number,
   pillars: { resilience: number; empathy: number; anticipation: number; recognition: number },
 ) {
+  const alertsUrl = `${env.PUBLIC_PORTAL_URL}/properties/${propertyId}/alerts#${feedbackId}`
+
   await resend.emails.send({
     from: FROM,
     to: ownerEmail,
@@ -88,8 +92,10 @@ export async function sendAlertEmail(
   <li>Anticipation: ${pillars.anticipation}/10</li>
   <li>Recognition: ${pillars.recognition}/10</li>
 </ul>
-<p>Log in to your portal to view any additional feedback left by the guest:</p>
-<p><a href="${env.PUBLIC_PORTAL_URL}">${env.PUBLIC_PORTAL_URL}</a></p>`,
+<p>
+  <a href="${alertsUrl}" style="display:inline-block;background:#ef4444;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">View this alert →</a>
+</p>
+<p style="font-size:12px;color:#64748b">This link takes you directly to the feedback entry in your Alerts page.</p>`,
   })
 }
 
