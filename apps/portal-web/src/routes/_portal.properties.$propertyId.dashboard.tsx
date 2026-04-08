@@ -242,7 +242,7 @@ function RouteComponent() {
               {TIER_CONFIG[displayTier].label} Seal
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4">
+          <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
             <div>
               <p className="text-[10px] uppercase tracking-wide text-gray-400">Feedback</p>
               <p className="text-xl font-bold text-gray-800">{stats?.totalFeedback ?? "—"}</p>
@@ -253,10 +253,6 @@ function RouteComponent() {
                 {stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—"}
                 <span className="text-xs font-normal text-gray-400"> /100</span>
               </p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Window</p>
-              <p className="text-xl font-bold text-gray-800">Last {days}d</p>
             </div>
           </div>
         </div>
