@@ -55,50 +55,6 @@ function getTierFromScore(score: number): Tier {
   return "member"
 }
 
-// ─── GCS Ring Gauge ─────────────────────────────────────────────────────────
-
-function GcsRing({ gcs, tier }: { gcs: number | null; tier: Tier }) {
-  const r = 56
-  const cx = 70
-  const cy = 70
-  const C = 2 * Math.PI * r
-  const pct = gcs != null ? Math.min(Math.max(gcs / 10, 0), 1) : 0
-  const filled = C * pct
-  const gap = C - filled
-  const t = TIER_CONFIG[tier]
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <svg width="140" height="140">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth="10" />
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={t.color}
-          strokeWidth="10"
-          strokeDasharray={`${filled} ${gap}`}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${cx} ${cy})`}
-        />
-        <text x={cx} y={cy - 6} textAnchor="middle" fontSize="28" fontWeight="800" fill={t.color}>
-          {gcs != null ? gcs.toFixed(1) : "—"}
-        </text>
-        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="10" fill="#9ca3af">
-          out of 10
-        </text>
-      </svg>
-      <span
-        className="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
-        style={{ background: t.bg, color: t.color }}
-      >
-        {t.label}
-      </span>
-    </div>
-  )
-}
-
 // ─── Locked section wrapper ─────────────────────────────────────────────────
 
 function LockedSection({ title, description }: { title: string; description: string }) {
@@ -115,7 +71,7 @@ function LockedSection({ title, description }: { title: string; description: str
         <p className="text-xs text-gray-500 text-center px-4">{description}</p>
         <a
           href="/organisation/billing"
-          className="mt-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+          className="mt-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600"
         >
           View Plans
         </a>
@@ -203,7 +159,8 @@ function RouteComponent() {
 
   const maxStaffCount = Math.max(...(staffBubbles?.map((s) => s.count) ?? [1]), 1)
   const MAX_BUBBLE = 56
-  const SENTIMENT_COLORS = { positive: "#22c55e", neutral: "#94a3b8", negative: "#ef4444" }
+  const SENTIMENT_COLORS = { positive: "#f97316", neutral: "#a8a29e", negative: "#dc2626" }
+  const PILL_PALETTE = ["#f97316", "#ea580c", "#fb923c", "#c2410c", "#f59e0b", "#d97706"]
 
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
@@ -254,42 +211,60 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Row 1: Stat pills */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Total Feedback", value: String(stats?.totalFeedback ?? "—"), color: "#6366f1" },
-          { label: "Avg GCS", value: stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—", color: "#14b8a6" },
-          { label: "Tier Score", value: stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—", color: "#a855f7" },
-          { label: "Current Seal", value: TIER_CONFIG[displayTier].label, color: TIER_CONFIG[displayTier].color },
-        ].map((pill) => (
-          <div key={pill.label} className="rounded-2xl bg-white px-5 py-4 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-1">
-              <div className="h-1.5 w-1.5 rounded-full" style={{ background: pill.color }} />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">{pill.label}</p>
-            </div>
-            <p className="text-3xl font-extrabold leading-none" style={{ color: pill.color }}>{pill.value}</p>
+      {/* Row 1+2: GCS hero + AI summary */}
+      <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
+        {/* GCS hero card */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm flex flex-col justify-between gap-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">GCS Score</p>
+          <div className="flex items-end gap-3">
+            <span className="text-8xl font-black leading-none text-orange-500">
+              {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
+            </span>
+            <span className="text-2xl font-light text-gray-300 mb-2">/10</span>
           </div>
-        ))}
-      </div>
-
-      {/* Row 2: GCS ring + AI summary */}
-      <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-        <div className="flex items-center justify-center rounded-2xl bg-white p-6 shadow-sm">
-          <GcsRing gcs={stats?.avgGcs ?? null} tier={displayTier} />
+          <div className="flex items-center gap-2">
+            <span
+              className="rounded-full px-3 py-1 text-xs font-bold"
+              style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
+            >
+              {TIER_CONFIG[displayTier].label} Seal
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Feedback</p>
+              <p className="text-xl font-bold text-gray-800">{stats?.totalFeedback ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Tier Score</p>
+              <p className="text-xl font-bold text-orange-500">
+                {stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Period</p>
+              <p className="text-xl font-bold text-gray-800">{days}d</p>
+            </div>
+          </div>
         </div>
-        <div className="rounded-2xl bg-[#1c1917] p-5 shadow-sm">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-500">AI Daily Summary</p>
+
+        {/* AI summary — white card */}
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">AI Daily Summary</p>
+          </div>
           {aiSummary ? (
             <>
-              <p className="mb-3 text-xs text-gray-500">{aiSummary.date}</p>
-              <p className="mb-4 text-sm leading-relaxed text-gray-200">{aiSummary.narrative}</p>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-500">Today's Focus</p>
+              <p className="mb-3 text-xs text-gray-400">{aiSummary.date}</p>
+              <p className="mb-4 text-sm leading-relaxed text-gray-700">{aiSummary.narrative}</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Today's Focus</p>
               <ul className="space-y-1.5">
                 {aiSummary.focusPoints.map((f, i) => {
                   const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
-                  const color = PILLAR_COLORS[pillarKey] ?? "#6366f1"
+                  const color = PILLAR_COLORS[pillarKey] ?? "#f97316"
                   return (
-                    <li key={i} className="flex gap-2 text-xs text-gray-200">
+                    <li key={i} className="flex gap-2 text-xs text-gray-600">
                       <span className="shrink-0 font-semibold" style={{ color }}>{f.pillar}:</span>
                       <span>{f.action}</span>
                     </li>
@@ -298,7 +273,7 @@ function RouteComponent() {
               </ul>
             </>
           ) : (
-            <p className="text-sm text-gray-500">Your first summary will appear tomorrow morning.</p>
+            <p className="text-sm text-gray-400">Your first summary will appear tomorrow morning.</p>
           )}
         </div>
       </div>
@@ -403,7 +378,7 @@ function RouteComponent() {
                     className="rounded-full px-3 py-1 font-semibold text-white"
                     style={{
                       fontSize: `${Math.round(scale * 12)}px`,
-                      background: `hsl(${(word.charCodeAt(0) * 37) % 360}, 70%, 55%)`,
+                      background: PILL_PALETTE[word.charCodeAt(0) % PILL_PALETTE.length],
                     }}
                   >
                     {word}
@@ -504,10 +479,10 @@ function RouteComponent() {
                 </thead>
                 <tbody>
                   {leaderboard.rows.map((row) => (
-                    <tr key={row.propertyId} className={row.isOwn ? "bg-indigo-50" : "border-b border-gray-50"} style={row.isOwn ? { borderLeft: "3px solid #6366f1" } : undefined}>
+                    <tr key={row.propertyId} className={row.isOwn ? "bg-orange-50" : "border-b border-gray-50"} style={row.isOwn ? { borderLeft: "3px solid #f97316" } : undefined}>
                       <td className="py-2 pr-3 font-bold text-gray-500">{row.rank}</td>
                       <td className="py-2 pr-3 font-semibold text-gray-800">{row.isOwn ? row.name : `Property #${row.rank}`}</td>
-                      <td className="py-2 pr-3 font-bold text-indigo-600">{row.avgGcs != null ? row.avgGcs.toFixed(1) : "—"}</td>
+                      <td className="py-2 pr-3 font-bold text-orange-500">{row.avgGcs != null ? row.avgGcs.toFixed(1) : "—"}</td>
                       <td className="py-2 pr-3 text-gray-500">{row.avgResilience?.toFixed(1) ?? "—"}</td>
                       <td className="py-2 pr-3 text-gray-500">{row.avgEmpathy?.toFixed(1) ?? "—"}</td>
                       <td className="py-2 pr-3 text-gray-500">{row.avgAnticipation?.toFixed(1) ?? "—"}</td>
