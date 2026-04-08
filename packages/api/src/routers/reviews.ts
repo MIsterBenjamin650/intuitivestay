@@ -184,10 +184,9 @@ export const reviewsRouter = router({
 
       if (canScrapeTa && tripAdvisorUrl) {
         try {
-          const runId = await apifyRun(token, "maxcopell/tripadvisor-scraper", {
+          const runId = await apifyRun(token, "maxcopell/tripadvisor-reviews", {
             startUrls: [{ url: tripAdvisorUrl }],
             maxReviews: 50,
-            reviewsLanguages: ["en"],
           })
           const datasetId = await apifyWait(token, runId)
           const reviews = await apifyDataset<{ rating?: number; text?: string }>(token, datasetId)
