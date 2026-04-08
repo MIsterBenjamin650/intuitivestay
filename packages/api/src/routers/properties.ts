@@ -222,6 +222,41 @@ async function getCachedOrCompute(propertyId: string, days: number): Promise<Das
   return computeDashboardCache(propertyId, days)
 }
 
+/**
+ * Creates a Stripe Checkout Session for an additional property subscription (£25/month).
+ * Attaches to the existing Stripe customer if one exists.
+ * Returns the checkout URL.
+ */
+async function createAdditionalPropertyCheckoutSession(
+  propertyId: string,
+  propertyName: string,
+  stripeCustomerId: string | null,
+): Promise<string> {
+  const params: Stripe.Checkout.SessionCreateParams = {
+    mode: "subscription",
+    line_items: [{ price: env.STRIPE_PRICE_ADDITIONAL_PROPERTY, quantity: 1 }],
+    subscription_data: {
+      description: `Additional Property: ${propertyName}`,
+      metadata: { propertyId },
+    },
+    metadata: { propertyId },
+    success_url: `${env.PUBLIC_PORTAL_URL}/properties?payment=success`,
+    cancel_url: `${env.PUBLIC_PORTAL_URL}/properties`,
+  }
+
+  if (stripeCustomerId) {
+    params.customer = stripeCustomerId
+  }
+
+  const session = await stripe.checkout.sessions.create(params)
+
+  if (!session.url) {
+    throw new Error("[createAdditionalPropertyCheckoutSession] Stripe did not return a URL")
+  }
+
+  return session.url
+}
+
 export const propertiesRouter = router({
   getPendingProperties: adminProcedure.query(async () => {
     return db
@@ -234,22 +269,95 @@ export const propertiesRouter = router({
   approveProperty: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      const [property] = await db
+      // Fetch the property and its organisation before updating
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.id),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.id, property.organisationId),
+      })
+      if (!org) throw new TRPCError({ code: "NOT_FOUND", message: "Organisation not found" })
+
+      // Count currently approved + paid properties for this org (excluding this one)
+      const [countResult] = await db
+        .select({ total: count() })
+        .from(properties)
+        .where(
+          and(
+            eq(properties.organisationId, org.id),
+            eq(properties.status, "approved"),
+            ne(properties.id, input.id),
+            or(isNull(properties.paymentStatus), eq(properties.paymentStatus, "paid")),
+          ),
+        )
+
+      const approvedCount = countResult?.total ?? 0
+      const planLimit = PLAN_PROPERTY_LIMITS[org.plan ?? "member"] ?? 0
+      const isAdditional = approvedCount >= planLimit
+
+      if (isAdditional) {
+        // ── Additional property: needs payment ──────────────────────────────
+        const [updatedProperty] = await db
+          .update(properties)
+          .set({ status: "approved", paymentStatus: "pending", updatedAt: new Date() })
+          .where(eq(properties.id, input.id))
+          .returning()
+
+        if (!updatedProperty) throw new TRPCError({ code: "NOT_FOUND" })
+
+        // Create Stripe checkout session
+        let checkoutUrl: string
+        try {
+          checkoutUrl = await createAdditionalPropertyCheckoutSession(
+            updatedProperty.id,
+            updatedProperty.name,
+            org.stripeCustomerId ?? null,
+          )
+        } catch (err) {
+          console.error("[approveProperty] Stripe checkout session failed:", err)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create payment link. Property approved but email not sent.",
+          })
+        }
+
+        // Store checkout session URL for reference
+        await db
+          .update(properties)
+          .set({ stripeCheckoutSessionId: checkoutUrl })
+          .where(eq(properties.id, input.id))
+
+        // Fire-and-forget payment email (no QR code yet)
+        const basePrice = PLAN_BASE_PRICES[org.plan ?? "host"] ?? "£34.99"
+        sendAdditionalPropertyPaymentEmail(
+          updatedProperty.ownerEmail,
+          updatedProperty.ownerName,
+          updatedProperty.name,
+          checkoutUrl,
+          org.plan ?? "host",
+          basePrice,
+        ).catch((err) => console.error("[approveProperty] Payment email failed:", err))
+
+        return updatedProperty
+      }
+
+      // ── Standard approval: within plan limit ────────────────────────────
+      const [updatedPropertyStandard] = await db
         .update(properties)
         .set({ status: "approved", updatedAt: new Date() })
         .where(eq(properties.id, input.id))
         .returning()
 
-      if (!property) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      }
+      if (!updatedPropertyStandard) throw new TRPCError({ code: "NOT_FOUND" })
 
-      // Fire-and-forget: generate QR code and send approval email
-      generateAndActivateProperty(property).catch((err) =>
+      // Fire-and-forget: generate QR code and send standard approval email
+      generateAndActivateProperty(updatedPropertyStandard).catch((err) =>
         console.error("[approveProperty] Activation failed:", err),
       )
 
-      return property
+      return updatedPropertyStandard
     }),
 
   rejectProperty: adminProcedure
