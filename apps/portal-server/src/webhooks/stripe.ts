@@ -36,40 +36,34 @@ function getCouponId(sub: Stripe.Subscription, milestoneLevel: 0 | 1 | 2 | 3): s
 }
 
 async function countActiveSubscriptions(): Promise<number> {
-  let count = 0
-  let hasMore = true
-  let startingAfter: string | undefined
+  // Exclude additional-property subscriptions — they must not inflate the milestone count
+  const additionalPriceId = env.STRIPE_PRICE_ADDITIONAL_PROPERTY
+  let total = 0
 
-  while (hasMore) {
-    const page = await stripe.subscriptions.list({
-      status: "active",
-      limit: 100,
-      ...(startingAfter ? { starting_after: startingAfter } : {}),
-    })
-    count += page.data.length
-    hasMore = page.has_more
-    if (hasMore && page.data.length > 0) {
-      startingAfter = page.data[page.data.length - 1]!.id
+  for (const status of ["active", "trialing"] as const) {
+    let hasMore = true
+    let startingAfter: string | undefined
+
+    while (hasMore) {
+      const page = await stripe.subscriptions.list({
+        status,
+        limit: 100,
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      })
+
+      // Only count plan subscriptions, not additional-property add-ons
+      total += page.data.filter(
+        (sub) => !sub.items.data.some((item) => item.price.id === additionalPriceId),
+      ).length
+
+      hasMore = page.has_more
+      if (hasMore && page.data.length > 0) {
+        startingAfter = page.data[page.data.length - 1]!.id
+      }
     }
   }
 
-  // Also count trialing subscriptions
-  hasMore = true
-  startingAfter = undefined
-  while (hasMore) {
-    const page = await stripe.subscriptions.list({
-      status: "trialing",
-      limit: 100,
-      ...(startingAfter ? { starting_after: startingAfter } : {}),
-    })
-    count += page.data.length
-    hasMore = page.has_more
-    if (hasMore && page.data.length > 0) {
-      startingAfter = page.data[page.data.length - 1]!.id
-    }
-  }
-
-  return count
+  return total
 }
 
 async function applyMilestoneDiscounts(newSub: Stripe.Subscription): Promise<void> {
@@ -91,6 +85,12 @@ async function applyMilestoneDiscounts(newSub: Stripe.Subscription): Promise<voi
           ...(startingAfter ? { starting_after: startingAfter } : {}),
         })
         for (const sub of page.data) {
+          // Never apply milestone coupons to additional-property add-on subscriptions
+          const isAdditional = sub.items.data.some(
+            (item) => item.price.id === env.STRIPE_PRICE_ADDITIONAL_PROPERTY,
+          )
+          if (isAdditional) continue
+
           const couponId = getCouponId(sub, currentMilestone)
           if (couponId) {
             await stripe.subscriptions.update(sub.id, { coupon: couponId })
@@ -196,6 +196,29 @@ export async function stripeWebhookHandler(c: Context) {
 
   if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object as Stripe.Subscription
+
+    // Check if this is an additional-property subscription
+    const isAdditional = sub.items.data.some(
+      (item) => item.price.id === env.STRIPE_PRICE_ADDITIONAL_PROPERTY,
+    )
+
+    if (isAdditional) {
+      // Find the property by its stored Stripe subscription ID and deactivate it
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.stripeSubscriptionId, sub.id),
+      })
+
+      if (property) {
+        await db
+          .update(properties)
+          .set({ paymentStatus: "cancelled", status: "archived", updatedAt: new Date() })
+          .where(eq(properties.id, property.id))
+      }
+
+      return c.json({ ok: true })
+    }
+
+    // ── Plan subscription deleted — existing logic ───────────────────────
     const email = await getCustomerEmail(sub.customer as string)
     if (!email) return c.json({ ok: true })
 
