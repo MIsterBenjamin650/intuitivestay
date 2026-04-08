@@ -2,6 +2,9 @@ import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useRouteContext } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
+
+import { ExportPdfButton } from "@/components/export-pdf-button"
+import type { PdfDashboardData } from "@/components/property-pdf-document"
 import {
   CartesianGrid,
   Legend,
@@ -200,7 +203,46 @@ function RouteComponent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
-        <DateRangeTabs days={days} onChange={setDays} />
+        <div className="flex items-center gap-3">
+          <DateRangeTabs days={days} onChange={setDays} />
+          {(() => {
+            const sessionProperties = (session as { user?: { properties?: Array<{ id: string; name: string }> } } | null)?.user?.properties ?? []
+            const propertyName = sessionProperties.find((p) => p.id === propertyId)?.name ?? "Property"
+            const pdfData: PdfDashboardData = {
+              propertyName,
+              days,
+              exportedAt: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+              stats: stats ? { totalFeedback: stats.totalFeedback, avgGcs: stats.avgGcs ?? 0 } : null,
+              tier: { currentTier: displayTier },
+              recentFeedback: (recentFeedback ?? []).map((fb) => ({
+                id: fb.id,
+                resilience: fb.resilience,
+                empathy: fb.empathy,
+                anticipation: fb.anticipation,
+                recognition: fb.recognition,
+                gcs: Number(fb.gcs),
+                mealTime: fb.mealTime ?? null,
+                namedStaffMember: fb.namedStaffMember ?? null,
+                ventText: fb.ventText ?? null,
+                submittedAt: String(fb.submittedAt),
+              })),
+              wordCloud: wordCloud ?? [],
+              staffBubbles: staffBubbles ?? [],
+              aiSummary: aiSummary
+                ? { narrative: aiSummary.narrative, focusPoints: aiSummary.focusPoints as Array<{ pillar: string; action: string }> }
+                : null,
+              gcsHistory: (history ?? []).map((h) => ({
+                bucket: h.bucket,
+                gcs: h.gcs ?? 0,
+                resilience: h.resilience ?? 0,
+                empathy: h.empathy ?? 0,
+                anticipation: h.anticipation ?? 0,
+                recognition: h.recognition ?? 0,
+              })),
+            }
+            return <ExportPdfButton data={pdfData} disabled={!stats || stats.totalFeedback === 0} />
+          })()}
+        </div>
       </div>
 
       {/* Row 1: Stat pills */}
