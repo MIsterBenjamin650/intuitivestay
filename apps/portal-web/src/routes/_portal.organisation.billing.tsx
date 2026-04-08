@@ -19,7 +19,7 @@ import {
   CardTitle,
 } from "@intuitive-stay/ui/components/card"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useRouteContext } from "@tanstack/react-router"
 import { ExternalLinkIcon } from "lucide-react"
 import { toast } from "sonner"
 
@@ -29,9 +29,40 @@ export const Route = createFileRoute("/_portal/organisation/billing")({
   component: RouteComponent,
 })
 
+const PLAN_LABELS: Record<string, string> = {
+  member: "Member",
+  host: "Host",
+  partner: "Partner",
+  founder: "Founder",
+}
+
+const PLAN_INCLUDED_PROPERTIES: Record<string, number> = {
+  member: 0,
+  host: 1,
+  partner: 1,
+  founder: 5,
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === "active") {
+    return <Badge className="bg-green-100 text-green-700 border-green-300 hover:bg-green-100">Active</Badge>
+  }
+  if (status === "trial") {
+    return <Badge className="bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-100">Trial</Badge>
+  }
+  if (status === "cancelled" || status === "inactive") {
+    return <Badge variant="outline" className="text-red-600 border-red-300">Inactive</Badge>
+  }
+  return <Badge variant="outline">{status}</Badge>
+}
+
 function RouteComponent() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const { session } = useRouteContext({ from: "/_portal" })
+
+  const plan = (session as { plan?: string | null } | null)?.plan ?? null
+  const subscriptionStatus = (session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"
 
   const { data: additionalProperties = [], isLoading } = useQuery(
     trpc.properties.getMyAdditionalProperties.queryOptions(),
@@ -53,49 +84,52 @@ function RouteComponent() {
     }),
   )
 
+  const includedCount = plan ? (PLAN_INCLUDED_PROPERTIES[plan] ?? 0) : 0
+  const planLabel = plan ? (PLAN_LABELS[plan] ?? plan) : null
+
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold">Billing</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your subscription and additional properties.
+          Your subscription and additional properties.
         </p>
       </div>
 
-      {/* Stripe billing portal link */}
-      <Card size="sm">
+      {/* Current plan */}
+      <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Plan subscription</CardTitle>
-          <CardDescription>
-            Manage your base plan, payment method, and invoices through the Stripe billing portal.
-          </CardDescription>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base">
+                {planLabel ? `${planLabel} plan` : "No plan"}
+              </CardTitle>
+              <CardDescription className="mt-1">
+                {includedCount === 0
+                  ? "No properties included — contact us to upgrade"
+                  : `${includedCount} ${includedCount === 1 ? "property" : "properties"} included`}
+              </CardDescription>
+            </div>
+            <StatusBadge status={subscriptionStatus} />
+          </div>
         </CardHeader>
-        <CardContent>
-          {portalData?.url ? (
-            <Button variant="outline" size="sm" asChild>
-              <a href={portalData.url} target="_blank" rel="noreferrer">
-                <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                Open billing portal
-              </a>
-            </Button>
-          ) : (
-            <p className="text-sm text-muted-foreground">No active subscription found.</p>
-          )}
-        </CardContent>
       </Card>
 
       {/* Additional properties */}
       <div>
-        <h2 className="text-lg font-semibold mb-3">Additional properties</h2>
+        <h2 className="text-base font-semibold mb-3">Additional properties</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Properties beyond your plan's included allowance, billed at £25/month each.
+        </p>
 
         {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
 
         {!isLoading && additionalProperties.length === 0 && (
-          <Card size="sm">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-sm">No additional properties</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">No additional properties</CardTitle>
               <CardDescription>
-                Properties included in your plan appear here once you add paid add-ons.
+                When you add a property beyond your plan's limit, it will appear here.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -133,7 +167,7 @@ function RouteComponent() {
                               className="text-destructive border-destructive/30 hover:bg-destructive/5"
                               disabled={isCancelling}
                             >
-                              Remove property
+                              Remove
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -164,6 +198,19 @@ function RouteComponent() {
           </div>
         )}
       </div>
+
+      {/* Stripe portal — secondary action */}
+      {portalData?.url && (
+        <div className="border-t pt-4">
+          <p className="text-sm text-muted-foreground mb-2">Need to update your payment method or download an invoice?</p>
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground h-auto p-0 hover:text-foreground">
+            <a href={portalData.url} target="_blank" rel="noreferrer">
+              <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" />
+              Open payment portal
+            </a>
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
