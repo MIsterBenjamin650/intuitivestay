@@ -9,9 +9,9 @@ import { z } from "zod"
 import { adminProcedure, protectedProcedure, router } from "../index"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
+import { generateAndActivateProperty } from "../lib/activate-property"
 import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
-import { generateMagicLinkUrl } from "../lib/generate-magic-link"
-import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
+import { generateQrPdf } from "../lib/generate-qr"
 
 // ─── Insights helpers ─────────────────────────────────────────────────────────
 
@@ -224,38 +224,10 @@ export const propertiesRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
       }
 
-      // Check if a QR code already exists (idempotency — re-approving should not create a duplicate)
-      const existingQr = await db.query.qrCodes.findFirst({
-        where: eq(qrCodes.propertyId, property.id),
-      })
-
-      const magicLinkUrl = await generateMagicLinkUrl(property.ownerEmail).catch(() => null)
-
-      if (!existingQr) {
-        const uniqueCode = generateUniqueCode()
-        const feedbackUrl = `${env.PUBLIC_PORTAL_URL}/f/${uniqueCode}`
-
-        await db.insert(qrCodes).values({
-          id: crypto.randomUUID(),
-          propertyId: property.id,
-          uniqueCode,
-          feedbackUrl,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-
-        // Fire-and-forget: generate PDF then send approval email with attachment
-        generateQrPdf(feedbackUrl, property.name)
-          .then((pdfBuffer) =>
-            sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, pdfBuffer, magicLinkUrl ?? undefined),
-          )
-          .catch((err) => console.error("Failed to generate QR / send approval email:", err))
-      } else {
-        // QR already exists — just resend the approval email without regenerating
-        sendApprovalEmail(property.ownerEmail, property.ownerName, property.name, undefined, magicLinkUrl ?? undefined).catch((err) =>
-          console.error("Failed to send approval email:", err),
-        )
-      }
+      // Fire-and-forget: generate QR code and send approval email
+      generateAndActivateProperty(property).catch((err) =>
+        console.error("[approveProperty] Activation failed:", err),
+      )
 
       return property
     }),
