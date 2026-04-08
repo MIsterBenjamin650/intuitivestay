@@ -2,6 +2,7 @@ import { db } from "@intuitive-stay/db"
 import { organisations, properties, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { sendSubscriptionNotificationEmail } from "@intuitive-stay/api/lib/email"
+import { generateAndActivateProperty } from "@intuitive-stay/api/lib/activate-property"
 import { eq } from "drizzle-orm"
 import type { Context } from "hono"
 import Stripe from "stripe"
@@ -247,6 +248,45 @@ export async function stripeWebhookHandler(c: Context) {
       .update(organisations)
       .set({ subscriptionStatus: "active", subscriptionEndsAt: periodEnd })
       .where(eq(organisations.id, orgId))
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session
+
+    const propertyId = session.metadata?.propertyId
+    if (!propertyId) return c.json({ ok: true })
+
+    // Only act on paid sessions (subscription mode sessions may have payment_status = 'no_payment_required' for trials)
+    if (session.payment_status !== "paid") return c.json({ ok: true })
+
+    const subscriptionId =
+      typeof session.subscription === "string"
+        ? session.subscription
+        : (session.subscription as Stripe.Subscription | null)?.id ?? null
+
+    if (!subscriptionId) return c.json({ ok: true })
+
+    const property = await db.query.properties.findFirst({
+      where: eq(properties.id, propertyId),
+    })
+
+    // Guard: only activate if currently awaiting payment
+    if (!property || property.paymentStatus !== "pending") return c.json({ ok: true })
+
+    // Mark as paid and store the subscription ID for future cancellation
+    await db
+      .update(properties)
+      .set({
+        paymentStatus: "paid",
+        stripeSubscriptionId: subscriptionId,
+        updatedAt: new Date(),
+      })
+      .where(eq(properties.id, propertyId))
+
+    // Generate QR code and send activation email (same as standard approval flow)
+    await generateAndActivateProperty(property).catch((err) =>
+      console.error("[webhook/checkout.session.completed] Activation failed:", err),
+    )
   }
 
   return c.json({ ok: true })
