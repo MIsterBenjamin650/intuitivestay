@@ -114,7 +114,11 @@ function RouteComponent() {
   const { propertyId } = Route.useParams()
   const { session } = useRouteContext({ from: "/_portal" })
   const plan = (session as { plan?: string | null } | null)?.plan ?? null
-  const canSeeLeaderboard = plan === "member" || plan === "host" || plan === "partner"
+  const PLAN_RANK: Record<string, number> = { member: 0, host: 1, partner: 2, founder: 3 }
+  const planRank = PLAN_RANK[plan ?? ""] ?? -1
+  const canSeeLeaderboard = planRank >= 1       // host, partner, founder
+  const canSeeAdvancedInsights = planRank >= 2  // partner, founder
+  const canSeeLocalMarket = planRank >= 2       // partner, founder
 
   const [days, setDays] = React.useState<Days>(30)
   const trpc = useTRPC()
@@ -507,10 +511,24 @@ function RouteComponent() {
       {/* Row 8: Online Reputation */}
       <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />
 
-      {/* Row 9: Locked sections */}
+      {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
-        <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Upgrade to unlock." />
-        <LockedSection title="Local Market" description="Compare your GCS against local hospitality market benchmarks. Upgrade to unlock." />
+        {canSeeAdvancedInsights ? (
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Advanced Insights</p>
+            <p className="text-sm text-gray-400">Sentiment trend analysis and reputation gap analysis coming soon.</p>
+          </div>
+        ) : (
+          <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Available on Partner and Founder plans." />
+        )}
+        {canSeeLocalMarket ? (
+          <div className="rounded-2xl bg-white p-5 shadow-sm">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Local Market</p>
+            <p className="text-sm text-gray-400">Local hospitality market benchmarks coming soon.</p>
+          </div>
+        ) : (
+          <LockedSection title="Local Market" description="Compare your GCS against local hospitality market benchmarks. Available on Partner and Founder plans." />
+        )}
       </div>
     </div>
   )
