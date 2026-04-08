@@ -190,9 +190,16 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
               placeholder="https://www.google.com/maps/place/Your+Business+Name/..."
               className="mt-1 w-full rounded-md border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"
             />
-            <p className="mt-1 text-[10px] text-gray-400">
-              Open your Google Maps listing, copy the URL from your browser address bar and paste it here.
-            </p>
+            <div className="mt-2 rounded-md bg-blue-50 border border-blue-100 px-3 py-2 space-y-1">
+              <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide">How to find your Google Maps URL</p>
+              <ol className="space-y-0.5 text-[11px] text-blue-700 list-none">
+                <li>1. Open <span className="font-semibold">Google Maps</span> in your browser</li>
+                <li>2. Search for your property by name</li>
+                <li>3. Click on your listing in the results</li>
+                <li>4. Copy the URL from your browser's address bar</li>
+                <li>5. Paste it into the field above</li>
+              </ol>
+            </div>
           </div>
           <button
             onClick={handleSaveSources}
