@@ -1,7 +1,7 @@
 import { db } from "@intuitive-stay/db"
-import { feedback, feedbackFingerprints, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
+import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
 import { TRPCError } from "@trpc/server"
-import { and, count, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm"
+import { and, count, desc, eq, gt, inArray, isNotNull, like, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure, router } from "../index"
@@ -176,6 +176,9 @@ export const feedbackRouter = router({
         recognition: input.recognition,
         gcs,
       })
+
+      // Invalidate dashboard cache so the owner sees fresh data immediately
+      await db.delete(dashboardCache).where(like(dashboardCache.id, `${qrCode.propertyId}:%`))
 
       // Fire-and-forget alert email for low scores
       if (gcs <= 5) {
