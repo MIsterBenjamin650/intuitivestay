@@ -20,7 +20,6 @@ import {
 } from "@intuitive-stay/ui/components/card"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useRouteContext } from "@tanstack/react-router"
-import { ExternalLinkIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useTRPC } from "@/utils/trpc"
@@ -66,10 +65,6 @@ function RouteComponent() {
 
   const { data: additionalProperties = [], isLoading } = useQuery(
     trpc.properties.getMyAdditionalProperties.queryOptions(),
-  )
-
-  const { data: portalData } = useQuery(
-    trpc.properties.getStripePortalUrl.queryOptions(),
   )
 
   const { mutate: cancelProperty, isPending: isCancelling } = useMutation(
@@ -199,18 +194,6 @@ function RouteComponent() {
         )}
       </div>
 
-      {/* Stripe portal — secondary action */}
-      {portalData?.url && (
-        <div className="border-t pt-4">
-          <p className="text-sm text-muted-foreground mb-2">Need to update your payment method or download an invoice?</p>
-          <Button variant="ghost" size="sm" asChild className="text-muted-foreground h-auto p-0 hover:text-foreground">
-            <a href={portalData.url} target="_blank" rel="noreferrer">
-              <ExternalLinkIcon className="mr-1.5 h-3.5 w-3.5" />
-              Open payment portal
-            </a>
-          </Button>
-        </div>
-      )}
     </div>
   )
 }
