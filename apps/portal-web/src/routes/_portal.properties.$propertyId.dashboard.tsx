@@ -104,13 +104,13 @@ function GcsRing({ gcs, tier }: { gcs: number | null; tier: Tier }) {
 
 function LockedSection({ title, description }: { title: string; description: string }) {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-white p-5 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm">
       <div className="mb-4 space-y-2 blur-sm select-none pointer-events-none">
         {[80, 60, 90, 45, 70].map((w, i) => (
           <div key={i} className="h-3 rounded-full bg-gray-200" style={{ width: `${w}%` }} />
         ))}
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-white/80 backdrop-blur-sm">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/80 backdrop-blur-sm">
         <LockIcon className="size-6 text-gray-400" />
         <p className="text-sm font-semibold text-gray-700">{title}</p>
         <p className="text-xs text-gray-500 text-center px-4">{description}</p>
@@ -134,7 +134,7 @@ function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => 
     { label: "90 days", value: 90 },
   ]
   return (
-    <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+    <div className="flex gap-1 rounded-lg bg-[#f0ede8] p-1">
       {options.map((o) => (
         <button
           key={o.value}
@@ -209,10 +209,10 @@ function RouteComponent() {
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div className="flex flex-col gap-5 p-5 bg-[#faf9f7] min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
         <div className="flex items-center gap-3">
           <DateRangeTabs days={days} onChange={setDays} />
           {(() => {
@@ -263,31 +263,34 @@ function RouteComponent() {
           { label: "Tier Score", value: stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—", color: "#a855f7" },
           { label: "Current Seal", value: TIER_CONFIG[displayTier].label, color: TIER_CONFIG[displayTier].color },
         ].map((pill) => (
-          <div key={pill.label} className="rounded-xl bg-white px-4 py-3 shadow-sm" style={{ borderLeft: `4px solid ${pill.color}` }}>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">{pill.label}</p>
-            <p className="mt-0.5 text-xl font-extrabold leading-tight" style={{ color: pill.color }}>{pill.value}</p>
+          <div key={pill.label} className="rounded-2xl bg-white px-5 py-4 shadow-sm">
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="h-1.5 w-1.5 rounded-full" style={{ background: pill.color }} />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">{pill.label}</p>
+            </div>
+            <p className="text-3xl font-extrabold leading-none" style={{ color: pill.color }}>{pill.value}</p>
           </div>
         ))}
       </div>
 
       {/* Row 2: GCS ring + AI summary */}
       <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-        <div className="flex items-center justify-center rounded-xl bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-center rounded-2xl bg-white p-6 shadow-sm">
           <GcsRing gcs={stats?.avgGcs ?? null} tier={displayTier} />
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">AI Daily Summary</p>
+        <div className="rounded-2xl bg-[#1c1917] p-5 shadow-sm">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-500">AI Daily Summary</p>
           {aiSummary ? (
             <>
               <p className="mb-3 text-xs text-gray-500">{aiSummary.date}</p>
-              <p className="mb-4 text-sm leading-relaxed text-gray-700">{aiSummary.narrative}</p>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Today's Focus</p>
+              <p className="mb-4 text-sm leading-relaxed text-gray-200">{aiSummary.narrative}</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-500">Today's Focus</p>
               <ul className="space-y-1.5">
                 {aiSummary.focusPoints.map((f, i) => {
                   const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
                   const color = PILLAR_COLORS[pillarKey] ?? "#6366f1"
                   return (
-                    <li key={i} className="flex gap-2 text-xs text-gray-700">
+                    <li key={i} className="flex gap-2 text-xs text-gray-200">
                       <span className="shrink-0 font-semibold" style={{ color }}>{f.pillar}:</span>
                       <span>{f.action}</span>
                     </li>
@@ -296,22 +299,22 @@ function RouteComponent() {
               </ul>
             </>
           ) : (
-            <p className="text-sm text-gray-400">Your first summary will appear tomorrow morning.</p>
+            <p className="text-sm text-gray-500">Your first summary will appear tomorrow morning.</p>
           )}
         </div>
       </div>
 
       {/* Row 3: Pillar trend + Radar */}
       <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
-        <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Scores Over Time</p>
           {history?.length ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={history}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" />
                 <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
                   formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
                 <Line type="monotone" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={false} name="Resilience" />
@@ -324,7 +327,7 @@ function RouteComponent() {
             <p className="text-sm text-gray-400">No data yet for this period.</p>
           )}
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Radar</p>
           {radarData.length ? (
             <ResponsiveContainer width="100%" height={220}>
@@ -332,7 +335,7 @@ function RouteComponent() {
                 <PolarGrid />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#6b7280" }} />
                 <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.25} />
-                <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
                   formatter={(v: unknown) => (typeof v === "number" ? v.toFixed(1) : String(v)) as string} />
               </RadarChart>
             </ResponsiveContainer>
@@ -353,20 +356,20 @@ function RouteComponent() {
           const pct = avgVal != null ? Math.min(Math.max(avgVal / 10, 0), 1) : 0
           const color = PILLAR_COLORS[pillar]
           return (
-            <div key={pillar} className="flex flex-col items-center rounded-xl bg-white p-4 shadow-sm">
-              <svg width="100" height="100">
-                <circle cx={50} cy={50} r={r} fill="none" stroke="#e5e7eb" strokeWidth="8" />
+            <div key={pillar} className="rounded-2xl bg-white p-5 shadow-sm flex flex-col items-center gap-2">
+              <svg width="120" height="120">
+                <circle cx={60} cy={60} r={r} fill="none" stroke="#e5e7eb" strokeWidth="8" />
                 <circle
-                  cx={50} cy={50} r={r} fill="none" stroke={color} strokeWidth="8"
+                  cx={60} cy={60} r={r} fill="none" stroke={color} strokeWidth="8"
                   strokeDasharray={`${C * pct} ${C * (1 - pct)}`}
                   strokeLinecap="round"
-                  transform="rotate(-90 50 50)"
+                  transform="rotate(-90 60 60)"
                 />
-                <text x={50} y={54} textAnchor="middle" fontSize="20" fontWeight="800" fill={color}>
+                <text x={60} y={65} textAnchor="middle" fontSize="24" fontWeight="700" fill={color}>
                   {avgVal != null ? avgVal.toFixed(1) : "—"}
                 </text>
               </svg>
-              <p className="mt-1 capitalize text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">{pillar}</p>
+              <p className="capitalize text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">{pillar}</p>
             </div>
           )
         })}
@@ -374,7 +377,7 @@ function RouteComponent() {
 
       {/* Row 5: Word cloud + Staff bubbles */}
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Guest Adjectives</p>
           {wordCloud?.length ? (
             <div className="flex flex-wrap gap-2">
@@ -398,7 +401,7 @@ function RouteComponent() {
             <p className="text-sm text-gray-400">No descriptive words collected yet.</p>
           )}
         </div>
-        <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Staff Mentions</p>
           {staffBubbles?.length ? (
             <div className="flex flex-wrap gap-3">
@@ -430,12 +433,12 @@ function RouteComponent() {
       </div>
 
       {/* Row 6: Recent feedback */}
-      <div className="rounded-xl bg-white p-5 shadow-sm">
+      <div className="rounded-2xl bg-white p-5 shadow-sm">
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Recent Feedback</p>
         {recentFeedback?.length ? (
           <div className="space-y-3">
             {recentFeedback.map((f) => (
-              <div key={f.id} className="flex gap-4 rounded-lg border border-gray-100 p-3">
+              <div key={f.id} className="flex gap-4 rounded-xl border border-gray-100 p-3">
                 <div className="text-2xl leading-none">{TIME_EMOJIS[f.mealTime ?? ""] ?? "🕐"}</div>
                 <div className="flex flex-1 flex-col gap-1.5">
                   <div className="flex flex-wrap gap-1.5">
@@ -471,7 +474,7 @@ function RouteComponent() {
 
       {/* Row 7: City leaderboard */}
       {canSeeLeaderboard ? (
-        <div className="rounded-xl bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">
             City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
           </p>
