@@ -45,8 +45,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useTRPC } from "@/utils/trpc"
 import {
   ArrowUpDownIcon,
@@ -54,6 +54,7 @@ import {
   ChevronUpIcon,
   PlusIcon,
 } from "lucide-react"
+import { toast } from "sonner"
 
 type PropertyType =
   | "Bar"
@@ -70,6 +71,7 @@ type PropertyRow = {
   id: string
   name: string
   status: "pending" | "approved" | "rejected"
+  paymentStatus: string | null
   type: string | null
   ownerName: string
   ownerEmail: string
@@ -80,29 +82,21 @@ type PropertyRow = {
 type AddPropertyFormValues = {
   propertyName: string
   propertyType: PropertyType
-  ownerName: string
-  ownerEmail: string
-  businessPhone: string
-  businessWebsite: string
   addressLine1: string
   addressCity: string
   addressPostalCode: string
   addressCountry: string
 }
 
-
 const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
   propertyName: "",
   propertyType: "Hotel",
-  ownerName: "",
-  ownerEmail: "",
-  businessPhone: "",
-  businessWebsite: "",
   addressLine1: "",
   addressCity: "",
   addressPostalCode: "",
   addressCountry: "United Kingdom",
 }
+
 const PROPERTY_TYPE_OPTIONS = [
   "Bar",
   "Cafe",
@@ -238,24 +232,6 @@ function RequiredMark() {
 }
 
 export const Route = createFileRoute("/_portal/properties/")({
-  beforeLoad: async ({ context }) => {
-    const session = context.session as {
-      plan?: string | null
-      user?: { properties?: Array<{ id: string }> }
-    } | null
-    const plan = session?.plan ?? null
-    if (plan !== "founder") {
-      const properties = session?.user?.properties ?? []
-      const firstId = properties[0]?.id
-      if (firstId) {
-        throw redirect({
-          to: "/properties/$propertyId/dashboard",
-          params: { propertyId: firstId },
-        })
-      }
-      throw redirect({ to: "/" })
-    }
-  },
   validateSearch,
   component: RouteComponent,
 })
@@ -271,6 +247,7 @@ function RouteComponent() {
     id: p.id,
     name: p.name,
     status: p.status as "pending" | "approved" | "rejected",
+    paymentStatus: p.paymentStatus ?? null,
     type: p.type,
     ownerName: p.ownerName,
     ownerEmail: p.ownerEmail,
@@ -280,7 +257,35 @@ function RouteComponent() {
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
   const [addFormValues, setAddFormValues] =
     React.useState<AddPropertyFormValues>(DEFAULT_ADD_FORM_VALUES)
-  const [addFormError, setAddFormError] = React.useState<string | null>(null)
+
+  // Access session plan from route context
+  const context = Route.useRouteContext()
+  const session = context.session as { plan?: string | null } | null
+  const plan = session?.plan ?? null
+
+  const queryClient = useQueryClient()
+
+  const { mutate: submitProperty, isPending: isSubmitting, error: submitError } = useMutation(
+    trpc.properties.submitProperty.mutationOptions({
+      onSuccess: () => {
+        setIsAddDialogOpen(false)
+        setAddFormValues(DEFAULT_ADD_FORM_VALUES)
+        queryClient.invalidateQueries(trpc.properties.getMyProperties.queryFilter())
+        toast.success("Property submitted for review. We'll be in touch soon.")
+      },
+    }),
+  )
+
+  // Cost breakdown for the Add Property dialog
+  const PLAN_LIMITS: Record<string, number> = { member: 0, host: 1, partner: 1, founder: 5 }
+  const PLAN_PRICES: Record<string, number> = { host: 34.99, partner: 79.99, founder: 189.99 }
+  const approvedCount = rawProperties.filter(
+    (p) => p.status === "approved" && (p.paymentStatus == null || p.paymentStatus === "paid"),
+  ).length
+  const planLimit = PLAN_LIMITS[plan ?? "member"] ?? 0
+  const willBeAdditional = approvedCount >= planLimit
+  const basePriceNum = PLAN_PRICES[plan ?? "host"] ?? 34.99
+  const newMonthlyTotal = willBeAdditional ? (basePriceNum + 25).toFixed(2) : null
 
   const search = React.useMemo<ResolvedPropertiesSearch>(
     () => ({
@@ -312,7 +317,6 @@ function RouteComponent() {
     setIsAddDialogOpen(open)
     if (!open) {
       setAddFormValues(DEFAULT_ADD_FORM_VALUES)
-      setAddFormError(null)
     }
   }, [])
 
@@ -326,10 +330,16 @@ function RouteComponent() {
   const handleAddPropertySubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault()
-      // Properties are registered automatically via the Wix bridge
-      setIsAddDialogOpen(false)
+      submitProperty({
+        name: addFormValues.propertyName,
+        type: addFormValues.propertyType,
+        addressLine1: addFormValues.addressLine1 || undefined,
+        city: addFormValues.addressCity,
+        postcode: addFormValues.addressPostalCode || undefined,
+        country: addFormValues.addressCountry,
+      })
     },
-    []
+    [addFormValues, submitProperty],
   )
 
   const filteredData = React.useMemo(() => {
@@ -428,16 +438,23 @@ function RouteComponent() {
         header: "Status",
         cell: ({ row }) => {
           const s = row.original.status
+          const ps = (row.original as { paymentStatus?: string | null }).paymentStatus
           return (
-            <Badge
-              variant={
-                s === "approved" ? "default" : s === "rejected" ? "destructive" : "secondary"
-              }
-            >
-              {s === "pending"
-                ? "Awaiting Approval"
-                : s.charAt(0).toUpperCase() + s.slice(1)}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-1">
+              <Badge variant={s === "approved" ? "default" : s === "rejected" ? "destructive" : "secondary"}>
+                {s === "pending" ? "Awaiting Approval" : s.charAt(0).toUpperCase() + s.slice(1)}
+              </Badge>
+              {s === "approved" && ps === "pending" && (
+                <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50">
+                  Payment required
+                </Badge>
+              )}
+              {s === "approved" && ps === "cancelling" && (
+                <Badge variant="outline" className="text-orange-600 border-orange-400 bg-orange-50">
+                  Cancellation pending
+                </Badge>
+              )}
+            </div>
           )
         },
       },
@@ -786,78 +803,8 @@ function RouteComponent() {
                   </Select>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="owner-name">
-                      Owner Name
-                      <RequiredMark />
-                    </Label>
-                    <Input
-                      id="owner-name"
-                      value={addFormValues.ownerName}
-                      onChange={(event) =>
-                        updateAddFormValue("ownerName", event.target.value)
-                      }
-                      placeholder="e.g. Alex Johnson"
-                      className="h-10"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="owner-email">
-                      Owner Email
-                      <RequiredMark />
-                    </Label>
-                    <Input
-                      id="owner-email"
-                      type="email"
-                      value={addFormValues.ownerEmail}
-                      onChange={(event) =>
-                        updateAddFormValue("ownerEmail", event.target.value)
-                      }
-                      placeholder="owner@example.com"
-                      className="h-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="business-phone">
-                      Business Phone
-                      <RequiredMark />
-                    </Label>
-                    <Input
-                      id="business-phone"
-                      value={addFormValues.businessPhone}
-                      onChange={(event) =>
-                        updateAddFormValue("businessPhone", event.target.value)
-                      }
-                      placeholder="+44 20 0000 0000"
-                      className="h-10"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="business-website">Business Website</Label>
-                    <Input
-                      id="business-website"
-                      value={addFormValues.businessWebsite}
-                      onChange={(event) =>
-                        updateAddFormValue("businessWebsite", event.target.value)
-                      }
-                      placeholder="https://example.com"
-                      className="h-10"
-                    />
-                  </div>
-                </div>
-
                 <div className="grid gap-2">
-                  <Label htmlFor="address-line">
-                    Address Line
-                    <RequiredMark />
-                  </Label>
+                  <Label htmlFor="address-line">Address Line</Label>
                   <Input
                     id="address-line"
                     value={addFormValues.addressLine1}
@@ -866,7 +813,6 @@ function RouteComponent() {
                     }
                     placeholder="e.g. 10 River Road"
                     className="h-10"
-                    required
                   />
                 </div>
 
@@ -888,10 +834,7 @@ function RouteComponent() {
                     />
                   </div>
                   <div className="grid gap-2 sm:col-span-1">
-                    <Label htmlFor="address-postcode">
-                      Postal Code
-                      <RequiredMark />
-                    </Label>
+                    <Label htmlFor="address-postcode">Postal Code</Label>
                     <Input
                       id="address-postcode"
                       value={addFormValues.addressPostalCode}
@@ -900,7 +843,6 @@ function RouteComponent() {
                       }
                       placeholder="Postal code"
                       className="h-10"
-                      required
                     />
                   </div>
                   <div className="grid gap-2 sm:col-span-1">
@@ -921,9 +863,32 @@ function RouteComponent() {
                   </div>
                 </div>
 
-                {addFormError ? (
-                  <p className="text-xs text-destructive">{addFormError}</p>
-                ) : null}
+                {/* Cost breakdown shown when this will be a chargeable additional property */}
+                {willBeAdditional && (
+                  <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm mb-4">
+                    <p className="font-semibold text-orange-800 mb-2">Additional property charge</p>
+                    <div className="space-y-1 text-orange-700">
+                      <div className="flex justify-between">
+                        <span>{plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "Your"} plan (base)</span>
+                        <span>£{basePriceNum.toFixed(2)}/mo</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Additional property</span>
+                        <span>£25.00/mo</span>
+                      </div>
+                      <div className="flex justify-between font-bold border-t border-orange-300 pt-1 mt-1">
+                        <span>New monthly total</span>
+                        <span>£{newMonthlyTotal}/mo</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-orange-600 mt-2">
+                      Payment is requested after admin approval. No charge until then.
+                    </p>
+                  </div>
+                )}
+                {submitError && (
+                  <p className="text-sm text-destructive mb-3">{submitError.message}</p>
+                )}
               </div>
             </div>
 
@@ -935,7 +900,9 @@ function RouteComponent() {
               >
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting…" : "Submit for review"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
