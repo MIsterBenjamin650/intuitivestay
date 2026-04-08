@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useRouteContext } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
 
+import { CompletePaymentButton } from "@/components/complete-payment-button"
 import { ExportPdfButton } from "@/components/export-pdf-button"
 import { OnlineReputationSection } from "@/components/online-reputation-section"
 import type { PdfDashboardData } from "@/components/property-pdf-document"
@@ -123,6 +124,11 @@ function RouteComponent() {
 
   const [days, setDays] = React.useState<Days>(30)
   const trpc = useTRPC()
+
+  const { data: myProperties = [] } = useQuery(trpc.properties.getMyProperties.queryOptions())
+  const activeProperty = myProperties.find((p) => p.id === propertyId)
+  const paymentStatus = activeProperty?.paymentStatus ?? null
+
   const opts = { propertyId, days }
 
   const { data: stats } = useQuery(trpc.properties.getDashboardStats.queryOptions(opts))
@@ -169,8 +175,35 @@ function RouteComponent() {
 
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
+  // Payment gate: property is approved but payment hasn't been made yet
+  if (paymentStatus === "pending") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-12 text-center">
+        <div className="rounded-full bg-amber-100 p-4">
+          <svg className="h-8 w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold">Payment required</h2>
+        <p className="text-muted-foreground max-w-sm">
+          This property has been approved. Complete payment to activate your dashboard and receive your QR code.
+        </p>
+        <CompletePaymentButton propertyId={propertyId} />
+      </div>
+    )
+  }
+
+  // Cancelling banner — property still accessible but show a notice
+  const isCancelling = paymentStatus === "cancelling"
+
   return (
     <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden">
+      {isCancelling && (
+        <div className="mx-6 mt-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+          <strong>Cancellation scheduled.</strong> This property will be deactivated at the end of your current billing period. You can manage this in your{" "}
+          <a href="/organisation/billing" className="underline font-medium">Billing settings</a>.
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
