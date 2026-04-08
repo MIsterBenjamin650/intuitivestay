@@ -1,5 +1,17 @@
 @import "@intuitive-stay/ui/globals.css";
 
+/* ── Light warm sidebar theme ───────────────────────────────────────────── */
+:root {
+  --sidebar-background: #faf6f0;
+  --sidebar-foreground: #1c1917;
+  --sidebar-border: #e8ddd0;
+  --sidebar-accent: rgba(249, 115, 22, 0.10);
+  --sidebar-accent-foreground: #f97316;
+  --sidebar-primary: #f97316;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-ring: #f97316;
+}
+
 /* Slider thumb styling for the guest feedback form */
 input.is-slider::-webkit-slider-thumb {
   -webkit-appearance: none;

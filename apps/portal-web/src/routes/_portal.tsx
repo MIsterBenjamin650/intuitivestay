@@ -88,46 +88,48 @@ function RouteComponent() {
   } | null)?.staffPermissions ?? null
 
   return (
-    <SidebarProvider>
-      <ActivePropertyProvider initialProperties={sessionProperties}>
-        <AppSidebar
-          isAdmin={(session as { isAdmin?: boolean } | null)?.isAdmin === true}
-          plan={(session as { plan?: string | null } | null)?.plan ?? null}
-          subscriptionStatus={(session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"}
-          isStaff={isStaff}
-          staffPermissions={staffPermissions}
-          staffPropertyId={(session as { staffPropertyId?: string | null } | null)?.staffPropertyId ?? null}
-        />
-        <SidebarInset className="overflow-x-hidden bg-gradient-to-br from-white via-[#fdf8f3] to-[#fef0d9] min-h-screen">
-          <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-orange-100/60 bg-white/70 backdrop-blur-md">
-            <div className="flex w-full items-center justify-between gap-3 px-3 md:px-4">
-              <div className="flex min-w-0 flex-1 items-center gap-2">
-                <SidebarTrigger className="-ml-1" />
-                <div className="relative w-full max-w-sm md:max-w-md">
-                  <SearchIcon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search"
-                    className="h-9 pr-14 pl-9"
-                    aria-label="Search"
-                  />
-                  <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-md border border-border/70 bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                    ⌘ F
-                  </span>
+    <div className="min-h-screen w-full bg-gradient-to-br from-white via-[#fdf8f3] to-[#fef0d9]">
+      <SidebarProvider>
+        <ActivePropertyProvider initialProperties={sessionProperties}>
+          <AppSidebar
+            isAdmin={(session as { isAdmin?: boolean } | null)?.isAdmin === true}
+            plan={(session as { plan?: string | null } | null)?.plan ?? null}
+            subscriptionStatus={(session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"}
+            isStaff={isStaff}
+            staffPermissions={staffPermissions}
+            staffPropertyId={(session as { staffPropertyId?: string | null } | null)?.staffPropertyId ?? null}
+          />
+          <SidebarInset className="overflow-x-hidden bg-transparent min-h-screen">
+            <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center bg-transparent">
+              <div className="flex w-full items-center justify-between gap-3 px-3 md:px-4">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <SidebarTrigger className="-ml-1" />
+                  <div className="relative w-full max-w-sm md:max-w-md">
+                    <SearchIcon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Search"
+                      className="h-9 pr-14 pl-9"
+                      aria-label="Search"
+                    />
+                    <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-md border border-border/70 bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                      ⌘ F
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <TopbarThemeSwitcher />
+                  <TopbarNotifications />
+                  <TopbarUserMenu />
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <TopbarThemeSwitcher />
-                <TopbarNotifications />
-                <TopbarUserMenu />
-              </div>
+            </header>
+            <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden pt-3">
+              <Outlet />
             </div>
-          </header>
-          <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden pt-3">
-            <Outlet />
-          </div>
-        </SidebarInset>
-      </ActivePropertyProvider>
-    </SidebarProvider>
+          </SidebarInset>
+        </ActivePropertyProvider>
+      </SidebarProvider>
+    </div>
   );
 }

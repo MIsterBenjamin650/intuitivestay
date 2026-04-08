@@ -47,11 +47,11 @@ const AppSidebarLink: LinkComponent<typeof SidebarAnchor> = (props) => {
 function SidebarBrand() {
   return (
     <div className="flex min-h-8 items-center px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-      <span className="truncate text-[15px] font-bold tracking-[-0.4px] text-white group-data-[collapsible=icon]:hidden">
+      <span className="truncate text-[15px] font-bold tracking-[-0.4px] text-[#1c1917] group-data-[collapsible=icon]:hidden">
         Intuitive Stay
       </span>
       <span
-        className="hidden size-8 items-center justify-center rounded-md bg-white/10 text-xs font-bold text-white group-data-[collapsible=icon]:inline-flex"
+        className="hidden size-8 items-center justify-center rounded-md bg-orange-100 text-xs font-bold text-[#f97316] group-data-[collapsible=icon]:inline-flex"
         aria-label="Intuitive Stay"
         title="Intuitive Stay"
       >
@@ -89,7 +89,7 @@ function SidebarLinkItem({
   return (
     <SidebarMenuItem className="relative">
       {isActive && !disabled && (
-        <span className="pointer-events-none absolute left-0 top-1 bottom-1 z-10 w-[3px] rounded-r bg-[#a5b4fc]" />
+        <span className="pointer-events-none absolute left-0 top-1 bottom-1 z-10 w-[3px] rounded-r bg-[#f97316]" />
       )}
       <SidebarMenuButton
         render={disabled ? undefined : link}
@@ -152,18 +152,18 @@ export function AppSidebar({
     return (
       <Sidebar
         collapsible="icon"
-        className="[background:linear-gradient(180deg,#1e1b4b_0%,#312e81_100%)] border-r-0"
+        className="border-r border-[#e8ddd0] bg-[#faf6f0]"
         {...props}
       >
         <SidebarHeader className="gap-0 p-0">
-          <div className="flex h-16 items-center border-b border-sidebar-border p-2">
+          <div className="flex h-16 items-center border-b border-[#e8ddd0] p-2">
             <SidebarBrand />
           </div>
         </SidebarHeader>
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">Admin</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1c1917]/40">Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarLinkItem
@@ -196,18 +196,18 @@ export function AppSidebar({
     return (
       <Sidebar
         collapsible="icon"
-        className="[background:linear-gradient(180deg,#1e1b4b_0%,#312e81_100%)] border-r-0"
+        className="border-r border-[#e8ddd0] bg-[#faf6f0]"
         {...props}
       >
         <SidebarHeader className="gap-0 p-0">
-          <div className="flex h-16 items-center border-b border-sidebar-border p-2">
+          <div className="flex h-16 items-center border-b border-[#e8ddd0] p-2">
             <SidebarBrand />
           </div>
         </SidebarHeader>
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1c1917]/40">
               My Property
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -264,7 +264,7 @@ export function AppSidebar({
       <SidebarContent>
         {hasProperties && (
             <SidebarGroup>
-              <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/35">
+              <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1c1917]/40">
                 My Property
               </SidebarGroupLabel>
               <SidebarGroupContent>
