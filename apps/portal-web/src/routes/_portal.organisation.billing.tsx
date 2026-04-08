@@ -19,7 +19,8 @@ import {
   CardTitle,
 } from "@intuitive-stay/ui/components/card"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, useRouteContext } from "@tanstack/react-router"
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router"
+import { CreditCardIcon, PlusIcon, XCircleIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useTRPC } from "@/utils/trpc"
@@ -55,6 +56,45 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant="outline">{status}</Badge>
 }
 
+function PortalActionButton({
+  url,
+  isLoading,
+  icon: Icon,
+  label,
+  description,
+}: {
+  url: string | null | undefined
+  isLoading: boolean
+  icon: React.ElementType
+  label: string
+  description: string
+}) {
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{label}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+          {isLoading ? (
+            <Button size="sm" variant="outline" disabled>Loading…</Button>
+          ) : url ? (
+            <Button size="sm" variant="outline" asChild>
+              <a href={url} target="_blank" rel="noreferrer">Open</a>
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" disabled>Unavailable</Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function RouteComponent() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -65,6 +105,14 @@ function RouteComponent() {
 
   const { data: additionalProperties = [], isLoading } = useQuery(
     trpc.properties.getMyAdditionalProperties.queryOptions(),
+  )
+
+  const { data: paymentData, isLoading: paymentLoading } = useQuery(
+    trpc.properties.getStripeUpdatePaymentUrl.queryOptions(),
+  )
+
+  const { data: manageData, isLoading: manageLoading } = useQuery(
+    trpc.properties.getStripeManageSubscriptionUrl.queryOptions(),
   )
 
   const { mutate: cancelProperty, isPending: isCancelling } = useMutation(
@@ -109,6 +157,43 @@ function RouteComponent() {
           </div>
         </CardHeader>
       </Card>
+
+      {/* Quick actions */}
+      <div>
+        <h2 className="text-base font-semibold mb-3">Manage</h2>
+        <div className="flex flex-col gap-2">
+          <PortalActionButton
+            url={paymentData?.url}
+            isLoading={paymentLoading}
+            icon={CreditCardIcon}
+            label="Update payment method"
+            description="Change the card used for your subscription"
+          />
+          <PortalActionButton
+            url={manageData?.url}
+            isLoading={manageLoading}
+            icon={XCircleIcon}
+            label="Cancel or renew subscription"
+            description="Cancel your plan or reactivate a cancelled subscription"
+          />
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                  <PlusIcon className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Add a property</p>
+                  <p className="text-xs text-muted-foreground">Submit a new property to your account</p>
+                </div>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to="/properties">Go to Properties</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Additional properties */}
       <div>
@@ -193,7 +278,6 @@ function RouteComponent() {
           </div>
         )}
       </div>
-
     </div>
   )
 }

@@ -1715,4 +1715,40 @@ export const propertiesRouter = router({
 
     return { url: session.url }
   }),
+
+  getStripeUpdatePaymentUrl: protectedProcedure.query(async ({ ctx }): Promise<{ url: string | null }> => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+
+    if (!org?.stripeCustomerId) {
+      return { url: null }
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: org.stripeCustomerId,
+      return_url: env.PUBLIC_PORTAL_URL + "/organisation/billing",
+      flow_data: { type: "payment_method_update" },
+    })
+
+    return { url: session.url }
+  }),
+
+  getStripeManageSubscriptionUrl: protectedProcedure.query(async ({ ctx }): Promise<{ url: string | null }> => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+
+    if (!org?.stripeCustomerId) {
+      return { url: null }
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: org.stripeCustomerId,
+      return_url: env.PUBLIC_PORTAL_URL + "/organisation/billing",
+      flow_data: { type: "subscription_cancel" },
+    })
+
+    return { url: session.url }
+  }),
 })
