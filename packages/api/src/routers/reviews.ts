@@ -1,4 +1,3 @@
-import { ApifyClient } from "apify-client"
 import { db } from "@intuitive-stay/db"
 import { onlineReviewsCache, organisations, properties } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
@@ -23,6 +22,49 @@ async function assertPropertyOwner(userId: string, propertyId: string) {
 }
 
 const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+const APIFY_BASE = "https://api.apify.com/v2"
+
+async function apifyRun(
+  token: string,
+  actorId: string,
+  input: Record<string, unknown>,
+): Promise<string> {
+  const res = await fetch(`${APIFY_BASE}/acts/${encodeURIComponent(actorId)}/runs?token=${token}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Apify start failed (${res.status}): ${text}`)
+  }
+  const json = (await res.json()) as { data: { id: string } }
+  return json.data.id
+}
+
+async function apifyWait(token: string, runId: string, timeoutMs = 300_000): Promise<string> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 5000))
+    const res = await fetch(`${APIFY_BASE}/actor-runs/${runId}?token=${token}`)
+    if (!res.ok) throw new Error(`Apify poll failed (${res.status})`)
+    const json = (await res.json()) as { data: { status: string; defaultDatasetId: string } }
+    const { status, defaultDatasetId } = json.data
+    if (status === "SUCCEEDED") return defaultDatasetId
+    if (status === "FAILED" || status === "ABORTED" || status === "TIMED-OUT") {
+      throw new Error(`Apify run ${status}`)
+    }
+  }
+  throw new Error("Apify run timed out after 5 minutes")
+}
+
+async function apifyDataset<T>(token: string, datasetId: string, limit = 50): Promise<T[]> {
+  const res = await fetch(
+    `${APIFY_BASE}/datasets/${datasetId}/items?token=${token}&limit=${limit}`,
+  )
+  if (!res.ok) throw new Error(`Apify dataset fetch failed (${res.status})`)
+  return res.json() as Promise<T[]>
+}
 
 export const reviewsRouter = router({
   setReviewSources: protectedProcedure
@@ -84,6 +126,7 @@ export const reviewsRouter = router({
       if (!env.APIFY_API_TOKEN) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Apify not configured" })
       }
+      const token = env.APIFY_API_TOKEN
 
       const prop = await db
         .select({
@@ -131,7 +174,6 @@ export const reviewsRouter = router({
         })
       }
 
-      const apify = new ApifyClient({ token: env.APIFY_API_TOKEN })
       const results: {
         source: "tripadvisor" | "google"
         avgRating: number
@@ -142,16 +184,13 @@ export const reviewsRouter = router({
 
       if (canScrapeTa && tripAdvisorUrl) {
         try {
-          const run = await apify.actor("maxcopell/tripadvisor-scraper").call(
-            {
-              startUrls: [{ url: tripAdvisorUrl }],
-              maxReviews: 50,
-              reviewsLanguages: ["en"],
-            },
-            { waitSecs: 300 },
-          )
-          const { items } = await apify.dataset(run.defaultDatasetId).listItems({ limit: 50 })
-          const reviews = items as Array<{ rating?: number; text?: string }>
+          const runId = await apifyRun(token, "maxcopell/tripadvisor-scraper", {
+            startUrls: [{ url: tripAdvisorUrl }],
+            maxReviews: 50,
+            reviewsLanguages: ["en"],
+          })
+          const datasetId = await apifyWait(token, runId)
+          const reviews = await apifyDataset<{ rating?: number; text?: string }>(token, datasetId)
           const texts = reviews.map((r) => r.text ?? "").filter(Boolean)
           const ratings = reviews.map((r) => r.rating ?? 0).filter(Boolean)
           const avgRating =
@@ -166,16 +205,13 @@ export const reviewsRouter = router({
 
       if (canScrapeGoogle && googlePlaceId) {
         try {
-          const run = await apify.actor("compass/google-maps-reviews-scraper").call(
-            {
-              placeIds: [googlePlaceId],
-              maxReviews: 50,
-              language: "en",
-            },
-            { waitSecs: 300 },
-          )
-          const { items } = await apify.dataset(run.defaultDatasetId).listItems({ limit: 50 })
-          const reviews = items as Array<{ stars?: number; text?: string }>
+          const runId = await apifyRun(token, "compass/google-maps-reviews-scraper", {
+            placeIds: [googlePlaceId],
+            maxReviews: 50,
+            language: "en",
+          })
+          const datasetId = await apifyWait(token, runId)
+          const reviews = await apifyDataset<{ stars?: number; text?: string }>(token, datasetId)
           const texts = reviews.map((r) => r.text ?? "").filter(Boolean)
           const ratings = reviews.map((r) => r.stars ?? 0).filter(Boolean)
           const avgRating =
