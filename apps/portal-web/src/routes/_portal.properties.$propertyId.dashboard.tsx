@@ -220,7 +220,14 @@ function RouteComponent() {
       <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         {/* GCS hero card */}
         <div className="rounded-2xl bg-white p-6 shadow-sm flex flex-col justify-between gap-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">GCS Score</p>
+          <div className="flex items-start justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">GCS Score</p>
+            <p className="text-[10px] text-gray-400 tabular-nums">
+              {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              {" · "}
+              {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+            </p>
+          </div>
           <div className="flex items-end gap-3">
             <span className="text-8xl font-black leading-none text-orange-500">
               {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
@@ -241,14 +248,15 @@ function RouteComponent() {
               <p className="text-xl font-bold text-gray-800">{stats?.totalFeedback ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Tier Score</p>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Score</p>
               <p className="text-xl font-bold text-orange-500">
                 {stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—"}
+                <span className="text-xs font-normal text-gray-400"> /100</span>
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Period</p>
-              <p className="text-xl font-bold text-gray-800">{days}d</p>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Window</p>
+              <p className="text-xl font-bold text-gray-800">Last {days}d</p>
             </div>
           </div>
         </div>
@@ -264,14 +272,14 @@ function RouteComponent() {
               <p className="mb-3 text-xs text-gray-400">{aiSummary.date}</p>
               <p className="mb-4 text-sm leading-relaxed text-gray-700">{aiSummary.narrative}</p>
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Today's Focus</p>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {aiSummary.focusPoints.map((f, i) => {
                   const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
                   const color = PILLAR_COLORS[pillarKey] ?? "#f97316"
                   return (
-                    <li key={i} className="flex gap-2 text-xs text-gray-600">
-                      <span className="shrink-0 font-semibold" style={{ color }}>{f.pillar}:</span>
-                      <span>{f.action}</span>
+                    <li key={i} className="grid text-xs text-gray-600" style={{ gridTemplateColumns: "90px 1fr" }}>
+                      <span className="font-semibold shrink-0" style={{ color }}>{f.pillar}:</span>
+                      <span className="leading-relaxed">{f.action}</span>
                     </li>
                   )
                 })}
