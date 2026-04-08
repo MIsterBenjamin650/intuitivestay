@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, useNavigate, useRouteContext } from "@tanstack/react-router"
-import * as React from "react"
+import { createFileRoute, redirect, useRouteContext } from "@tanstack/react-router"
 import {
   Area,
   AreaChart,
@@ -15,6 +14,36 @@ import { AdminDashboard } from "@/components/admin-dashboard"
 import { useTRPC } from "@/utils/trpc"
 
 export const Route = createFileRoute("/_portal/")({
+  beforeLoad: ({ context }) => {
+    const session = context.session as {
+      isAdmin?: boolean
+      isStaff?: boolean
+      staffPropertyId?: string | null
+      user?: { properties?: Array<{ id: string }> }
+    } | null
+
+    const isAdmin = session?.isAdmin === true
+    const isStaff = session?.isStaff === true
+    const staffPropertyId = session?.staffPropertyId ?? null
+    const properties = session?.user?.properties ?? []
+
+    if (isStaff && staffPropertyId) {
+      throw redirect({
+        to: "/properties/$propertyId/dashboard",
+        params: { propertyId: staffPropertyId },
+      })
+    }
+
+    if (!isAdmin && properties.length > 0) {
+      const firstProperty = properties[0]
+      if (firstProperty) {
+        throw redirect({
+          to: "/properties/$propertyId/dashboard",
+          params: { propertyId: firstProperty.id },
+        })
+      }
+    }
+  },
   component: RouteComponent,
 })
 
@@ -155,34 +184,8 @@ function PortfolioDashboard() {
 
 function RouteComponent() {
   const { session } = useRouteContext({ from: "/_portal" })
-  const navigate = useNavigate()
   const isAdmin = (session as { isAdmin?: boolean } | null)?.isAdmin === true
-  const isStaff = (session as { isStaff?: boolean } | null)?.isStaff === true
-  const staffPropertyId = (session as { staffPropertyId?: string | null } | null)?.staffPropertyId ?? null
-  const plan = (session as { plan?: string | null } | null)?.plan ?? null
-  const properties = (session as { user?: { properties?: Array<{ id: string; name: string }> } } | null)?.user?.properties ?? []
-
-  React.useEffect(() => {
-    if (isStaff && staffPropertyId) {
-      void navigate({
-        to: "/properties/$propertyId/dashboard",
-        params: { propertyId: staffPropertyId },
-        replace: true,
-      })
-    } else if (!isAdmin && properties.length > 0) {
-      const firstProperty = properties[0]
-      if (firstProperty) {
-        void navigate({
-          to: "/properties/$propertyId/dashboard",
-          params: { propertyId: firstProperty.id },
-          replace: true,
-        })
-      }
-    }
-  }, [isAdmin, isStaff, staffPropertyId, properties, navigate])
 
   if (isAdmin) return <AdminDashboard />
-  if (isStaff && staffPropertyId) return null
-  if (!isAdmin && properties.length > 0) return null
   return <PortfolioDashboard />
 }
