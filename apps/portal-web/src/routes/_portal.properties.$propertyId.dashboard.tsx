@@ -473,8 +473,25 @@ function RouteComponent() {
           </p>
           {leaderboard?.rows.length ? (() => {
             const maxGcs = Math.max(...leaderboard.rows.map((r) => r.avgGcs ?? 0), 1)
+            const cityAvg = leaderboard.cityAvg ?? null
+            const avgPct = cityAvg != null ? Math.max((cityAvg / maxGcs) * 100, 0) : null
             return (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                {/* Average label above bars */}
+                {avgPct != null && (
+                  <div className="flex items-center gap-3">
+                    <span className="w-5 shrink-0" />
+                    <span className="w-28 shrink-0" />
+                    <div className="relative flex-1">
+                      <div className="absolute -top-1" style={{ left: `${avgPct}%`, transform: "translateX(-50%)" }}>
+                        <span className="whitespace-nowrap rounded-full bg-gray-700 px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                          City avg {cityAvg.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="w-8 shrink-0" />
+                  </div>
+                )}
                 {leaderboard.rows.map((row) => {
                   const gcs = row.avgGcs ?? 0
                   const pct = Math.max((gcs / maxGcs) * 100, 2)
@@ -487,10 +504,11 @@ function RouteComponent() {
                       <span className={`w-28 shrink-0 truncate text-xs font-semibold ${isOwn ? "text-orange-500" : "text-gray-500"}`}>
                         {isOwn ? row.name : `Property #${row.rank}`}
                       </span>
-                      {/* Bar */}
-                      <div className="flex-1 h-7 rounded-lg bg-gray-100 overflow-hidden">
+                      {/* Bar with average line overlay */}
+                      <div className="relative flex-1 h-7 rounded-lg bg-gray-100 overflow-hidden">
+                        {/* Fill */}
                         <div
-                          className="h-full rounded-lg flex items-center justify-end pr-2.5 transition-all duration-700"
+                          className="absolute inset-y-0 left-0 rounded-lg flex items-center justify-end pr-2.5 transition-all duration-700"
                           style={{
                             width: `${pct}%`,
                             background: isOwn
@@ -502,6 +520,13 @@ function RouteComponent() {
                             {gcs.toFixed(1)}
                           </span>
                         </div>
+                        {/* City average line */}
+                        {avgPct != null && (
+                          <div
+                            className="absolute inset-y-0 w-0.5 bg-gray-600 opacity-50 z-10"
+                            style={{ left: `${avgPct}%` }}
+                          />
+                        )}
                       </div>
                       {/* Submissions */}
                       <span className="w-8 shrink-0 text-right text-[11px] text-gray-400">{row.submissions}</span>

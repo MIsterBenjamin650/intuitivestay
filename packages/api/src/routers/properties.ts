@@ -1274,7 +1274,21 @@ export const propertiesRouter = router({
           return b.avgGcs - a.avgGcs
         })
         .map((row, idx) => ({ ...row, rank: idx + 1 }))
-      return { city: prop.city, rows }
+
+      // City average across all properties with data
+      const withData = rows.filter((r) => r.avgGcs != null)
+      const cityAvg = withData.length
+        ? withData.reduce((sum, r) => sum + (r.avgGcs ?? 0), 0) / withData.length
+        : null
+
+      // Top 10, always include own property even if outside top 10
+      const top10 = rows.slice(0, 10)
+      const ownInTop10 = top10.some((r) => r.isOwn)
+      const finalRows = ownInTop10
+        ? top10
+        : [...top10.slice(0, 9), rows.find((r) => r.isOwn)].filter(Boolean) as typeof rows
+
+      return { city: prop.city, rows: finalRows, cityAvg }
     }),
 
   getTierStatus: protectedProcedure
