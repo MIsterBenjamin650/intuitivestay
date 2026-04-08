@@ -469,12 +469,19 @@ function RouteComponent() {
       {/* Row 7: City leaderboard */}
       {canSeeLeaderboard ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">
-            City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
-          </p>
+          {/* Header row with rank badge */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">
+              City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
+            </p>
+            {leaderboard?.ownRank != null && leaderboard.totalCount != null && (
+              <span className="text-xs font-bold text-orange-500">
+                {leaderboard.ownRank}<span className="text-gray-400 font-normal"> of {leaderboard.totalCount}</span>
+              </span>
+            )}
+          </div>
           {leaderboard?.rows.length ? (() => {
             const cityAvg = leaderboard.cityAvg ?? null
-            // Convert GCS (0–10) to percentage (0–100) for the Y axis
             const chartData = leaderboard.rows.map((row) => ({
               label: row.isOwn ? (row.name ?? "You") : `#${row.rank}`,
               score: row.avgGcs != null ? Math.round(row.avgGcs * 10) : 0,
