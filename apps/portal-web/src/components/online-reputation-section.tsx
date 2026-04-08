@@ -174,7 +174,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
   if (isLoading) return null
 
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm">
+    <div className="rounded-2xl bg-white p-5 shadow-sm">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div>
@@ -219,7 +219,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
       {/* Setup form */}
       {showSetup && (
-        <div className="mb-4 rounded-lg border border-dashed border-orange-200 bg-orange-50/50 p-4 space-y-3">
+        <div className="mb-4 rounded-xl border border-dashed border-orange-200 bg-[#fff7ed] p-4 space-y-3">
           <p className="text-xs font-medium text-gray-700">
             Enter your property's review page URLs so we can compare your online reputation with your GCS scores.
           </p>
@@ -265,7 +265,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
       {/* No setup yet */}
       {!hasSetup && !showSetup && (
-        <div className="rounded-lg border border-dashed p-8 text-center">
+        <div className="rounded-xl border border-dashed border-stone-200 p-8 text-center">
           <p className="text-sm text-gray-400">
             Connect your TripAdvisor and Google listings to compare your online reputation with your GCS scores.
           </p>
@@ -280,7 +280,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
       {/* Setup done but no data yet */}
       {hasSetup && !hasCache && !showSetup && (
-        <div className="rounded-lg border border-dashed p-8 text-center">
+        <div className="rounded-xl border border-dashed border-stone-200 p-8 text-center">
           <p className="text-sm text-gray-400">
             Click "Refresh Reviews" to pull in your latest online reviews and generate a comparison.
           </p>
@@ -293,7 +293,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
           <div className="grid gap-4 md:grid-cols-[1fr_auto]">
             <ResponsiveContainer width="100%" height={240}>
               <RadarChart data={radarData}>
-                <PolarGrid />
+                <PolarGrid stroke="#f5f5f4" />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#6b7280" }} />
                 <Radar
                   name="GCS Score"
@@ -358,7 +358,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
           {/* Summary */}
           {summary && (
-            <div className="mt-4 rounded-lg bg-gray-50 border border-gray-100 p-4 space-y-2">
+            <div className="mt-4 rounded-xl bg-[#faf9f7] border border-stone-100 p-4 space-y-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Reputation Insight</p>
               <p className="text-xs text-gray-700 leading-relaxed">{summary.alignment}</p>
               <p className="text-xs text-gray-700 leading-relaxed">{summary.pillarInsight}</p>
