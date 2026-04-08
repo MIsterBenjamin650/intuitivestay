@@ -138,6 +138,7 @@ export const reviewsRouter = router({
         reviewCount: number
         texts: string[]
       }[] = []
+      const scrapeErrors: string[] = []
 
       if (canScrapeTa && tripAdvisorUrl) {
         try {
@@ -147,7 +148,7 @@ export const reviewsRouter = router({
               maxReviews: 50,
               reviewsLanguages: ["en"],
             },
-            { waitSecs: 120 },
+            { waitSecs: 300 },
           )
           const { items } = await apify.dataset(run.defaultDatasetId).listItems({ limit: 50 })
           const reviews = items as Array<{ rating?: number; text?: string }>
@@ -157,7 +158,9 @@ export const reviewsRouter = router({
             ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0
           results.push({ source: "tripadvisor", avgRating, reviewCount: reviews.length, texts })
         } catch (err) {
-          console.error("TripAdvisor scrape failed:", err)
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error("TripAdvisor scrape failed:", msg)
+          scrapeErrors.push(`TripAdvisor: ${msg}`)
         }
       }
 
@@ -169,7 +172,7 @@ export const reviewsRouter = router({
               maxReviews: 50,
               language: "en",
             },
-            { waitSecs: 120 },
+            { waitSecs: 300 },
           )
           const { items } = await apify.dataset(run.defaultDatasetId).listItems({ limit: 50 })
           const reviews = items as Array<{ stars?: number; text?: string }>
@@ -179,7 +182,9 @@ export const reviewsRouter = router({
             ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0
           results.push({ source: "google", avgRating, reviewCount: reviews.length, texts })
         } catch (err) {
-          console.error("Google scrape failed:", err)
+          const msg = err instanceof Error ? err.message : String(err)
+          console.error("Google scrape failed:", msg)
+          scrapeErrors.push(`Google: ${msg}`)
         }
       }
 
@@ -214,6 +219,13 @@ export const reviewsRouter = router({
           })
       }
 
-      return { scraped: results.map((r) => r.source) }
+      if (results.length === 0 && scrapeErrors.length > 0) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: scrapeErrors.join(" | "),
+        })
+      }
+
+      return { scraped: results.map((r) => r.source), errors: scrapeErrors }
     }),
 })
