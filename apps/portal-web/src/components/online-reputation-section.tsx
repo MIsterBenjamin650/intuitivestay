@@ -119,6 +119,51 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
   const showChart = hasCache && onlinePillars !== null
 
+  // Compute plain-English summary from pillar gaps
+  function buildSummary() {
+    if (!onlinePillars) return null
+    const pillars = [
+      { name: "Resilience", gcsVal: gcs.resilience ?? 0, onlineVal: Number(onlinePillars.pillarResilience) },
+      { name: "Empathy", gcsVal: gcs.empathy ?? 0, onlineVal: Number(onlinePillars.pillarEmpathy) },
+      { name: "Anticipation", gcsVal: gcs.anticipation ?? 0, onlineVal: Number(onlinePillars.pillarAnticipation) },
+      { name: "Recognition", gcsVal: gcs.recognition ?? 0, onlineVal: Number(onlinePillars.pillarRecognition) },
+    ]
+
+    const avgGcs = pillars.reduce((s, p) => s + p.gcsVal, 0) / pillars.length
+    const avgOnline = pillars.reduce((s, p) => s + p.onlineVal, 0) / pillars.length
+    const overallGap = avgGcs - avgOnline
+
+    // Find biggest gap pillars
+    const sorted = [...pillars].sort((a, b) => Math.abs(b.gcsVal - b.onlineVal) - Math.abs(a.gcsVal - a.onlineVal))
+    const biggest = sorted[0]!
+    const gap = biggest.gcsVal - biggest.onlineVal
+
+    // Overall alignment sentence
+    let alignment: string
+    if (Math.abs(overallGap) < 0.5) {
+      alignment = "Your in-house GCS scores closely match what guests are saying online — a strong sign of consistency across their experience."
+    } else if (overallGap > 0) {
+      alignment = `Your team is performing better in-house (avg ${avgGcs.toFixed(1)}/10) than your online reviews suggest (avg ${avgOnline.toFixed(1)}/10). This gap may mean great service moments aren't being translated into written reviews.`
+    } else {
+      alignment = `Your online reviews (avg ${avgOnline.toFixed(1)}/10) are outpacing your internal GCS scores (avg ${avgGcs.toFixed(1)}/10) — guests are leaving positive impressions that your team may not be consistently tracking internally.`
+    }
+
+    // Biggest gap pillar sentence
+    let pillarInsight: string
+    if (Math.abs(gap) < 0.5) {
+      const best = [...pillars].sort((a, b) => b.onlineVal - a.onlineVal)[0]!
+      pillarInsight = `${best.name} stands out as your strongest pillar in online reviews (${best.onlineVal.toFixed(1)}/10), which aligns well with your GCS data.`
+    } else if (gap > 0) {
+      pillarInsight = `${biggest.name} shows the largest gap — your internal score (${biggest.gcsVal.toFixed(1)}/10) is higher than what online reviewers mention (${biggest.onlineVal.toFixed(1)}/10). Encouraging guests to specifically comment on ${biggest.name.toLowerCase()} moments could improve your online reputation score.`
+    } else {
+      pillarInsight = `${biggest.name} is your hidden strength — online reviewers rate it higher (${biggest.onlineVal.toFixed(1)}/10) than your internal GCS captures (${biggest.gcsVal.toFixed(1)}/10). This is worth celebrating with your team.`
+    }
+
+    return { alignment, pillarInsight }
+  }
+
+  const summary = buildSummary()
+
   if (isLoading) return null
 
   return (
@@ -237,60 +282,71 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
       {/* Comparison chart */}
       {showChart && (
-        <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-          <ResponsiveContainer width="100%" height={240}>
-            <RadarChart data={radarData}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#6b7280" }} />
-              <Radar
-                name="GCS Score"
-                dataKey="GCS"
-                stroke="#6366f1"
-                fill="#6366f1"
-                fillOpacity={0.25}
-              />
-              <Radar
-                name="Online Reviews"
-                dataKey="Online Reviews"
-                stroke="#f97316"
-                fill="#f97316"
-                fillOpacity={0.15}
-              />
-              <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-              <Tooltip
-                contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
-                formatter={(v: unknown) =>
-                  typeof v === "number" ? v.toFixed(1) : (String(v) as string)
-                }
-              />
-            </RadarChart>
-          </ResponsiveContainer>
+        <>
+          <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+            <ResponsiveContainer width="100%" height={240}>
+              <RadarChart data={radarData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#6b7280" }} />
+                <Radar
+                  name="GCS Score"
+                  dataKey="GCS"
+                  stroke="#6366f1"
+                  fill="#6366f1"
+                  fillOpacity={0.25}
+                />
+                <Radar
+                  name="Online Reviews"
+                  dataKey="Online Reviews"
+                  stroke="#f97316"
+                  fill="#f97316"
+                  fillOpacity={0.15}
+                />
+                <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11 }}
+                  formatter={(v: unknown) =>
+                    typeof v === "number" ? v.toFixed(1) : (String(v) as string)
+                  }
+                />
+              </RadarChart>
+            </ResponsiveContainer>
 
-          <div className="flex flex-col gap-3 justify-center min-w-[140px]">
-            {data?.tripadvisor && (
-              <div className="rounded-lg border p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
-                  TripAdvisor
-                </p>
-                <StarRating value={Number(data.tripadvisor.avgRating)} />
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {data.tripadvisor.reviewCount} reviews
-                </p>
-              </div>
-            )}
-            {data?.google && (
-              <div className="rounded-lg border p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
-                  Google
-                </p>
-                <StarRating value={Number(data.google.avgRating)} />
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {data.google.reviewCount} reviews
-                </p>
-              </div>
-            )}
+            <div className="flex flex-col gap-3 justify-center min-w-[140px]">
+              {data?.tripadvisor && (
+                <div className="rounded-lg border p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+                    TripAdvisor
+                  </p>
+                  <StarRating value={Number(data.tripadvisor.avgRating)} />
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {data.tripadvisor.reviewCount} reviews
+                  </p>
+                </div>
+              )}
+              {data?.google && (
+                <div className="rounded-lg border p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">
+                    Google
+                  </p>
+                  <StarRating value={Number(data.google.avgRating)} />
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {data.google.reviewCount} reviews
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* Summary */}
+          {summary && (
+            <div className="mt-4 rounded-lg bg-gray-50 border border-gray-100 p-4 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Reputation Insight</p>
+              <p className="text-xs text-gray-700 leading-relaxed">{summary.alignment}</p>
+              <p className="text-xs text-gray-700 leading-relaxed">{summary.pillarInsight}</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
