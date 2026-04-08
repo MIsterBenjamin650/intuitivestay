@@ -269,6 +269,13 @@ export async function stripeWebhookHandler(c: Context) {
     const subscriptionId =
       typeof subscriptionRef === "string" ? subscriptionRef : subscriptionRef.id
     const sub = await stripe.subscriptions.retrieve(subscriptionId)
+
+    // Don't update org status for additional-property add-on invoices
+    const isAdditional = sub.items.data.some(
+      (item) => item.price.id === env.STRIPE_PRICE_ADDITIONAL_PROPERTY,
+    )
+    if (isAdditional) return c.json({ ok: true })
+
     // current_period_end is on the SubscriptionItem in Stripe v22
     const rawPeriodEnd = sub.items.data[0]?.current_period_end
     const periodEnd = rawPeriodEnd ? new Date(rawPeriodEnd * 1000) : null

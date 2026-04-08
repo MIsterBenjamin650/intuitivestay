@@ -932,9 +932,17 @@ export const propertiesRouter = router({
       }
 
       // Schedule cancellation at period end (owner retains access until then)
-      await stripe.subscriptions.update(property.stripeSubscriptionId, {
-        cancel_at_period_end: true,
-      })
+      try {
+        await stripe.subscriptions.update(property.stripeSubscriptionId, {
+          cancel_at_period_end: true,
+        })
+      } catch (err) {
+        console.error("[cancelAdditionalProperty] Stripe cancellation failed:", err)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not schedule cancellation with Stripe. Please try again or contact support.",
+        })
+      }
 
       const [updated] = await db
         .update(properties)
