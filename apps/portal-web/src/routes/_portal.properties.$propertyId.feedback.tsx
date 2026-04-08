@@ -1,18 +1,16 @@
+import { Badge } from "@intuitive-stay/ui/components/badge"
+import { Button } from "@intuitive-stay/ui/components/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@intuitive-stay/ui/components/card"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { useState } from "react"
 
 import { useTRPC } from "@/utils/trpc"
 
@@ -20,98 +18,175 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/feedback")
   component: RouteComponent,
 })
 
+function formatDate(date: Date | string) {
+  return new Date(date).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+function GcsChip({ gcs }: { gcs: number }) {
+  const color =
+    gcs >= 8
+      ? "bg-green-100 text-green-700 border-green-200"
+      : gcs >= 6
+        ? "bg-amber-100 text-amber-700 border-amber-200"
+        : "bg-red-100 text-red-700 border-red-200"
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-bold tabular-nums ${color}`}>
+      {gcs.toFixed(2)}
+    </span>
+  )
+}
+
+function PillarRow({
+  resilience,
+  empathy,
+  anticipation,
+  recognition,
+}: {
+  resilience: number
+  empathy: number
+  anticipation: number
+  recognition: number
+}) {
+  return (
+    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+      <span>R: <strong>{resilience}</strong></span>
+      <span>E: <strong>{empathy}</strong></span>
+      <span>A: <strong>{anticipation}</strong></span>
+      <span>Rc: <strong>{recognition}</strong></span>
+    </div>
+  )
+}
+
 function RouteComponent() {
   const { propertyId } = Route.useParams()
   const trpc = useTRPC()
+  const [offset, setOffset] = useState(0)
+
   const { data, isLoading, isError } = useQuery(
-    trpc.feedback.getPropertyFeedbackSummary.queryOptions({ propertyId }),
+    trpc.feedback.getFeedbackLog.queryOptions({ propertyId, offset }),
   )
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </div>
-    )
-  }
-
-  if (isError || !data) {
-    return (
-      <div className="p-6">
-        <p className="text-sm text-destructive">Failed to load feedback data.</p>
-      </div>
-    )
-  }
+  const pageSize = data?.pageSize ?? 50
+  const total = data?.total ?? 0
+  const rows = data?.rows ?? []
+  const currentPage = Math.floor(offset / pageSize) + 1
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold">Guest Feedback</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          GCS pillar breakdown and staff recognition · {data.totalFeedback} submission
-          {data.totalFeedback !== 1 ? "s" : ""}
+        <h1 className="text-2xl font-bold">Feedback Log</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Every submission received — most recent first.
+          {total > 0 && ` ${total.toLocaleString()} total.`}
         </p>
       </div>
 
-      {data.totalFeedback === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No feedback received yet. Share the QR code with guests to start collecting data.
-        </p>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-xl border bg-card p-4">
-              <h2 className="font-semibold mb-4">GCS Pillar Overview</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={data.pillarScores}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="pillar" />
-                  <Radar
-                    name="Score"
-                    dataKey="score"
-                    stroke="#6366f1"
-                    fill="#6366f1"
-                    fillOpacity={0.4}
-                  />
-                  <Tooltip formatter={(v) => (typeof v === "number" ? v.toFixed(2) : v)} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      )}
 
-            <div className="rounded-xl border bg-card p-4">
-              <h2 className="font-semibold mb-4">Pillar Scores (avg, 1–10)</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.pillarScores}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="pillar" />
-                  <YAxis domain={[0, 10]} />
-                  <Tooltip formatter={(v) => (typeof v === "number" ? v.toFixed(2) : v)} />
-                  <Bar dataKey="score" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+      {isError && (
+        <p className="text-sm text-destructive">Failed to load feedback.</p>
+      )}
+
+      {!isLoading && !isError && rows.length === 0 && (
+        <Card size="sm">
+          <CardHeader>
+            <CardTitle className="text-sm">No feedback yet</CardTitle>
+            <CardDescription>
+              Share your QR code with guests to start collecting submissions.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {!isLoading && !isError && rows.length > 0 && (
+        <>
+          <div className="flex flex-col gap-3">
+            {rows.map((row) => (
+              <Card key={row.id} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <GcsChip gcs={row.gcs} />
+                      {row.gcs <= 5 && (
+                        <Badge variant="destructive" className="text-[10px]">Low Score</Badge>
+                      )}
+                      {row.isUniformScore && (
+                        <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300 bg-amber-50">
+                          ⚠ Uniform
+                        </Badge>
+                      )}
+                      {row.namedStaffMember && (
+                        <Badge variant="outline" className="text-[10px] text-green-700 border-green-300 bg-green-50">
+                          ★ {row.namedStaffMember}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {formatDate(row.submittedAt)}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-2">
+                  <PillarRow
+                    resilience={row.resilience}
+                    empathy={row.empathy}
+                    anticipation={row.anticipation}
+                    recognition={row.recognition}
+                  />
+                  {row.ventText && (
+                    <p className="text-sm text-muted-foreground italic">
+                      "{row.ventText}"
+                    </p>
+                  )}
+                  {row.guestEmail && (
+                    <a
+                      href={`mailto:${row.guestEmail}`}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {row.guestEmail}
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          {data.staffMentions.length > 0 ? (
-            <div className="rounded-xl border bg-card p-4">
-              <h2 className="font-semibold mb-4">Staff Mentions in Feedback</h2>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={data.staffMentions} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" width={80} />
-                  <Tooltip />
-                  <Bar dataKey="mentions" fill="#6366f1" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="rounded-xl border bg-card p-4">
-              <h2 className="font-semibold mb-2">Staff Mentions</h2>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                No staff members named yet. Nominations appear here when high-scoring guests
-                use the Name Drop™ screen.
+                Page {currentPage} of {totalPages}
               </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(Math.max(0, offset - pageSize))}
+                  disabled={offset === 0}
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(offset + pageSize)}
+                  disabled={offset + pageSize >= total}
+                >
+                  Next
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </>

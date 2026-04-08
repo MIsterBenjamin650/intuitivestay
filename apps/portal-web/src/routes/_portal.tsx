@@ -88,7 +88,7 @@ function RouteComponent() {
   } | null)?.staffPermissions ?? null
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-white via-[#fdf8f3] to-[#fef0d9]">
+    <div className="min-h-screen w-full bg-gradient-to-br from-white via-[#fdf8f3] to-[#fef0d9] dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
       <SidebarProvider>
         <ActivePropertyProvider initialProperties={sessionProperties}>
           <AppSidebar
@@ -109,12 +109,9 @@ function RouteComponent() {
                     <Input
                       type="search"
                       placeholder="Search"
-                      className="h-9 pr-14 pl-9"
+                      className="h-9 pl-9"
                       aria-label="Search"
                     />
-                    <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-md border border-border/70 bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                      ⌘ F
-                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 md:gap-2">

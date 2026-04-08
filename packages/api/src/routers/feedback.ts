@@ -544,4 +544,58 @@ export const feedbackRouter = router({
         submittedAt: row.submittedAt,
       }))
     }),
+
+  /**
+   * Protected — returns paginated raw feedback submissions for a property,
+   * most recent first. Used on the Feedback Log page.
+   */
+  getFeedbackLog: protectedProcedure
+    .input(z.object({ propertyId: z.string(), offset: z.number().int().min(0).default(0) }))
+    .query(async ({ ctx, input }) => {
+      const PAGE_SIZE = 50
+
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const [rows, totalResult] = await Promise.all([
+        db
+          .select()
+          .from(feedback)
+          .where(eq(feedback.propertyId, input.propertyId))
+          .orderBy(desc(feedback.submittedAt))
+          .limit(PAGE_SIZE)
+          .offset(input.offset),
+        db
+          .select({ total: count() })
+          .from(feedback)
+          .where(eq(feedback.propertyId, input.propertyId)),
+      ])
+
+      return {
+        rows: rows.map((row) => ({
+          id: row.id,
+          gcs: Number(row.gcs),
+          resilience: row.resilience,
+          empathy: row.empathy,
+          anticipation: row.anticipation,
+          recognition: row.recognition,
+          ventText: row.ventText,
+          guestEmail: row.guestEmail,
+          namedStaffMember: row.namedStaffMember,
+          mealTime: row.mealTime,
+          isUniformScore: row.isUniformScore,
+          submittedAt: row.submittedAt,
+        })),
+        total: totalResult[0]?.total ?? 0,
+        pageSize: PAGE_SIZE,
+      }
+    }),
 })

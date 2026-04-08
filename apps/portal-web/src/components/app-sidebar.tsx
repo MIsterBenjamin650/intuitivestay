@@ -47,7 +47,7 @@ const AppSidebarLink: LinkComponent<typeof SidebarAnchor> = (props) => {
 function SidebarBrand() {
   return (
     <div className="flex min-h-8 items-center px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-      <span className="truncate text-[15px] font-bold tracking-[-0.4px] text-[#1c1917] group-data-[collapsible=icon]:hidden">
+      <span className="truncate text-[15px] font-bold tracking-[-0.4px] text-sidebar-foreground group-data-[collapsible=icon]:hidden">
         Intuitive Stay
       </span>
       <span
@@ -163,7 +163,7 @@ export function AppSidebar({
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1c1917]/40">Admin</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground/40">Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarLinkItem
@@ -207,7 +207,7 @@ export function AppSidebar({
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1c1917]/40">
+            <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground/40">
               My Property
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -264,7 +264,7 @@ export function AppSidebar({
       <SidebarContent>
         {hasProperties && (
             <SidebarGroup>
-              <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#1c1917]/40">
+              <SidebarGroupLabel className="px-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-sidebar-foreground/40">
                 My Property
               </SidebarGroupLabel>
               <SidebarGroupContent>
