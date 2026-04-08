@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, jsonb } from "drizzle-orm/pg-core"
+import { index, pgTable, text, timestamp, jsonb } from "drizzle-orm/pg-core"
 import { properties } from "./properties"
 import { user } from "./auth"
 
@@ -27,4 +27,8 @@ export const propertyMembers = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     acceptedAt: timestamp("accepted_at"),
   },
+  (table) => [
+    index("property_members_propertyId_idx").on(table.propertyId),
+    index("property_members_userId_idx").on(table.userId),
+  ],
 )

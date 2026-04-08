@@ -26,7 +26,16 @@ export const feedback = pgTable("feedback", {
   isUniformScore: boolean("is_uniform_score").default(false).notNull(), // true if all 4 pillars rated identically — flagged as low confidence
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 },
-(table) => [index("feedback_propertyId_idx").on(table.propertyId)],
+(table) => [
+  // Single-column — covers queries filtering by property alone
+  index("feedback_propertyId_idx").on(table.propertyId),
+  // Composite — covers the vast majority of dashboard queries (property + time range)
+  index("feedback_propertyId_submittedAt_idx").on(table.propertyId, table.submittedAt),
+  // Standalone time index — covers city-wide aggregations that don't filter by property
+  index("feedback_submittedAt_idx").on(table.submittedAt),
+  // Low GCS alert queries
+  index("feedback_gcs_idx").on(table.gcs),
+],
 );
 
 export const feedbackRelations = relations(feedback, ({ one }) => ({

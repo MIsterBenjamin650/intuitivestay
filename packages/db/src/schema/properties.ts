@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { organisations } from "./organisations";
 
@@ -27,7 +27,14 @@ export const properties = pgTable("properties", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+},
+(table) => [
+  index("properties_organisationId_idx").on(table.organisationId),
+  index("properties_city_idx").on(table.city),
+  index("properties_status_idx").on(table.status),
+  // Composite — leaderboard queries filter by city AND status together
+  index("properties_city_status_idx").on(table.city, table.status),
+]);
 
 export const propertiesRelations = relations(properties, ({ one }) => ({
   organisation: one(organisations, {
