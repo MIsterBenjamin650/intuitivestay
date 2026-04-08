@@ -172,9 +172,9 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <DateRangeTabs days={days} onChange={setDays} />
           {(() => {
             const sessionProperties = (session as { user?: { properties?: Array<{ id: string; name: string }> } } | null)?.user?.properties ?? []
@@ -321,7 +321,7 @@ function RouteComponent() {
                 <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" vertical={false} />
                 <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={20} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
+                <Tooltip cursor={false} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
                   formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
                 <Bar dataKey="resilience" fill={PILLAR_COLORS.resilience} radius={[4, 4, 0, 0]} name="Resilience" />
@@ -579,17 +579,23 @@ function RouteComponent() {
       {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
         {canSeeAdvancedInsights ? (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Advanced Insights</p>
-            <p className="text-sm text-gray-400">Sentiment trend analysis and reputation gap analysis coming soon.</p>
+          <div className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Advanced Insights</p>
+              <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">Sentiment trend analysis, day-of-week consistency patterns, and reputation gap analysis will appear here once your property has sufficient data history.</p>
           </div>
         ) : (
           <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Available on Partner and Founder plans." />
         )}
         {canSeeLocalMarket ? (
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Local Market</p>
-            <p className="text-sm text-gray-400">Local hospitality market benchmarks coming soon.</p>
+          <div className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Local Market</p>
+              <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">Benchmarking your GCS against other hospitality properties in your local market will appear here once your city has enough active properties.</p>
           </div>
         ) : (
           <LockedSection title="Local Market" description="Compare your GCS against local hospitality market benchmarks. Available on Partner and Founder plans." />
