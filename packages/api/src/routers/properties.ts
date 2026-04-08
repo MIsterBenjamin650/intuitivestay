@@ -2,13 +2,13 @@ import { db } from "@intuitive-stay/db"
 import { aiDailySummaries, dashboardCache, feedback, leaderboardCache, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, avg, count, desc, eq, gte, inArray, isNotNull, max, sql } from "drizzle-orm"
+import { and, avg, count, desc, eq, gte, inArray, isNotNull, isNull, max, ne, or, sql } from "drizzle-orm"
 import Stripe from "stripe"
 import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, router } from "../index"
 import { generateAndActivateProperty } from "../lib/activate-property"
-import { sendApprovalEmail, sendRejectionEmail } from "../lib/email"
+import { sendAdditionalPropertyPaymentEmail, sendApprovalEmail, sendNewPropertyNotificationEmail, sendRejectionEmail } from "../lib/email"
 import { generateQrPdf } from "../lib/generate-qr"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
@@ -38,6 +38,26 @@ const RANGE_DAYS: Record<TimeRange, number> = {
   "180d": 180,
   "365d": 365,
 }
+
+// ─── Additional property billing ─────────────────────────────────────────────
+
+/** Number of properties included at no extra charge per plan */
+export const PLAN_PROPERTY_LIMITS: Record<string, number> = {
+  member: 0,
+  host: 1,
+  partner: 1,
+  founder: 5,
+}
+
+/** Display prices for the cost breakdown shown in the Add Property form */
+export const PLAN_BASE_PRICES: Record<string, string> = {
+  host: "£34.99",
+  partner: "£79.99",
+  founder: "£189.99",
+}
+
+/** Additional property monthly charge */
+export const ADDITIONAL_PROPERTY_PRICE = 25.00
 
 function clampTimeRange(requested: string, plan: string): TimeRange {
   const max = PLAN_MAX_RANGE[plan as Plan] ?? "7d"
@@ -641,6 +661,76 @@ export const propertiesRouter = router({
       .from(properties)
       .where(eq(properties.organisationId, org.id))
   }),
+
+  /**
+   * Protected — owner submits a new property from the portal.
+   * Creates the property as 'pending' and fires an admin notification email.
+   * Guards against inactive subscriptions.
+   */
+  submitProperty: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(100),
+        type: z.string().min(1),
+        addressLine1: z.string().optional(),
+        city: z.string().min(1),
+        postcode: z.string().optional(),
+        country: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+
+      if (!org) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "No organisation found" })
+      }
+
+      // Block submission if subscription is not active
+      const activeStatuses = ["active", "trial"] as const
+      if (!activeStatuses.includes(org.subscriptionStatus as (typeof activeStatuses)[number])) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Your subscription is not currently active. Please renew before adding a property.",
+        })
+      }
+
+      const propertyId = crypto.randomUUID()
+      const [property] = await db
+        .insert(properties)
+        .values({
+          id: propertyId,
+          organisationId: org.id,
+          name: input.name,
+          type: input.type,
+          address: input.addressLine1 ?? null,
+          city: input.city,
+          postcode: input.postcode ?? null,
+          country: input.country,
+          ownerEmail: ctx.session.user.email,
+          ownerName: ctx.session.user.name,
+          status: "pending",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning()
+
+      if (!property) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" })
+
+      // Fire-and-forget admin notification
+      sendNewPropertyNotificationEmail(
+        ctx.session.user.name,
+        ctx.session.user.email,
+        input.name,
+        input.city,
+        input.country,
+        env.PUBLIC_PORTAL_URL,
+      ).catch((err) => console.error("[submitProperty] Admin notification failed:", err))
+
+      return property
+    }),
 
   getPortfolioDashboard: protectedProcedure.query(async ({ ctx }) => {
     const org = await db.query.organisations.findFirst({
