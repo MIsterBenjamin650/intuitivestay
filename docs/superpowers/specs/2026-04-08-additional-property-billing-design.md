@@ -26,13 +26,11 @@ Only `approved` properties with `payment_status = null` (plan-included) or `paym
 
 ## Plan Base Prices (for cost breakdown display in UI)
 
-| Plan    | Base price  |
-|---------|-------------|
-| Host    | £34.99/month |
-| Partner | £TBC/month  |
-| Founder | £TBC/month  |
-
-> **Note:** Partner and Founder base prices must be confirmed and hardcoded in the frontend before deployment.
+| Plan    | Base price    |
+|---------|---------------|
+| Host    | £34.99/month  |
+| Partner | £79.99/month  |
+| Founder | £189.99/month |
 
 ---
 
