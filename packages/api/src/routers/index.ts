@@ -5,6 +5,7 @@ import { feedbackRouter } from "./feedback"
 import { inviteRouter } from "./invite"
 import { propertiesRouter } from "./properties"
 import { teamRouter } from "./team"
+import { reviewsRouter } from "./reviews"
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
@@ -20,6 +21,7 @@ export const appRouter = router({
   feedback: feedbackRouter,
   ai: aiRouter,
   team: teamRouter,
+  reviews: reviewsRouter,
   invite: inviteRouter,
   contact: contactRouter,
 })

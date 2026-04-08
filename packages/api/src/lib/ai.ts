@@ -51,3 +51,56 @@ Respond with valid JSON only, no markdown:
   const parsed = JSON.parse(text) as DailySummaryResult
   return parsed
 }
+
+export type PillarAnalysisResult = {
+  resilience: number
+  empathy: number
+  anticipation: number
+  recognition: number
+}
+
+export async function analyseReviewsForPillars(
+  reviews: string[],
+): Promise<PillarAnalysisResult> {
+  if (reviews.length === 0) {
+    return { resilience: 5, empathy: 5, anticipation: 5, recognition: 5 }
+  }
+
+  const sample = reviews.slice(0, 50)
+  const prompt = `You are a hospitality performance analyst. Analyse these ${sample.length} guest reviews and score the property on 4 service pillars from 1-10 based purely on what the reviews say.
+
+Pillar definitions:
+- Resilience: How well do staff handle problems, complaints, or unexpected situations?
+- Empathy: How warm, caring and attentive are staff to individual guest needs?
+- Anticipation: Do staff anticipate guest needs before being asked?
+- Recognition: Do guests feel personally recognised, remembered, or special?
+
+If a pillar is not mentioned in the reviews, score it 5 (neutral).
+
+Reviews:
+${sample.map((r, i) => `${i + 1}. "${r.replace(/"/g, "'").slice(0, 300)}"`).join("\n")}
+
+Respond with valid JSON only, no markdown:
+{
+  "resilience": 7.5,
+  "empathy": 8.2,
+  "anticipation": 6.9,
+  "recognition": 7.8
+}`
+
+  const message = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 256,
+    messages: [{ role: "user", content: prompt }],
+  })
+
+  const raw = message.content[0]?.type === "text" ? message.content[0].text : ""
+  const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim()
+  const parsed = JSON.parse(text) as PillarAnalysisResult
+  return {
+    resilience: Math.min(10, Math.max(1, Number(parsed.resilience))),
+    empathy: Math.min(10, Math.max(1, Number(parsed.empathy))),
+    anticipation: Math.min(10, Math.max(1, Number(parsed.anticipation))),
+    recognition: Math.min(10, Math.max(1, Number(parsed.recognition))),
+  }
+}

@@ -17,6 +17,8 @@ export const properties = pgTable("properties", {
   status: text("status").notNull().default("pending"), // 'pending' | 'approved' | 'rejected'
   adminNotes: text("admin_notes"),
   isVip: boolean("is_vip").default(false).notNull(),
+  tripAdvisorUrl: text("tripadvisor_url"),
+  googlePlaceId: text("google_place_id"),
   ownerEmail: text("owner_email").notNull(),
   ownerName: text("owner_name").notNull(),
   // ownerEmail/ownerName copied from Wix registration form; add userId FK in a later migration once owner creates their portal account

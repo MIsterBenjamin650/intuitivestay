@@ -20,6 +20,7 @@
     "@intuitive-stay/env": "workspace:*",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
+    "apify-client": "^2.22.3",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "pdf-lib": "^1.17.1",

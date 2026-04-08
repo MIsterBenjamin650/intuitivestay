@@ -4,6 +4,7 @@ import { createFileRoute, useRouteContext } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
 
 import { ExportPdfButton } from "@/components/export-pdf-button"
+import { OnlineReputationSection } from "@/components/online-reputation-section"
 import type { PdfDashboardData } from "@/components/property-pdf-document"
 import {
   CartesianGrid,
@@ -184,6 +185,15 @@ function RouteComponent() {
         { subject: "Recognition", score: history.reduce((s, r) => s + (r.recognition ?? 0), 0) / history.length },
       ]
     : []
+
+  const avgPillars = history?.length
+    ? {
+        resilience: history.reduce((s, r) => s + (r.resilience ?? 0), 0) / history.length,
+        empathy: history.reduce((s, r) => s + (r.empathy ?? 0), 0) / history.length,
+        anticipation: history.reduce((s, r) => s + (r.anticipation ?? 0), 0) / history.length,
+        recognition: history.reduce((s, r) => s + (r.recognition ?? 0), 0) / history.length,
+      }
+    : { resilience: null, empathy: null, anticipation: null, recognition: null }
 
   const TIME_EMOJIS: Record<string, string> = {
     morning: "☀️",
@@ -502,7 +512,10 @@ function RouteComponent() {
         />
       )}
 
-      {/* Row 8: Locked sections */}
+      {/* Row 8: Online Reputation */}
+      <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />
+
+      {/* Row 9: Locked sections */}
       <div className="grid gap-4 md:grid-cols-2">
         <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Upgrade to unlock." />
         <LockedSection title="Local Market" description="Compare your GCS against local hospitality market benchmarks. Upgrade to unlock." />
