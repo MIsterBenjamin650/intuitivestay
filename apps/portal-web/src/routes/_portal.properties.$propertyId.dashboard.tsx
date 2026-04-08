@@ -7,14 +7,13 @@ import { ExportPdfButton } from "@/components/export-pdf-button"
 import { OnlineReputationSection } from "@/components/online-reputation-section"
 import type { PdfDashboardData } from "@/components/property-pdf-document"
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -304,8 +303,9 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Row 3: Pillar trend + Radar */}
+      {/* Row 3: A2 Line chart + B1 Grouped bar chart */}
       <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
+        {/* A2 — clean lines with dots */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Scores Over Time</p>
           {history?.length ? (
@@ -317,27 +317,34 @@ function RouteComponent() {
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
                   formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                <Line type="monotone" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={false} name="Resilience" />
-                <Line type="monotone" dataKey="empathy" stroke={PILLAR_COLORS.empathy} strokeWidth={2} dot={false} name="Empathy" />
-                <Line type="monotone" dataKey="anticipation" stroke={PILLAR_COLORS.anticipation} strokeWidth={2} dot={false} name="Anticipation" />
-                <Line type="monotone" dataKey="recognition" stroke={PILLAR_COLORS.recognition} strokeWidth={2} dot={false} name="Recognition" />
+                <Line type="linear" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.resilience }} name="Resilience" />
+                <Line type="linear" dataKey="empathy" stroke={PILLAR_COLORS.empathy} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.empathy }} name="Empathy" />
+                <Line type="linear" dataKey="anticipation" stroke={PILLAR_COLORS.anticipation} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.anticipation }} name="Anticipation" />
+                <Line type="linear" dataKey="recognition" stroke={PILLAR_COLORS.recognition} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.recognition }} name="Recognition" />
               </LineChart>
             </ResponsiveContainer>
           ) : (
             <p className="text-sm text-gray-400">No data yet for this period.</p>
           )}
         </div>
+
+        {/* B1 — grouped bar chart */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Radar</p>
-          {radarData.length ? (
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Breakdown</p>
+          {history?.length ? (
             <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={radarData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#6b7280" }} />
-                <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.25} />
+              <BarChart data={history.slice(-5)} barCategoryGap="30%" barGap={2}>
+                <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" vertical={false} />
+                <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={20} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
-                  formatter={(v: unknown) => (typeof v === "number" ? v.toFixed(1) : String(v)) as string} />
-              </RadarChart>
+                  formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
+                <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
+                <Bar dataKey="resilience" fill={PILLAR_COLORS.resilience} radius={[4, 4, 0, 0]} name="Resilience" />
+                <Bar dataKey="empathy" fill={PILLAR_COLORS.empathy} radius={[4, 4, 0, 0]} name="Empathy" />
+                <Bar dataKey="anticipation" fill={PILLAR_COLORS.anticipation} radius={[4, 4, 0, 0]} name="Anticipation" />
+                <Bar dataKey="recognition" fill={PILLAR_COLORS.recognition} radius={[4, 4, 0, 0]} name="Recognition" />
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <p className="text-sm text-gray-400">No data yet.</p>
@@ -345,34 +352,41 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Row 4: Pillar donut gauges */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {(["resilience", "empathy", "anticipation", "recognition"] as const).map((pillar) => {
-          const avgVal = history?.length
-            ? history.reduce((s, r) => s + (r[pillar] ?? 0), 0) / history.length
-            : null
-          const r = 40
-          const C = 2 * Math.PI * r
-          const pct = avgVal != null ? Math.min(Math.max(avgVal / 10, 0), 1) : 0
-          const color = PILLAR_COLORS[pillar]
-          return (
-            <div key={pillar} className="rounded-2xl bg-white p-5 shadow-sm flex flex-col items-center gap-2">
-              <svg width="120" height="120">
-                <circle cx={60} cy={60} r={r} fill="none" stroke="#e5e7eb" strokeWidth="8" />
-                <circle
-                  cx={60} cy={60} r={r} fill="none" stroke={color} strokeWidth="8"
-                  strokeDasharray={`${C * pct} ${C * (1 - pct)}`}
-                  strokeLinecap="round"
-                  transform="rotate(-90 60 60)"
-                />
-                <text x={60} y={65} textAnchor="middle" fontSize="24" fontWeight="700" fill={color}>
-                  {avgVal != null ? avgVal.toFixed(1) : "—"}
-                </text>
-              </svg>
-              <p className="capitalize text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">{pillar}</p>
-            </div>
-          )
-        })}
+      {/* Row 4: D1 — gradient horizontal bars for all pillars */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Scores</p>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {(["resilience", "empathy", "anticipation", "recognition"] as const).map((pillar) => {
+            const avgVal = history?.length
+              ? history.reduce((s, r) => s + (r[pillar] ?? 0), 0) / history.length
+              : null
+            const pct = avgVal != null ? Math.min(Math.max((avgVal / 10) * 100, 0), 100) : 0
+            const color = PILLAR_COLORS[pillar]
+            const gradientMap: Record<string, string> = {
+              resilience: "linear-gradient(90deg, #818cf8, #6366f1)",
+              empathy: "linear-gradient(90deg, #2dd4bf, #14b8a6)",
+              anticipation: "linear-gradient(90deg, #c084fc, #a855f7)",
+              recognition: "linear-gradient(90deg, #fb923c, #f97316)",
+            }
+            return (
+              <div key={pillar}>
+                <div className="flex justify-between items-baseline mb-2">
+                  <span className="text-[11px] font-semibold capitalize text-gray-700">{pillar}</span>
+                  <span className="text-lg font-extrabold" style={{ color }}>
+                    {avgVal != null ? avgVal.toFixed(1) : "—"}
+                    <span className="text-xs font-normal text-gray-400 ml-0.5">/10</span>
+                  </span>
+                </div>
+                <div className="h-2.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%`, background: gradientMap[pillar] }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Row 5: Word cloud + Staff bubbles */}
