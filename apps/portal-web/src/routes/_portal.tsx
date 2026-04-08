@@ -98,8 +98,8 @@ function RouteComponent() {
           staffPermissions={staffPermissions}
           staffPropertyId={(session as { staffPropertyId?: string | null } | null)?.staffPropertyId ?? null}
         />
-        <SidebarInset className="overflow-x-hidden bg-[#faf9f7]">
-          <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-stone-200 bg-[#faf9f7]/95 backdrop-blur-md">
+        <SidebarInset className="overflow-x-hidden bg-gradient-to-br from-white via-[#fdf8f3] to-[#fef0d9] min-h-screen">
+          <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center border-b border-orange-100/60 bg-white/70 backdrop-blur-md">
             <div className="flex w-full items-center justify-between gap-3 px-3 md:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <SidebarTrigger className="-ml-1" />

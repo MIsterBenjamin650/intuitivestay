@@ -209,7 +209,7 @@ function RouteComponent() {
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
   return (
-    <div className="flex flex-col gap-5 p-5 bg-[#faf9f7] min-h-screen">
+    <div className="flex flex-col gap-5 p-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
