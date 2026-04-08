@@ -840,6 +840,111 @@ export const propertiesRouter = router({
       return property
     }),
 
+  /**
+   * Protected — generates a fresh Stripe checkout URL for a property awaiting payment.
+   * Called when the owner clicks "Complete payment" on the property card in the portal.
+   */
+  getAdditionalPropertyCheckoutUrl: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      if (property.paymentStatus !== "pending") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Property does not require payment" })
+      }
+
+      const url = await createAdditionalPropertyCheckoutSession(
+        property.id,
+        property.name,
+        org.stripeCustomerId ?? null,
+      )
+
+      return { url }
+    }),
+
+  /**
+   * Protected — returns all additional (paid/cancelling) properties for this org.
+   * Used in the billing section to list add-ons with a Remove button.
+   */
+  getMyAdditionalProperties: protectedProcedure.query(async ({ ctx }) => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+    })
+    if (!org) return []
+
+    return db
+      .select({
+        id: properties.id,
+        name: properties.name,
+        city: properties.city,
+        country: properties.country,
+        paymentStatus: properties.paymentStatus,
+        stripeSubscriptionId: properties.stripeSubscriptionId,
+      })
+      .from(properties)
+      .where(
+        and(
+          eq(properties.organisationId, org.id),
+          or(
+            eq(properties.paymentStatus, "paid"),
+            eq(properties.paymentStatus, "cancelling"),
+          ),
+        ),
+      )
+  }),
+
+  /**
+   * Protected — schedules cancellation of an additional property's Stripe subscription
+   * at the end of the current billing period. Sets paymentStatus to 'cancelling'.
+   */
+  cancelAdditionalProperty: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, input.propertyId),
+      })
+      if (!property) throw new TRPCError({ code: "NOT_FOUND" })
+      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      if (property.paymentStatus !== "paid") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only active additional properties can be cancelled",
+        })
+      }
+      if (!property.stripeSubscriptionId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No Stripe subscription found for this property",
+        })
+      }
+
+      // Schedule cancellation at period end (owner retains access until then)
+      await stripe.subscriptions.update(property.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      })
+
+      const [updated] = await db
+        .update(properties)
+        .set({ paymentStatus: "cancelling", updatedAt: new Date() })
+        .where(eq(properties.id, input.propertyId))
+        .returning()
+
+      return updated
+    }),
+
   getPortfolioDashboard: protectedProcedure.query(async ({ ctx }) => {
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
