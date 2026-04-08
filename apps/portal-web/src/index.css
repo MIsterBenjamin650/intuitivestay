@@ -1,10 +1,10 @@
 @import "@intuitive-stay/ui/globals.css";
 
-/* ── Light warm sidebar theme ───────────────────────────────────────────── */
+/* ── Transparent warm sidebar theme ─────────────────────────────────────── */
 :root {
-  --sidebar-background: #faf6f0;
+  --sidebar-background: transparent;
   --sidebar-foreground: #1c1917;
-  --sidebar-border: #e8ddd0;
+  --sidebar-border: rgba(249, 115, 22, 0.15);
   --sidebar-accent: rgba(249, 115, 22, 0.10);
   --sidebar-accent-foreground: #f97316;
   --sidebar-primary: #f97316;

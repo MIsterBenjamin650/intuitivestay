@@ -152,11 +152,11 @@ export function AppSidebar({
     return (
       <Sidebar
         collapsible="icon"
-        className="border-r border-[#e8ddd0] bg-[#faf6f0]"
+        className="border-r border-orange-100/50 bg-transparent"
         {...props}
       >
         <SidebarHeader className="gap-0 p-0">
-          <div className="flex h-16 items-center border-b border-[#e8ddd0] p-2">
+          <div className="flex h-16 items-center border-b border-orange-100/50 p-2">
             <SidebarBrand />
           </div>
         </SidebarHeader>
@@ -196,11 +196,11 @@ export function AppSidebar({
     return (
       <Sidebar
         collapsible="icon"
-        className="border-r border-[#e8ddd0] bg-[#faf6f0]"
+        className="border-r border-orange-100/50 bg-transparent"
         {...props}
       >
         <SidebarHeader className="gap-0 p-0">
-          <div className="flex h-16 items-center border-b border-[#e8ddd0] p-2">
+          <div className="flex h-16 items-center border-b border-orange-100/50 p-2">
             <SidebarBrand />
           </div>
         </SidebarHeader>
@@ -249,11 +249,11 @@ export function AppSidebar({
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-[#e8ddd0] bg-[#faf6f0]"
+      className="border-r border-orange-100/50 bg-transparent"
       {...props}
     >
       <SidebarHeader className="gap-0 p-0">
-        <div className="flex h-16 items-center border-b border-[#e8ddd0] p-2">
+        <div className="flex h-16 items-center border-b border-orange-100/50 p-2">
           <SidebarBrand />
         </div>
         <div className="p-2">
