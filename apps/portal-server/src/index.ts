@@ -60,17 +60,20 @@ app.post("/api/properties/register", async (c) => {
   }
 
   const ownerName = typeof body.ownerName === "string" ? body.ownerName.trim() : ""
-  const ownerEmail = typeof body.ownerEmail === "string" ? body.ownerEmail.trim() : ""
+  // Accept businessEmail (new) or ownerEmail (legacy field name) from Wix
+  const businessEmail =
+    typeof body.businessEmail === "string" ? body.businessEmail.trim() :
+    typeof body.ownerEmail === "string" ? body.ownerEmail.trim() : ""
   const propertyName = typeof body.propertyName === "string" ? body.propertyName.trim() : ""
   const propertyCity = typeof body.propertyCity === "string" ? body.propertyCity.trim() : ""
   const propertyCountry =
     typeof body.propertyCountry === "string" ? body.propertyCountry.trim() : ""
 
-  if (!ownerName || !ownerEmail || !propertyName || !propertyCity || !propertyCountry) {
+  if (!ownerName || !businessEmail || !propertyName || !propertyCity || !propertyCountry) {
     return c.json(
       {
         error:
-          "Missing required fields: ownerName, ownerEmail, propertyName, propertyCity, propertyCountry",
+          "Missing required fields: ownerName, businessEmail, propertyName, propertyCity, propertyCountry",
       },
       400,
     )
@@ -87,7 +90,7 @@ app.post("/api/properties/register", async (c) => {
   try {
     property = await registerPropertyFromWix({
       ownerName,
-      ownerEmail,
+      businessEmail,
       propertyName,
       propertyAddress,
       propertyCity,

@@ -2,11 +2,13 @@ import { db } from "@intuitive-stay/db"
 import { organisations, properties, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { eq } from "drizzle-orm"
-import { sendNewPropertyNotificationEmail } from "./email"
+import { sendBusinessEmailVerification } from "./email"
 
 export type RegisterPropertyInput = {
   ownerName: string
-  ownerEmail: string
+  /** The business/property email (e.g. info@thebistro.com).
+   *  Used as the portal login and for ownership verification. */
+  businessEmail: string
   propertyName: string
   propertyAddress?: string
   propertyCity: string
@@ -16,9 +18,9 @@ export type RegisterPropertyInput = {
 }
 
 export async function registerPropertyFromWix(input: RegisterPropertyInput) {
-  // 1. Find or create the portal user account
+  // 1. Find or create the portal user account (keyed on business email)
   const existingUser = await db.query.user.findFirst({
-    where: eq(user.email, input.ownerEmail),
+    where: eq(user.email, input.businessEmail),
   })
 
   const userId = existingUser?.id ?? crypto.randomUUID()
@@ -27,7 +29,7 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
     await db.insert(user).values({
       id: userId,
       name: input.ownerName,
-      email: input.ownerEmail,
+      email: input.businessEmail,
       emailVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -48,7 +50,6 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "")
-    // Append random suffix to guarantee uniqueness
     const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`
     orgId = crypto.randomUUID()
 
@@ -63,8 +64,11 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
     })
   }
 
-  // 3. Create the property (status: pending — awaiting admin approval)
+  // 3. Create the property — held pending email verification before admin sees it
   const propertyId = crypto.randomUUID()
+  const verificationToken = crypto.randomUUID()
+  const tokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000)
+
   const [property] = await db
     .insert(properties)
     .values({
@@ -77,25 +81,23 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
       country: input.propertyCountry,
       type: input.propertyType ?? null,
       status: "pending",
-      ownerEmail: input.ownerEmail,
+      ownerEmail: input.businessEmail,
       ownerName: input.ownerName,
+      businessEmail: input.businessEmail,
+      businessEmailVerified: false,
+      businessEmailToken: verificationToken,
+      businessEmailTokenExpires: tokenExpires,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
     .returning()
 
-  // 4. Notify admin of new submission
+  // 4. Send verification email — admin is notified only after the link is clicked
+  const verificationUrl = `${env.PUBLIC_PORTAL_URL}/verify-property/${verificationToken}`
   try {
-    await sendNewPropertyNotificationEmail(
-      input.ownerName,
-      input.ownerEmail,
-      input.propertyName,
-      input.propertyCity,
-      input.propertyCountry,
-      env.PUBLIC_PORTAL_URL,
-    )
+    await sendBusinessEmailVerification(input.businessEmail, input.propertyName, verificationUrl)
   } catch (err) {
-    console.error("Failed to send admin notification email:", err)
+    console.error("Failed to send business email verification:", err)
   }
 
   return property
