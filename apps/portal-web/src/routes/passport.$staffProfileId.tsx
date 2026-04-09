@@ -158,22 +158,22 @@ function PassportPage() {
 
                 {/* 2-column grid: nominations/month + consistency */}
                 <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                  <div className="rounded-lg bg-gray-50 px-3 py-3">
                     <p className="text-lg font-bold">{data.nominationsPerMonth}</p>
-                    <p className="text-xs text-muted-foreground">Noms / month</p>
+                    <p className="text-xs text-muted-foreground leading-tight mt-0.5">Avg. guest nominations<br />per month</p>
                   </div>
-                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                  <div className="rounded-lg bg-gray-50 px-3 py-3">
                     <p className={`text-sm font-bold ${data.consistencyRating === "Very Consistent" ? "text-green-600" : data.consistencyRating === "Variable" ? "text-orange-500" : "text-gray-600"}`}>
                       {data.consistencyRating}
                     </p>
-                    <p className="text-xs text-muted-foreground">Consistency</p>
+                    <p className="text-xs text-muted-foreground leading-tight mt-0.5">Score consistency<br />across nominations</p>
                   </div>
                 </div>
 
-                {/* Peak meal time */}
+                {/* Peak service period */}
                 {data.peakMealTime && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Peak meal time</span>
+                    <span className="text-muted-foreground">Peak service period</span>
                     <span className="font-semibold capitalize">{data.peakMealTime}</span>
                   </div>
                 )}

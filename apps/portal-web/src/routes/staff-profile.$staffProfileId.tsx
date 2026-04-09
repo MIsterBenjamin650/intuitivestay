@@ -204,13 +204,16 @@ function StaffProfilePage() {
                   </div>
 
                   {/* Consistency */}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Consistency</span>
-                    <span className={
-                      data.consistencyRating === "Very Consistent" ? "font-semibold text-green-600"
-                      : data.consistencyRating === "Variable" ? "font-semibold text-orange-500"
-                      : "font-semibold text-gray-500"
-                    }>
+                  <div className="flex items-start justify-between text-sm gap-4">
+                    <div>
+                      <span className="text-muted-foreground">Consistency</span>
+                      <p className="text-xs text-muted-foreground/70">How much your scores vary across nominations</p>
+                    </div>
+                    <span className={`font-semibold shrink-0 ${
+                      data.consistencyRating === "Very Consistent" ? "text-green-600"
+                      : data.consistencyRating === "Variable" ? "text-orange-500"
+                      : "text-gray-500"
+                    }`}>
                       {data.consistencyRating}
                     </span>
                   </div>
@@ -218,15 +221,18 @@ function StaffProfilePage() {
                   {/* Peak meal time */}
                   {data.peakMealTime && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Peak meal time</span>
+                      <span className="text-muted-foreground">Peak service period</span>
                       <span className="font-semibold capitalize">{data.peakMealTime}</span>
                     </div>
                   )}
 
                   {/* Nominations per month */}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Nominations / month</span>
-                    <span className="font-semibold">{data.nominationsPerMonth}</span>
+                  <div className="flex items-start justify-between text-sm gap-4">
+                    <div>
+                      <span className="text-muted-foreground">Avg. nominations per month</span>
+                      <p className="text-xs text-muted-foreground/70">Based on your time on the platform</p>
+                    </div>
+                    <span className="font-semibold shrink-0">{data.nominationsPerMonth}</span>
                   </div>
 
                   {/* Top adjectives */}
