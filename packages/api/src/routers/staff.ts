@@ -117,6 +117,12 @@ export const staffRouter = router({
         ),
       })
       if (existing) {
+        if (existing.removedAt) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Your registration was removed from this property. Please contact the property owner.",
+          })
+        }
         throw new TRPCError({
           code: "CONFLICT",
           message: "You are already registered at this property.",
@@ -159,6 +165,13 @@ export const staffRouter = router({
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "This verification link is invalid or has already been used.",
+        })
+      }
+
+      if (staff.removedAt) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This verification link is no longer valid.",
         })
       }
 
@@ -341,6 +354,9 @@ export const staffRouter = router({
       })
       if (!staff) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." })
+      }
+      if (staff.removedAt) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "This profile is no longer active." })
       }
       if (staff.activatedAt) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Profile is already activated." })
