@@ -166,10 +166,10 @@ function RouteComponent() {
     : { resilience: null, empathy: null, anticipation: null, recognition: null }
 
   const TIME_EMOJIS: Record<string, string> = {
-    morning: "☀️",
-    afternoon: "🌤",
-    evening: "🌙",
-    night: "⭐",
+    breakfast: "☀️",
+    lunch: "🌤",
+    dinner: "🌙",
+    none: "🕐",
   }
 
   const maxStaffCount = Math.max(...(staffBubbles?.map((s) => s.count) ?? [1]), 1)

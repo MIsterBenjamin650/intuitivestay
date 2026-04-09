@@ -1790,7 +1790,8 @@ export const propertiesRouter = router({
     .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
     .query(async ({ input }) => {
       const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
-      const ORDER = ["morning", "afternoon", "evening", "night"]
+      // Only show actual meal periods — exclude "none" (entire stay visits)
+      const ORDER = ["breakfast", "lunch", "dinner"]
 
       const rows = await db
         .select({
@@ -1803,6 +1804,7 @@ export const propertiesRouter = router({
           eq(feedback.propertyId, input.propertyId),
           gte(feedback.submittedAt, since),
           isNotNull(feedback.mealTime),
+          ne(feedback.mealTime, "none"),
         ))
         .groupBy(feedback.mealTime)
 
