@@ -124,7 +124,7 @@ function RouteComponent() {
   const canSeeAdvancedInsights = planRank >= 2  // partner, founder
   const canSeeLocalMarket = planRank >= 2       // partner, founder
 
-  const [days, setDays] = React.useState<Days>(30)
+  const [days, setDays] = React.useState<Days>(1)
   const trpc = useTRPC()
 
   const { data: myProperties = [] } = useQuery(trpc.properties.getMyProperties.queryOptions())
