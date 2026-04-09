@@ -17,6 +17,8 @@ function RouteComponent() {
   const queryClient = useQueryClient()
   const [copied, setCopied] = React.useState(false)
   const [confirmRemoveId, setConfirmRemoveId] = React.useState<string | null>(null)
+  const [commendingStaffId, setCommendingStaffId] = React.useState<string | null>(null)
+  const [commendBody, setCommendBody] = React.useState("")
 
   const removeMutation = useMutation(
     trpc.staff.removeStaff.mutationOptions({
@@ -25,6 +27,17 @@ function RouteComponent() {
         void queryClient.invalidateQueries(
           trpc.staff.listPropertyStaff.queryOptions({ propertyId }),
         )
+      },
+    }),
+  )
+
+  const commendMutation = useMutation(
+    trpc.staff.addCommendation.mutationOptions({
+      onSuccess: () => {
+        setTimeout(() => {
+          setCommendingStaffId(null)
+          setCommendBody("")
+        }, 1500)
       },
     }),
   )
@@ -144,59 +157,123 @@ function RouteComponent() {
               </thead>
               <tbody>
                 {staffList.map((s) => (
-                  <tr key={s.id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-medium">{s.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(s.createdAt).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className="px-4 py-3">
-                      {s.emailVerifiedAt ? (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                          Pending
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {confirmRemoveId === s.id ? (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Confirm?</span>
-                          <button
-                            type="button"
-                            onClick={() => removeMutation.mutate({ staffProfileId: s.id })}
-                            disabled={removeMutation.isPending}
-                            className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
-                          >
-                            {removeMutation.isPending ? "Removing…" : "Yes"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setConfirmRemoveId(null)}
-                            disabled={removeMutation.isPending}
-                            className="text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            Cancel
-                          </button>
+                  <React.Fragment key={s.id}>
+                    <tr className="border-b">
+                      <td className="px-4 py-3 font-medium">{s.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {new Date(s.createdAt).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        {s.emailVerifiedAt ? (
+                          <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {s.emailVerifiedAt && confirmRemoveId !== s.id && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCommendingStaffId(commendingStaffId === s.id ? null : s.id)
+                                setCommendBody("")
+                              }}
+                              className="text-xs font-medium text-orange-500 hover:text-orange-600 transition-colors"
+                            >
+                              {commendingStaffId === s.id ? "Cancel" : "Commend"}
+                            </button>
+                          )}
+                          {confirmRemoveId === s.id ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Confirm?</span>
+                              <button
+                                type="button"
+                                onClick={() => removeMutation.mutate({ staffProfileId: s.id })}
+                                disabled={removeMutation.isPending}
+                                className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                              >
+                                {removeMutation.isPending ? "Removing…" : "Yes"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmRemoveId(null)}
+                                disabled={removeMutation.isPending}
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmRemoveId(s.id)}
+                              className="text-xs font-medium text-red-500 hover:text-red-600 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmRemoveId(s.id)}
-                          className="text-xs font-medium text-red-500 hover:text-red-600 transition-colors"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                    {commendingStaffId === s.id && (
+                      <tr className="bg-orange-50/40 border-b">
+                        <td colSpan={5} className="px-4 py-4">
+                          <div className="space-y-3 max-w-lg">
+                            <p className="text-xs font-semibold">
+                              Write a commendation for {s.name}
+                            </p>
+                            <textarea
+                              value={commendBody}
+                              onChange={(e) => setCommendBody(e.target.value)}
+                              maxLength={500}
+                              rows={3}
+                              placeholder="Describe how this staff member went above and beyond…"
+                              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
+                            />
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">
+                                {commendBody.length}/500
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {commendMutation.isSuccess ? (
+                                  <span className="text-xs font-medium text-green-600">
+                                    Commendation added ✓
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      commendMutation.mutate({
+                                        staffProfileId: s.id,
+                                        body: commendBody,
+                                      })
+                                    }
+                                    disabled={
+                                      commendBody.trim().length < 10 ||
+                                      commendMutation.isPending
+                                    }
+                                    className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-60 transition-colors"
+                                  >
+                                    {commendMutation.isPending ? "Submitting…" : "Submit"}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
