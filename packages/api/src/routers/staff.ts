@@ -97,7 +97,6 @@ export const staffRouter = router({
         token: z.string(),
         name: z.string().min(1).max(100),
         email: z.string().email(),
-        role: z.string().max(80).optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -136,7 +135,6 @@ export const staffRouter = router({
       await db.insert(staffProfiles).values({
         id,
         name: input.name.trim(),
-        role: input.role?.trim() ?? null,
         email: input.email.toLowerCase(),
         propertyId: property.id,
         emailVerificationToken: verificationToken,
@@ -210,6 +208,7 @@ export const staffRouter = router({
           id: staffProfiles.id,
           name: staffProfiles.name,
           email: staffProfiles.email,
+          role: staffProfiles.role,
           createdAt: staffProfiles.createdAt,
           emailVerifiedAt: staffProfiles.emailVerifiedAt,
           nominations: count(feedback.id),
@@ -230,6 +229,7 @@ export const staffRouter = router({
         id: s.id,
         name: s.name,
         email: s.email,
+        role: s.role ?? null,
         createdAt: s.createdAt,
         emailVerifiedAt: s.emailVerifiedAt,
         nominations: s.nominations,
@@ -266,6 +266,38 @@ export const staffRouter = router({
       await db
         .update(staffProfiles)
         .set({ removedAt: new Date() })
+        .where(eq(staffProfiles.id, input.staffProfileId))
+
+      return { ok: true }
+    }),
+
+  /**
+   * Protected — owner updates the job title/role for a staff member at their property.
+   */
+  updateStaffRole: protectedProcedure
+    .input(z.object({ staffProfileId: z.string(), role: z.string().max(80) }))
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.id, input.staffProfileId),
+      })
+      if (!staff) throw new TRPCError({ code: "NOT_FOUND", message: "Staff member not found." })
+
+      const property = await db.query.properties.findFirst({
+        where: and(
+          eq(properties.id, staff.propertyId),
+          eq(properties.organisationId, org.id),
+        ),
+      })
+      if (!property) throw new TRPCError({ code: "FORBIDDEN" })
+
+      await db
+        .update(staffProfiles)
+        .set({ role: input.role.trim() || null })
         .where(eq(staffProfiles.id, input.staffProfileId))
 
       return { ok: true }

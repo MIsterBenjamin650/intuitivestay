@@ -21,6 +21,8 @@ function RouteComponent() {
   const [commendBody, setCommendBody] = React.useState("")
   const [resendingId, setResendingId] = React.useState<string | null>(null)
   const [resentId, setResentId] = React.useState<string | null>(null)
+  const [editingRoleId, setEditingRoleId] = React.useState<string | null>(null)
+  const [roleInputValue, setRoleInputValue] = React.useState("")
 
   const removeMutation = useMutation(
     trpc.staff.removeStaff.mutationOptions({
@@ -53,6 +55,17 @@ function RouteComponent() {
       },
       onError: () => {
         setResendingId(null)
+      },
+    }),
+  )
+
+  const updateRoleMutation = useMutation(
+    trpc.staff.updateStaffRole.mutationOptions({
+      onSuccess: () => {
+        setEditingRoleId(null)
+        void queryClient.invalidateQueries(
+          trpc.staff.listPropertyStaff.queryOptions({ propertyId }),
+        )
       },
     }),
   )
@@ -164,6 +177,7 @@ function RouteComponent() {
               <thead>
                 <tr className="border-b bg-muted/40">
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Role</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
@@ -182,6 +196,53 @@ function RouteComponent() {
                           )}
                           {s.name}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {editingRoleId === s.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={roleInputValue}
+                              onChange={(e) => setRoleInputValue(e.target.value)}
+                              maxLength={80}
+                              placeholder="e.g. Head Waiter"
+                              className="rounded border border-border bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-ring w-36"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") updateRoleMutation.mutate({ staffProfileId: s.id, role: roleInputValue })
+                                if (e.key === "Escape") setEditingRoleId(null)
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateRoleMutation.mutate({ staffProfileId: s.id, role: roleInputValue })}
+                              disabled={updateRoleMutation.isPending}
+                              className="text-xs font-medium text-orange-600 hover:text-orange-700 disabled:opacity-50"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingRoleId(null)}
+                              className="text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => { setEditingRoleId(s.id); setRoleInputValue(s.role ?? "") }}
+                            className="group flex items-center gap-1.5 text-xs"
+                          >
+                            <span className={s.role ? "text-foreground" : "text-muted-foreground/60 italic"}>
+                              {s.role ?? "Add role"}
+                            </span>
+                            <svg className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
                       <td className="px-4 py-3 text-muted-foreground">
@@ -278,7 +339,7 @@ function RouteComponent() {
                     </tr>
                     {commendingStaffId === s.id && (
                       <tr className="bg-orange-50/40 border-b">
-                        <td colSpan={6} className="px-4 py-4">
+                        <td colSpan={7} className="px-4 py-4">
                           <div className="space-y-3 max-w-lg">
                             <p className="text-xs font-semibold">
                               Write a commendation for {s.name}
