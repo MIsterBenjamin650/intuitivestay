@@ -35,6 +35,7 @@ export const properties = pgTable("properties", {
   businessEmailVerified: boolean("business_email_verified").notNull().default(false),
   businessEmailToken: text("business_email_token"),
   businessEmailTokenExpires: timestamp("business_email_token_expires", { withTimezone: true }),
+  businessWebsite: text("business_website"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

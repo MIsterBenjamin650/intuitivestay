@@ -85,12 +85,15 @@ app.post("/api/properties/register", async (c) => {
     typeof body.propertyPostcode === "string" ? body.propertyPostcode.trim() : undefined
   const propertyType =
     typeof body.propertyType === "string" ? body.propertyType.trim() : undefined
+  const businessWebsite =
+    typeof body.businessWebsite === "string" ? body.businessWebsite.trim() : undefined
 
   let property
   try {
     property = await registerPropertyFromWix({
       ownerName,
       businessEmail,
+      businessWebsite,
       propertyName,
       propertyAddress,
       propertyCity,

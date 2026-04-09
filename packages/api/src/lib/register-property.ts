@@ -9,6 +9,7 @@ export type RegisterPropertyInput = {
   /** The business/property email (e.g. info@thebistro.com).
    *  Used as the portal login and for ownership verification. */
   businessEmail: string
+  businessWebsite?: string
   propertyName: string
   propertyAddress?: string
   propertyCity: string
@@ -84,6 +85,7 @@ export async function registerPropertyFromWix(input: RegisterPropertyInput) {
       ownerEmail: input.businessEmail,
       ownerName: input.ownerName,
       businessEmail: input.businessEmail,
+      businessWebsite: input.businessWebsite ?? null,
       businessEmailVerified: false,
       businessEmailToken: verificationToken,
       businessEmailTokenExpires: tokenExpires,
