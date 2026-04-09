@@ -306,8 +306,8 @@ function RouteComponent() {
             }
 
             return (
-              <div className="relative flex justify-center items-center py-1">
-                <svg viewBox="-28 -28 256 256" className="w-full max-w-[210px]">
+              <div className="relative flex justify-center items-center py-2">
+                <svg viewBox="-28 -28 256 256" className="w-full max-w-[320px]">
                   {/* Track */}
                   <circle cx={100} cy={100} r={R} fill="none" stroke="#e5e7eb" strokeWidth={SW} />
                   {/* Orange arc — starts at 12 o'clock */}
@@ -340,20 +340,23 @@ function RouteComponent() {
                       </g>
                     )
                   })}
-                </svg>
-                {/* Centre overlay */}
-                <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-6xl font-black leading-none text-orange-500">
-                    {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
-                  </span>
-                  <span className="text-sm font-light text-gray-400 mt-1">/10</span>
-                  <span
-                    className="mt-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold"
-                    style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
-                  >
+                  {/* Centre content rendered in SVG for perfect alignment */}
+                  <text x={100} y={88} textAnchor="middle" dominantBaseline="middle"
+                    fontSize="38" fontWeight="900" fill="#f97316" fontFamily="inherit">
+                    {stats?.avgGcs != null ? Math.round(tierScore) : "—"}
+                  </text>
+                  <text x={100} y={115} textAnchor="middle" dominantBaseline="middle"
+                    fontSize="12" fill="#9ca3af" fontFamily="inherit">
+                    /100
+                  </text>
+                  {/* Tier badge */}
+                  <rect x={72} y={122} width={56} height={18} rx={9}
+                    fill={TIER_CONFIG[displayTier].bg} />
+                  <text x={100} y={131} textAnchor="middle" dominantBaseline="middle"
+                    fontSize="9" fontWeight="700" fill={TIER_CONFIG[displayTier].color} fontFamily="inherit">
                     {TIER_CONFIG[displayTier].label}
-                  </span>
-                </div>
+                  </text>
+                </svg>
               </div>
             )
           })()}
