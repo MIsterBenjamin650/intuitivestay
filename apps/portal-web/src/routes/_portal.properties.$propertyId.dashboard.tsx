@@ -34,18 +34,18 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/dashboard"
 type Days = 1 | 7 | 30 | 90
 
 const PILLAR_COLORS = {
-  resilience: "#6366f1",
-  empathy: "#14b8a6",
-  anticipation: "#a855f7",
-  recognition: "#f97316",
+  resilience:   "#f59e0b",  // amber
+  empathy:      "#38bdf8",  // sky
+  anticipation: "#a78bfa",  // violet
+  recognition:  "#fb7185",  // rose
 } as const
 
 const TIER_CONFIG = {
-  member:   { label: "Member",   color: "#9ca3af", bg: "#f3f4f6" },
-  bronze:   { label: "Bronze",   color: "#b45309", bg: "#fef3c7" },
-  silver:   { label: "Silver",   color: "#64748b", bg: "#f1f5f9" },
-  gold:     { label: "Gold",     color: "#ca8a04", bg: "#fefce8" },
-  platinum: { label: "Platinum", color: "#6366f1", bg: "#eef2ff" },
+  member:   { label: "Member",   color: "#9ca3af", bg: "#292524" },
+  bronze:   { label: "Bronze",   color: "#d97706", bg: "#44403c" },
+  silver:   { label: "Silver",   color: "#94a3b8", bg: "#334155" },
+  gold:     { label: "Gold",     color: "#f59e0b", bg: "#44403c" },
+  platinum: { label: "Platinum", color: "#a78bfa", bg: "#3b1f6e" },
 } as const
 
 type Tier = keyof typeof TIER_CONFIG
@@ -62,16 +62,16 @@ function getTierFromScore(score: number): Tier {
 
 function LockedSection({ title, description }: { title: string; description: string }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl bg-[#1c1917] p-5">
       <div className="mb-4 space-y-2 blur-sm select-none pointer-events-none">
         {[80, 60, 90, 45, 70].map((w, i) => (
-          <div key={i} className="h-3 rounded-full bg-gray-200" style={{ width: `${w}%` }} />
+          <div key={i} className="h-3 rounded-full bg-[#292524]" style={{ width: `${w}%` }} />
         ))}
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/80 backdrop-blur-sm">
-        <LockIcon className="size-6 text-gray-400" />
-        <p className="text-sm font-semibold text-gray-700">{title}</p>
-        <p className="text-xs text-gray-500 text-center px-4">{description}</p>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl bg-[#1c1917]/90 backdrop-blur-sm">
+        <LockIcon className="size-6 text-[#57534e]" />
+        <p className="text-sm font-semibold text-[#e7e5e4]">{title}</p>
+        <p className="text-xs text-[#a8a29e] text-center px-4">{description}</p>
         <a
           href="/organisation/billing"
           className="mt-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600"
@@ -93,7 +93,7 @@ function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => 
     { label: "90 days", value: 90 },
   ]
   return (
-    <div className="flex gap-1 rounded-lg bg-[#f0ede8] p-1">
+    <div className="flex gap-1 rounded-lg bg-[#1c1917] p-1">
       {options.map((o) => (
         <button
           key={o.value}
@@ -101,8 +101,8 @@ function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => 
           onClick={() => onChange(o.value)}
           className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
             days === o.value
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-[#292524] text-[#e7e5e4]"
+              : "text-[#57534e] hover:text-[#a8a29e]"
           }`}
         >
           {o.label}
@@ -174,8 +174,8 @@ function RouteComponent() {
 
   const maxStaffCount = Math.max(...(staffBubbles?.map((s) => s.count) ?? [1]), 1)
   const MAX_BUBBLE = 56
-  const SENTIMENT_COLORS = { positive: "#f97316", neutral: "#a8a29e", negative: "#dc2626" }
-  const PILL_PALETTE = ["#f97316", "#ea580c", "#fb923c", "#c2410c", "#f59e0b", "#d97706"]
+  const SENTIMENT_COLORS = { positive: "#f97316", neutral: "#44403c", negative: "#dc2626" }
+  const PILL_PALETTE = ["#f59e0b", "#38bdf8", "#a78bfa", "#fb7185", "#34d399", "#f97316"]
 
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
@@ -183,7 +183,7 @@ function RouteComponent() {
   if (paymentStatus === "pending") {
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-12 text-center">
-        <div className="rounded-full bg-amber-100 p-4">
+        <div className="rounded-full bg-[#292524] p-4">
           <svg className="h-8 w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -201,7 +201,7 @@ function RouteComponent() {
   const isCancelling = paymentStatus === "cancelling"
 
   return (
-    <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden">
+    <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden bg-[#0c0a09] min-h-screen">
       {isCancelling && (
         <div className="mx-6 mt-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
           <strong>Cancellation scheduled.</strong> This property will be deactivated at the end of your current billing period. You can manage this in your{" "}
@@ -210,7 +210,7 @@ function RouteComponent() {
       )}
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
+        <h1 className="text-xl font-bold text-[#e7e5e4]">Dashboard</h1>
         <div className="flex items-center gap-2 flex-wrap">
           <DateRangeTabs days={days} onChange={setDays} />
           {(() => {
@@ -256,10 +256,10 @@ function RouteComponent() {
       {/* Row 1+2: GCS hero + AI summary */}
       <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
         {/* GCS hero card */}
-        <div className="rounded-2xl bg-white p-6 shadow-sm flex flex-col justify-between gap-4">
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-6 flex flex-col justify-between gap-4">
           <div className="flex items-start justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">GCS Score</p>
-            <p className="text-[10px] text-gray-400 tabular-nums">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">GCS Score</p>
+            <p className="text-[10px] text-[#57534e] tabular-nums">
               {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
               {" · "}
               {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
@@ -309,7 +309,7 @@ function RouteComponent() {
               <div className="relative flex justify-center items-center py-2">
                 <svg viewBox="-28 -28 256 256" className="w-full max-w-[320px]">
                   {/* Track */}
-                  <circle cx={100} cy={100} r={R} fill="none" stroke="#e5e7eb" strokeWidth={SW} />
+                  <circle cx={100} cy={100} r={R} fill="none" stroke="#292524" strokeWidth={SW} />
                   {/* Orange arc — starts at 12 o'clock */}
                   {tierScore > 0 && (
                     <circle
@@ -331,10 +331,10 @@ function RouteComponent() {
                     return (
                       <g key={pct}>
                         <line x1={i.x} y1={i.y} x2={o.x} y2={o.y}
-                          stroke="white" strokeWidth={2.5} strokeLinecap="round" />
+                          stroke="#0c0a09" strokeWidth={2.5} strokeLinecap="round" />
                         <text x={lp.x} y={lp.y}
                           textAnchor={anchor(lp.x)} dominantBaseline="middle"
-                          fontSize="9" fill="#9ca3af" fontWeight="600">
+                          fontSize="9" fill="#57534e" fontWeight="600">
                           {label}
                         </text>
                       </g>
@@ -346,7 +346,7 @@ function RouteComponent() {
                     {stats?.avgGcs != null ? Math.round(tierScore) : "—"}
                   </text>
                   <text x={100} y={115} textAnchor="middle" dominantBaseline="middle"
-                    fontSize="12" fill="#9ca3af" fontFamily="inherit">
+                    fontSize="12" fill="#57534e" fontFamily="inherit">
                     /100
                   </text>
                   {/* Tier badge */}
@@ -365,8 +365,8 @@ function RouteComponent() {
             {tierScore >= 95 ? (
               <p className="text-xs text-indigo-500 font-semibold">🏆 Platinum — highest tier reached</p>
             ) : (
-              <p className="text-xs text-gray-400">
-                <span className="font-semibold text-gray-600">
+              <p className="text-xs text-[#57534e]">
+                <span className="font-semibold text-[#a8a29e]">
                   {Math.ceil(
                     tierScore < 50 ? 50 - tierScore
                     : tierScore < 70 ? 70 - tierScore
@@ -379,49 +379,49 @@ function RouteComponent() {
               </p>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4">
+          <div className="grid grid-cols-3 gap-3 border-t border-[#292524] pt-4">
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Feedback</p>
-              <p className="text-xl font-bold text-gray-800">{stats?.totalFeedback ?? "—"}</p>
+              <p className="text-[10px] uppercase tracking-wide text-[#57534e]">Feedback</p>
+              <p className="text-xl font-bold text-[#e7e5e4]">{stats?.totalFeedback ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Score</p>
+              <p className="text-[10px] uppercase tracking-wide text-[#57534e]">Score</p>
               <p className="text-xl font-bold text-orange-500">
                 {stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—"}
-                <span className="text-xs font-normal text-gray-400"> /100</span>
+                <span className="text-xs font-normal text-[#57534e]"> /100</span>
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400">Trend</p>
+              <p className="text-[10px] uppercase tracking-wide text-[#57534e]">Trend</p>
               {trend?.delta != null ? (
-                <p className={`text-xl font-bold ${trend.delta > 0 ? "text-green-500" : trend.delta < 0 ? "text-red-500" : "text-gray-400"}`}>
+                <p className={`text-xl font-bold ${trend.delta > 0 ? "text-green-500" : trend.delta < 0 ? "text-red-500" : "text-[#57534e]"}`}>
                   {trend.delta > 0 ? "↑" : trend.delta < 0 ? "↓" : "→"}
                   {" "}{Math.abs(trend.delta).toFixed(1)}
                 </p>
               ) : (
-                <p className="text-xl font-bold text-gray-300">—</p>
+                <p className="text-xl font-bold text-[#292524]">—</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* AI summary — white card */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
+        {/* AI summary — dark card */}
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">AI Daily Summary</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">AI Daily Summary</p>
           </div>
           {aiSummary ? (
             <>
-              <p className="mb-3 text-xs text-gray-400">{aiSummary.date}</p>
-              <p className="mb-4 text-sm leading-relaxed text-gray-700">{aiSummary.narrative}</p>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Today's Focus</p>
+              <p className="mb-3 text-xs text-[#57534e]">{aiSummary.date}</p>
+              <p className="mb-4 text-sm leading-relaxed text-[#a8a29e]">{aiSummary.narrative}</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Today's Focus</p>
               <ul className="space-y-2">
                 {aiSummary.focusPoints.map((f, i) => {
                   const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
                   const color = PILLAR_COLORS[pillarKey] ?? "#f97316"
                   return (
-                    <li key={i} className="grid text-xs text-gray-600" style={{ gridTemplateColumns: "90px 1fr" }}>
+                    <li key={i} className="grid text-xs text-[#78716c]" style={{ gridTemplateColumns: "90px 1fr" }}>
                       <span className="font-semibold shrink-0" style={{ color }}>{f.pillar}:</span>
                       <span className="leading-relaxed">{f.action}</span>
                     </li>
@@ -430,7 +430,7 @@ function RouteComponent() {
               </ul>
             </>
           ) : (
-            <p className="text-sm text-gray-400">Your first summary will appear tomorrow morning.</p>
+            <p className="text-sm text-[#57534e]">Your first summary will appear tomorrow morning.</p>
           )}
         </div>
       </div>
@@ -438,15 +438,15 @@ function RouteComponent() {
       {/* Row 3: A2 Line chart + B1 Grouped bar chart */}
       <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
         {/* A2 — clean lines with dots */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Scores Over Time</p>
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Pillar Scores Over Time</p>
           {history?.length ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={history}>
-                <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" />
-                <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
+                <CartesianGrid strokeDasharray="0" stroke="#292524" />
+                <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#57534e" }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#57534e" }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #292524", fontSize: 11, background: "#1c1917", color: "#a8a29e" }}
                   formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
                 <Line type="linear" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.resilience }} name="Resilience" />
@@ -456,29 +456,29 @@ function RouteComponent() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-sm text-gray-400">No data yet for this period.</p>
+            <p className="text-sm text-[#57534e]">No data yet for this period.</p>
           )}
         </div>
 
         {/* B1 — GCS by service period */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">GCS by Service Period</p>
-          <p className="mb-4 text-[10px] text-gray-400">Average score per time of day</p>
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">GCS by Service Period</p>
+          <p className="mb-4 text-[10px] text-[#57534e]">Average score per time of day</p>
           {mealTimes?.length ? (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={mealTimes} barCategoryGap="35%">
-                <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" vertical={false} />
+                <CartesianGrid strokeDasharray="0" stroke="#292524" vertical={false} />
                 <XAxis
                   dataKey="mealTime"
-                  tick={{ fontSize: 10, fill: "#9ca3af" }}
+                  tick={{ fontSize: 10, fill: "#57534e" }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
                 />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={20} />
+                <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#57534e" }} axisLine={false} tickLine={false} width={20} />
                 <Tooltip
                   cursor={false}
-                  contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #292524", fontSize: 11, background: "#1c1917", color: "#a8a29e" }}
                   formatter={(v: unknown, _: unknown, props: { payload?: { count?: number } }) => [
                     typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
                     "Avg GCS",
@@ -501,14 +501,14 @@ function RouteComponent() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-sm text-gray-400">No service period data yet.</p>
+            <p className="text-sm text-[#57534e]">No service period data yet.</p>
           )}
         </div>
       </div>
 
       {/* Row 4: D1 — gradient horizontal bars for all pillars */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
-        <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Scores</p>
+      <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
+        <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Pillar Scores</p>
         <div className="grid gap-5 sm:grid-cols-2">
           {(["resilience", "empathy", "anticipation", "recognition"] as const).map((pillar) => {
             const avgVal = history?.length
@@ -517,21 +517,21 @@ function RouteComponent() {
             const pct = avgVal != null ? Math.min(Math.max((avgVal / 10) * 100, 0), 100) : 0
             const color = PILLAR_COLORS[pillar]
             const gradientMap: Record<string, string> = {
-              resilience: "linear-gradient(90deg, #818cf8, #6366f1)",
-              empathy: "linear-gradient(90deg, #2dd4bf, #14b8a6)",
-              anticipation: "linear-gradient(90deg, #c084fc, #a855f7)",
-              recognition: "linear-gradient(90deg, #fb923c, #f97316)",
+              resilience:   "#f59e0b",
+              empathy:      "#38bdf8",
+              anticipation: "#a78bfa",
+              recognition:  "#fb7185",
             }
             return (
               <div key={pillar}>
                 <div className="flex justify-between items-baseline mb-2">
-                  <span className="text-[11px] font-semibold capitalize text-gray-700">{pillar}</span>
+                  <span className="text-[11px] font-semibold capitalize text-[#e7e5e4]">{pillar}</span>
                   <span className="text-lg font-extrabold" style={{ color }}>
                     {avgVal != null ? avgVal.toFixed(1) : "—"}
-                    <span className="text-xs font-normal text-gray-400 ml-0.5">/10</span>
+                    <span className="text-xs font-normal text-[#57534e] ml-0.5">/10</span>
                   </span>
                 </div>
-                <div className="h-2.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                <div className="h-2.5 w-full rounded-full bg-[#292524] overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{ width: `${pct}%`, background: gradientMap[pillar] }}
@@ -545,8 +545,8 @@ function RouteComponent() {
 
       {/* Row 5: Word cloud + Staff bubbles */}
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Guest Adjectives</p>
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Guest Adjectives</p>
           {wordCloud?.length ? (
             <div className="flex flex-wrap gap-2">
               {wordCloud.map(({ word, count }) => {
@@ -566,11 +566,11 @@ function RouteComponent() {
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">No descriptive words collected yet.</p>
+            <p className="text-sm text-[#57534e]">No descriptive words collected yet.</p>
           )}
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Staff Mentions</p>
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Staff Mentions</p>
           {staffBubbles?.length ? (
             <div className="flex flex-wrap gap-3">
               {staffBubbles.map(({ name, count, sentiment }) => {
@@ -589,24 +589,24 @@ function RouteComponent() {
                     >
                       {name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-[9px] font-medium text-gray-500">{name.split(" ")[0]}</span>
+                    <span className="text-[9px] font-medium text-[#a8a29e]">{name.split(" ")[0]}</span>
                   </div>
                 )
               })}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">No staff mentions yet.</p>
+            <p className="text-sm text-[#57534e]">No staff mentions yet.</p>
           )}
         </div>
       </div>
 
       {/* Row 6: Recent feedback */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Recent Feedback</p>
+      <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Recent Feedback</p>
         {recentFeedback?.length ? (
           <div className="space-y-3">
             {recentFeedback.map((f) => (
-              <div key={f.id} className="flex gap-4 rounded-xl border border-gray-100 p-3">
+              <div key={f.id} className="flex gap-4 rounded-xl border border-[#292524] p-3">
                 <div className="text-2xl leading-none">{TIME_EMOJIS[f.mealTime ?? ""] ?? "🕐"}</div>
                 <div className="flex flex-1 flex-col gap-1.5">
                   <div className="flex flex-wrap gap-1.5">
@@ -624,33 +624,33 @@ function RouteComponent() {
                     ))}
                   </div>
                   {f.namedStaffMember && (
-                    <p className="text-[11px] text-gray-500">
-                      Staff: <span className="font-semibold text-gray-700">{f.namedStaffMember}</span>
+                    <p className="text-[11px] text-[#a8a29e]">
+                      Staff: <span className="font-semibold text-[#e7e5e4]">{f.namedStaffMember}</span>
                     </p>
                   )}
                   {f.ventText && (
-                    <p className="rounded-md border border-amber-100 bg-amber-50 px-2 py-1 text-xs text-amber-800">{f.ventText}</p>
+                    <p className="rounded-md border border-[#44403c] bg-[#292524] px-2 py-1 text-xs text-[#a8a29e]">{f.ventText}</p>
                   )}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-400">No feedback yet for this period.</p>
+          <p className="text-sm text-[#57534e]">No feedback yet for this period.</p>
         )}
       </div>
 
       {/* Row 7: City leaderboard */}
       {canSeeLeaderboard ? (
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5">
           {/* Header row with rank badge */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">
               City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
             </p>
             {leaderboard?.ownRank != null && leaderboard.totalCount != null && (
               <span className="text-xs font-bold text-orange-500">
-                {leaderboard.ownRank}<span className="text-gray-400 font-normal"> of {leaderboard.totalCount}</span>
+                {leaderboard.ownRank}<span className="text-[#57534e] font-normal"> of {leaderboard.totalCount}</span>
               </span>
             )}
           </div>
@@ -667,7 +667,7 @@ function RouteComponent() {
             return (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={chartData} barCategoryGap="25%" margin={{ top: 16, right: 8, bottom: 8, left: 0 }}>
-                  <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" vertical={false} />
+                  <CartesianGrid strokeDasharray="0" stroke="#292524" vertical={false} />
                   <XAxis
                     dataKey="label"
                     tick={({ x, y, payload, index }) => {
@@ -679,7 +679,7 @@ function RouteComponent() {
                           textAnchor="middle"
                           fontSize={10}
                           fontWeight={d?.isOwn ? 700 : 400}
-                          fill={d?.isOwn ? "#f97316" : "#9ca3af"}
+                          fill={d?.isOwn ? "#f97316" : "#57534e"}
                         >
                           {payload.value}
                         </text>
@@ -691,31 +691,31 @@ function RouteComponent() {
                   <YAxis
                     domain={[0, 100]}
                     ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
-                    tick={{ fontSize: 9, fill: "#9ca3af" }}
+                    tick={{ fontSize: 9, fill: "#57534e" }}
                     axisLine={false}
                     tickLine={false}
                     width={28}
                   />
                   <Tooltip
-                    cursor={{ fill: "rgba(0,0,0,0.04)" }}
-                    contentStyle={{ borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 11 }}
+                    cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                    contentStyle={{ borderRadius: 10, border: "1px solid #292524", fontSize: 11, background: "#1c1917", color: "#a8a29e" }}
                     formatter={(value: unknown, _name: unknown, props: { payload?: { rawGcs?: number | null } }) => {
                       const gcs = props.payload?.rawGcs
                       return [`${value}% (GCS ${gcs != null ? gcs.toFixed(1) : "—"})`, "Score"]
                     }}
-                    labelStyle={{ fontWeight: 600, color: "#1c1917" }}
+                    labelStyle={{ fontWeight: 600, color: "#e7e5e4" }}
                   />
                   {cityAvgPct != null && (
                     <ReferenceLine
                       y={cityAvgPct}
-                      stroke="#374151"
+                      stroke="#57534e"
                       strokeDasharray="4 3"
                       strokeWidth={1.5}
                       label={{
                         value: `City avg ${cityAvgPct}%`,
                         position: "insideTopRight",
                         fontSize: 9,
-                        fill: "#374151",
+                        fill: "#57534e",
                         fontWeight: 600,
                         dy: -6,
                       }}
@@ -725,7 +725,7 @@ function RouteComponent() {
                     {chartData.map((entry, index) => (
                       <Cell
                         key={index}
-                        fill={entry.isOwn ? "#f97316" : "#e5e7eb"}
+                        fill={entry.isOwn ? "#f97316" : "#292524"}
                       />
                     ))}
                   </Bar>
@@ -733,7 +733,7 @@ function RouteComponent() {
               </ResponsiveContainer>
             )
           })() : (
-            <p className="text-sm text-gray-400">No other properties found in your city yet.</p>
+            <p className="text-sm text-[#57534e]">No other properties found in your city yet.</p>
           )}
         </div>
       ) : (
@@ -749,23 +749,23 @@ function RouteComponent() {
       {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
         {canSeeAdvancedInsights ? (
-          <div className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3">
+          <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Advanced Insights</p>
-              <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Advanced Insights</p>
+              <span className="rounded-full bg-[#292524] px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed">Sentiment trend analysis, day-of-week consistency patterns, and reputation gap analysis will appear here once your property has sufficient data history.</p>
+            <p className="text-sm text-[#a8a29e] leading-relaxed">Sentiment trend analysis, day-of-week consistency patterns, and reputation gap analysis will appear here once your property has sufficient data history.</p>
           </div>
         ) : (
           <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Available on Partner and Founder plans." />
         )}
         {canSeeLocalMarket ? (
-          <div className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3">
+          <div className="rounded-2xl bg-[#1c1917] border border-[#292524] p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Local Market</p>
-              <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#57534e]">Local Market</p>
+              <span className="rounded-full bg-[#292524] px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed">Benchmarking your GCS against other hospitality properties in your local market will appear here once your city has enough active properties.</p>
+            <p className="text-sm text-[#a8a29e] leading-relaxed">Benchmarking your GCS against other hospitality properties in your local market will appear here once your city has enough active properties.</p>
           </div>
         ) : (
           <LockedSection title="Local Market" description="Compare your GCS against local hospitality market benchmarks. Available on Partner and Founder plans." />
