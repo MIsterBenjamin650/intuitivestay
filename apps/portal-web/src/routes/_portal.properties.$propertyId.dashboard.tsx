@@ -141,7 +141,7 @@ function RouteComponent() {
   const { data: leaderboard } = useQuery(trpc.properties.getCityLeaderboardLive.queryOptions(opts))
   const { data: trend } = useQuery(trpc.properties.getGcsTrend.queryOptions(opts))
   const { data: mealTimes } = useQuery(trpc.properties.getMealTimeBreakdown.queryOptions(opts))
-  useQuery(trpc.properties.getTierStatus.queryOptions({ propertyId }))
+  const { data: tierStatus } = useQuery(trpc.properties.getTierStatus.queryOptions({ propertyId }))
   const { data: aiSummary } = useQuery(trpc.properties.getAiSummary.queryOptions({ propertyId }))
 
   const tierScore = stats?.avgGcs != null ? stats.avgGcs * 10 : 0
@@ -267,22 +267,50 @@ function RouteComponent() {
           </div>
           {/* GCS donut — pure SVG */}
           {(() => {
-            const R = 74
-            const SW = 22
+            const R = 70
+            const SW = 20
             const C = 2 * Math.PI * R
             const filled = (tierScore / 100) * C
-            const offset = C * 0.25
-            const notches = [0.5, 0.7, 0.8, 0.95]
+            const LABEL_R = R + SW / 2 + 13
+            const notches = [
+              { pct: 0.5,  label: "Bronze"   },
+              { pct: 0.7,  label: "Silver"   },
+              { pct: 0.8,  label: "Gold"     },
+              { pct: 0.95, label: "Platinum" },
+            ]
             function pt(pct: number, r: number) {
               const a = pct * 2 * Math.PI - Math.PI / 2
               return { x: 100 + r * Math.cos(a), y: 100 + r * Math.sin(a) }
             }
+            function anchor(x: number): "start" | "middle" | "end" {
+              return x > 115 ? "start" : x < 85 ? "end" : "middle"
+            }
+
+            // Countdown logic
+            const REVIEW_CYCLE_DAYS = 60
+            const GRACE_DAYS = 30
+            let countdownLabel: string | null = null
+            let countdownDays: number | null = null
+            let countdownUrgent = false
+            if (tierStatus?.pendingTier && tierStatus.pendingFrom) {
+              const since = Math.floor((Date.now() - new Date(tierStatus.pendingFrom).getTime()) / 86400000)
+              countdownDays = Math.max(0, GRACE_DAYS - since)
+              countdownLabel = countdownDays === 0
+                ? `${tierStatus.pendingTier} tier confirms today`
+                : `${countdownDays}d until ${tierStatus.pendingTier} tier confirmed`
+              countdownUrgent = countdownDays <= 7
+            } else if (tierStatus?.lastEvaluatedAt) {
+              const nextReview = new Date(tierStatus.lastEvaluatedAt).getTime() + REVIEW_CYCLE_DAYS * 86400000
+              countdownDays = Math.max(0, Math.ceil((nextReview - Date.now()) / 86400000))
+              countdownLabel = countdownDays === 0 ? "Tier review due today" : `${countdownDays}d until tier review`
+            }
+
             return (
               <div className="relative flex justify-center items-center py-1">
-                <svg viewBox="0 0 200 200" className="w-full max-w-[210px]">
+                <svg viewBox="-28 -28 256 256" className="w-full max-w-[210px]">
                   {/* Track */}
                   <circle cx={100} cy={100} r={R} fill="none" stroke="#e5e7eb" strokeWidth={SW} />
-                  {/* Orange arc */}
+                  {/* Orange arc — starts at 12 o'clock */}
                   {tierScore > 0 && (
                     <circle
                       cx={100} cy={100} r={R}
@@ -290,18 +318,26 @@ function RouteComponent() {
                       stroke="#f97316"
                       strokeWidth={SW}
                       strokeDasharray={`${filled} ${C}`}
-                      strokeDashoffset={offset}
                       strokeLinecap="round"
+                      transform="rotate(-90 100 100)"
                       style={{ transition: "stroke-dasharray 0.8s ease-out" }}
                     />
                   )}
-                  {/* Tier notches */}
-                  {notches.map((pct) => {
+                  {/* Tier notches + labels */}
+                  {notches.map(({ pct, label }) => {
                     const i = pt(pct, R - SW / 2 + 1)
                     const o = pt(pct, R + SW / 2 - 1)
+                    const lp = pt(pct, LABEL_R)
                     return (
-                      <line key={pct} x1={i.x} y1={i.y} x2={o.x} y2={o.y}
-                        stroke="white" strokeWidth={2.5} strokeLinecap="round" />
+                      <g key={pct}>
+                        <line x1={i.x} y1={i.y} x2={o.x} y2={o.y}
+                          stroke="white" strokeWidth={2.5} strokeLinecap="round" />
+                        <text x={lp.x} y={lp.y}
+                          textAnchor={anchor(lp.x)} dominantBaseline="middle"
+                          fontSize="9" fill="#9ca3af" fontWeight="600">
+                          {label}
+                        </text>
+                      </g>
                     )
                   })}
                 </svg>

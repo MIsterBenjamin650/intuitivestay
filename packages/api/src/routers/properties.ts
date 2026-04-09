@@ -1718,6 +1718,7 @@ export const propertiesRouter = router({
         pendingTier: tier.pendingTier,
         pendingDirection: tier.pendingDirection,
         pendingFrom: tier.pendingFrom,
+        lastEvaluatedAt: tier.lastEvaluatedAt ? tier.lastEvaluatedAt.toISOString() : null,
       }
     }),
 
