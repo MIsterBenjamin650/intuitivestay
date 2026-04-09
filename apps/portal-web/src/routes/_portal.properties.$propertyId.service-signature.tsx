@@ -55,7 +55,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="p-6 space-y-8 max-w-2xl">
+    <div className="p-6 space-y-8 max-w-4xl">
       {/* Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
@@ -168,14 +168,14 @@ function RouteComponent() {
                     <td className="px-4 py-3">
                       {confirmRemoveId === s.id ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Remove {s.name}?</span>
+                          <span className="text-xs text-muted-foreground">Confirm?</span>
                           <button
                             type="button"
                             onClick={() => removeMutation.mutate({ staffProfileId: s.id })}
                             disabled={removeMutation.isPending}
                             className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
                           >
-                            {removeMutation.isPending ? "Removing…" : "Yes, remove"}
+                            {removeMutation.isPending ? "Removing…" : "Yes"}
                           </button>
                           <button
                             type="button"

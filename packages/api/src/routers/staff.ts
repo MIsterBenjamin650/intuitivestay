@@ -305,9 +305,6 @@ export const staffRouter = router({
       if (!staff) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." })
       }
-      if (staff.removedAt) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "This profile is no longer active." })
-      }
 
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, staff.propertyId),
@@ -354,9 +351,6 @@ export const staffRouter = router({
       })
       if (!staff) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." })
-      }
-      if (staff.removedAt) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "This profile is no longer active." })
       }
       if (staff.activatedAt) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Profile is already activated." })
