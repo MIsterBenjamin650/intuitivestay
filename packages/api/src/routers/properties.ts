@@ -1016,7 +1016,45 @@ export const propertiesRouter = router({
       score: Number(r.avgGcs),
     }))
 
-    return { portfolioGcs, activeCount, alertCount, monthlyTrend }
+    // Per-property cards
+    const propertyRows = await db
+      .select({
+        id: properties.id,
+        name: properties.name,
+        type: properties.type,
+        city: properties.city,
+        country: properties.country,
+        status: properties.status,
+        avgGcs: propertyScores.avgGcs,
+        totalFeedback: propertyScores.totalFeedback,
+      })
+      .from(properties)
+      .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
+      .where(eq(properties.organisationId, org.id))
+      .orderBy(properties.name)
+
+    // Alert flag per property: any feedback with GCS <= 5
+    const alertRows = await db
+      .select({ propertyId: feedback.propertyId, total: count() })
+      .from(feedback)
+      .where(and(inArray(feedback.propertyId, propertyIds), sql`${feedback.gcs}::numeric <= 5`))
+      .groupBy(feedback.propertyId)
+
+    const alertsByProperty = new Map(alertRows.map((r) => [r.propertyId, r.total]))
+
+    const propertyCards = propertyRows.map((p) => ({
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      city: p.city,
+      country: p.country,
+      status: p.status,
+      avgGcs: p.avgGcs != null ? Number(p.avgGcs) : null,
+      totalFeedback: p.totalFeedback ?? 0,
+      alertCount: alertsByProperty.get(p.id) ?? 0,
+    }))
+
+    return { portfolioGcs, activeCount, alertCount, monthlyTrend, propertyCards }
   }),
 
   getPropertyDashboard: protectedProcedure
