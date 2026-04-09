@@ -430,7 +430,7 @@ export const propertiesRouter = router({
         .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
         .leftJoin(lastFeedbackSq, eq(lastFeedbackSq.propertyId, properties.id))
         .orderBy(desc(properties.createdAt)),
-      db.select({ total: count() }).from(user),
+      db.select({ total: count() }).from(user).where(ne(user.email, env.ADMIN_EMAIL)),
     ])
 
     const totalCount = rows.length

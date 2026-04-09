@@ -86,11 +86,22 @@ export async function sendApprovalEmail(
   qrPdfBuffer?: Buffer,
   magicLinkUrl?: string,
 ) {
-  const ctaBlock = magicLinkUrl
+  const loginBlock = magicLinkUrl
     ? btn("Open My Dashboard →", magicLinkUrl) +
-      p(`This link expires in 24 hours. After that, <a href="${env.PUBLIC_PORTAL_URL}/login" style="color:#f97316">log in here</a> and use "Forgot password" if you haven't set one yet.`, true)
-    : btn("Log in to your dashboard →", `${env.PUBLIC_PORTAL_URL}/login`) +
-      p(`If you haven't set a password yet, use the "Forgot password" option on the login page.`, true)
+      `<div style="margin-top:16px;padding:14px 16px;background:#fef9f5;border:1px solid #fed7aa;border-radius:8px;font-size:13px;color:#57534e;line-height:1.6">
+        <strong style="color:#1c1917">This button logs you in automatically</strong> — no password needed.<br>
+        The link is valid for <strong>24 hours</strong>.<br><br>
+        <strong style="color:#1c1917">After that, here's how to log in:</strong><br>
+        1. Go to <a href="${env.PUBLIC_PORTAL_URL}/login" style="color:#f97316">${env.PUBLIC_PORTAL_URL}/login</a><br>
+        2. Enter your email: <strong>${ownerEmail}</strong><br>
+        3. Click <strong>"Forgot password"</strong> to set your password and log in.
+      </div>`
+    : btn("Log in to your Dashboard →", `${env.PUBLIC_PORTAL_URL}/login`) +
+      `<div style="margin-top:16px;padding:14px 16px;background:#fef9f5;border:1px solid #fed7aa;border-radius:8px;font-size:13px;color:#57534e;line-height:1.6">
+        <strong style="color:#1c1917">Your login details:</strong><br>
+        Email: <strong>${ownerEmail}</strong><br><br>
+        You haven't set a password yet. On the login page, click <strong>"Forgot password"</strong>, enter the email above, and you'll receive a link to create your password.
+      </div>`
 
   await resend.emails.send({
     from: FROM,
@@ -98,11 +109,11 @@ export async function sendApprovalEmail(
     subject: `Your property "${propertyName}" has been approved`,
     html: wrap(
       h1(`Welcome to IntuitiveStay, ${ownerName}!`) +
-      p(`Your property <strong>${propertyName}</strong> has been approved and is now live.`) +
-      p(`Click below to access your dashboard:`) +
-      ctaBlock +
+      p(`Great news — <strong>${propertyName}</strong> has been approved and is now live on IntuitiveStay.`) +
+      p(`Click the button below to access your dashboard:`) +
+      loginBlock +
       `<div style="margin-top:24px;padding:16px;background:#fef9f5;border:1px solid #fed7aa;border-radius:8px">
-        ${p(`Your branded QR code is attached to this email as a PDF. Print it and place it at reception, bedside tables, or dining areas.`)}
+        ${p(`Your branded QR code is attached to this email as a PDF. Print it and place it where guests can easily scan it — reception, tables, or rooms.`)}
       </div>`,
     ),
     attachments: qrPdfBuffer
