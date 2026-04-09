@@ -178,7 +178,7 @@ export const feedbackRouter = router({
       })
 
       // Invalidate dashboard cache so the owner sees fresh data immediately
-      await db.delete(dashboardCache).where(like(dashboardCache.id, `${qrCode.propertyId}:%`))
+      db.delete(dashboardCache).where(like(dashboardCache.id, `${qrCode.propertyId}:%`)).catch(console.error)
 
       // Fire-and-forget alert email for low scores
       if (gcs <= 5) {
