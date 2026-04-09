@@ -16,6 +16,18 @@ function RouteComponent() {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [copied, setCopied] = React.useState(false)
+  const [confirmRemoveId, setConfirmRemoveId] = React.useState<string | null>(null)
+
+  const removeMutation = useMutation(
+    trpc.staff.removeStaff.mutationOptions({
+      onSuccess: () => {
+        setConfirmRemoveId(null)
+        void queryClient.invalidateQueries(
+          trpc.staff.listPropertyStaff.queryOptions({ propertyId }),
+        )
+      },
+    }),
+  )
 
   const { data: inviteData, isLoading: inviteLoading } = useQuery(
     trpc.staff.getInviteUrl.queryOptions({ propertyId }),
@@ -127,6 +139,7 @@ function RouteComponent() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,6 +163,37 @@ function RouteComponent() {
                         <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
                           Pending
                         </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {confirmRemoveId === s.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Remove {s.name}?</span>
+                          <button
+                            type="button"
+                            onClick={() => removeMutation.mutate({ staffProfileId: s.id })}
+                            disabled={removeMutation.isPending}
+                            className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                          >
+                            {removeMutation.isPending ? "Removing…" : "Yes, remove"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmRemoveId(null)}
+                            disabled={removeMutation.isPending}
+                            className="text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmRemoveId(s.id)}
+                          className="text-xs font-medium text-red-500 hover:text-red-600 transition-colors"
+                        >
+                          Remove
+                        </button>
                       )}
                     </td>
                   </tr>
