@@ -140,6 +140,8 @@ function RouteComponent() {
   const { data: wordCloud } = useQuery(trpc.properties.getWordCloud.queryOptions(opts))
   const { data: staffBubbles } = useQuery(trpc.properties.getStaffBubbles.queryOptions(opts))
   const { data: leaderboard } = useQuery(trpc.properties.getCityLeaderboardLive.queryOptions(opts))
+  const { data: trend } = useQuery(trpc.properties.getGcsTrend.queryOptions(opts))
+  const { data: mealTimes } = useQuery(trpc.properties.getMealTimeBreakdown.queryOptions(opts))
   useQuery(trpc.properties.getTierStatus.queryOptions({ propertyId }))
   const { data: aiSummary } = useQuery(trpc.properties.getAiSummary.queryOptions({ propertyId }))
 
@@ -342,7 +344,7 @@ function RouteComponent() {
               </p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
+          <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4">
             <div>
               <p className="text-[10px] uppercase tracking-wide text-gray-400">Feedback</p>
               <p className="text-xl font-bold text-gray-800">{stats?.totalFeedback ?? "—"}</p>
@@ -353,6 +355,17 @@ function RouteComponent() {
                 {stats?.avgGcs != null ? (stats.avgGcs * 10).toFixed(0) : "—"}
                 <span className="text-xs font-normal text-gray-400"> /100</span>
               </p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400">Trend</p>
+              {trend?.delta != null ? (
+                <p className={`text-xl font-bold ${trend.delta > 0 ? "text-green-500" : trend.delta < 0 ? "text-red-500" : "text-gray-400"}`}>
+                  {trend.delta > 0 ? "↑" : trend.delta < 0 ? "↓" : "→"}
+                  {" "}{Math.abs(trend.delta).toFixed(1)}
+                </p>
+              ) : (
+                <p className="text-xl font-bold text-gray-300">—</p>
+              )}
             </div>
           </div>
         </div>
@@ -412,26 +425,48 @@ function RouteComponent() {
           )}
         </div>
 
-        {/* B1 — grouped bar chart */}
+        {/* B1 — GCS by service period */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">Pillar Breakdown</p>
-          {history?.length ? (
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-gray-400">GCS by Service Period</p>
+          <p className="mb-4 text-[10px] text-gray-400">Average score per time of day</p>
+          {mealTimes?.length ? (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={history.slice(-5)} barCategoryGap="30%" barGap={2}>
+              <BarChart data={mealTimes} barCategoryGap="35%">
                 <CartesianGrid strokeDasharray="0" stroke="#f5f5f4" vertical={false} />
-                <XAxis dataKey="bucket" tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                <XAxis
+                  dataKey="mealTime"
+                  tick={{ fontSize: 10, fill: "#9ca3af" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
+                />
                 <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={20} />
-                <Tooltip cursor={false} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
-                  formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 10 }} />
-                <Bar dataKey="resilience" fill={PILLAR_COLORS.resilience} radius={[4, 4, 0, 0]} name="Resilience" />
-                <Bar dataKey="empathy" fill={PILLAR_COLORS.empathy} radius={[4, 4, 0, 0]} name="Empathy" />
-                <Bar dataKey="anticipation" fill={PILLAR_COLORS.anticipation} radius={[4, 4, 0, 0]} name="Anticipation" />
-                <Bar dataKey="recognition" fill={PILLAR_COLORS.recognition} radius={[4, 4, 0, 0]} name="Recognition" />
+                <Tooltip
+                  cursor={false}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 11 }}
+                  formatter={(v: unknown, _: unknown, props: { payload?: { count?: number } }) => [
+                    typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
+                    "Avg GCS",
+                  ]}
+                  labelFormatter={(l: string) => l.charAt(0).toUpperCase() + l.slice(1)}
+                />
+                <Bar dataKey="avgGcs" radius={[6, 6, 0, 0]} name="Avg GCS">
+                  {(mealTimes ?? []).map((entry) => (
+                    <Cell
+                      key={entry.mealTime}
+                      fill={
+                        entry.avgGcs == null ? "#e5e7eb"
+                        : entry.avgGcs >= 8 ? "#16a34a"
+                        : entry.avgGcs >= 6 ? "#f97316"
+                        : "#dc2626"
+                      }
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-sm text-gray-400">No data yet.</p>
+            <p className="text-sm text-gray-400">No service period data yet.</p>
           )}
         </div>
       </div>

@@ -2,7 +2,7 @@ import { db } from "@intuitive-stay/db"
 import { aiDailySummaries, dashboardCache, feedback, leaderboardCache, organisations, properties, propertyScores, propertyTiers, qrCodes, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, avg, count, desc, eq, gte, inArray, isNotNull, isNull, max, ne, or, sql } from "drizzle-orm"
+import { and, avg, count, desc, eq, gte, inArray, isNotNull, isNull, lt, max, ne, or, sql } from "drizzle-orm"
 import Stripe from "stripe"
 import { z } from "zod"
 
@@ -1753,6 +1753,66 @@ export const propertiesRouter = router({
 
     return { url: session.url }
   }),
+
+  getGcsTrend: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const { propertyId, days } = input
+      const now = Date.now()
+      const since = new Date(now - days * 24 * 60 * 60 * 1000)
+      const prevSince = new Date(now - 2 * days * 24 * 60 * 60 * 1000)
+
+      const [current] = await db
+        .select({ avg: avg(feedback.gcs) })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, propertyId), gte(feedback.submittedAt, since)))
+
+      const [previous] = await db
+        .select({ avg: avg(feedback.gcs) })
+        .from(feedback)
+        .where(and(
+          eq(feedback.propertyId, propertyId),
+          gte(feedback.submittedAt, prevSince),
+          lt(feedback.submittedAt, since),
+        ))
+
+      const currentAvg = current?.avg != null ? Number(current.avg) : null
+      const previousAvg = previous?.avg != null ? Number(previous.avg) : null
+      const delta = currentAvg != null && previousAvg != null
+        ? Math.round((currentAvg - previousAvg) * 10) / 10
+        : null
+
+      return { delta, previousAvg }
+    }),
+
+  getMealTimeBreakdown: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+      const ORDER = ["morning", "afternoon", "evening", "night"]
+
+      const rows = await db
+        .select({
+          mealTime: feedback.mealTime,
+          avgGcs: avg(feedback.gcs),
+          total: count(),
+        })
+        .from(feedback)
+        .where(and(
+          eq(feedback.propertyId, input.propertyId),
+          gte(feedback.submittedAt, since),
+          isNotNull(feedback.mealTime),
+        ))
+        .groupBy(feedback.mealTime)
+
+      return rows
+        .map((r) => ({
+          mealTime: r.mealTime ?? "unknown",
+          avgGcs: r.avgGcs != null ? Number(r.avgGcs) : null,
+          count: r.total,
+        }))
+        .sort((a, b) => ORDER.indexOf(a.mealTime) - ORDER.indexOf(b.mealTime))
+    }),
 
   getStripeUpdatePaymentUrl: protectedProcedure.query(async ({ ctx }): Promise<{ url: string | null }> => {
     const org = await db.query.organisations.findFirst({
