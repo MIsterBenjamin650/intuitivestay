@@ -19,6 +19,8 @@ function RouteComponent() {
   const [confirmRemoveId, setConfirmRemoveId] = React.useState<string | null>(null)
   const [commendingStaffId, setCommendingStaffId] = React.useState<string | null>(null)
   const [commendBody, setCommendBody] = React.useState("")
+  const [resendingId, setResendingId] = React.useState<string | null>(null)
+  const [resentId, setResentId] = React.useState<string | null>(null)
 
   const removeMutation = useMutation(
     trpc.staff.removeStaff.mutationOptions({
@@ -38,6 +40,19 @@ function RouteComponent() {
           setCommendingStaffId(null)
           setCommendBody("")
         }, 1500)
+      },
+    }),
+  )
+
+  const resendMutation = useMutation(
+    trpc.staff.resendVerificationEmail.mutationOptions({
+      onSuccess: (_, variables) => {
+        setResendingId(null)
+        setResentId(variables.staffProfileId)
+        setTimeout(() => setResentId(null), 2000)
+      },
+      onError: () => {
+        setResendingId(null)
       },
     }),
   )
@@ -181,6 +196,19 @@ function RouteComponent() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
+                          {!s.emailVerifiedAt && confirmRemoveId !== s.id && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResendingId(s.id)
+                                resendMutation.mutate({ staffProfileId: s.id })
+                              }}
+                              disabled={resendingId === s.id}
+                              className="text-xs font-medium text-blue-500 hover:text-blue-600 disabled:opacity-50 transition-colors"
+                            >
+                              {resentId === s.id ? "Sent ✓" : resendingId === s.id ? "Sending…" : "Resend"}
+                            </button>
+                          )}
                           {s.emailVerifiedAt && confirmRemoveId !== s.id && (
                             <button
                               type="button"
