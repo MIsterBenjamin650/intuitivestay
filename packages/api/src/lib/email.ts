@@ -293,3 +293,68 @@ export async function sendStaffInviteEmail(
 <p style="font-size:12px;color:#64748b">This invitation expires in 7 days. If you didn't expect this email, you can safely ignore it.</p>`,
   })
 }
+
+export async function sendStaffNominationEmail(
+  staffEmail: string,
+  staffName: string,
+  propertyName: string,
+  staffProfileId: string,
+) {
+  const profileUrl = `${env.PUBLIC_PORTAL_URL}/staff-profile/${staffProfileId}`
+
+  await resend.emails.send({
+    from: FROM,
+    to: staffEmail,
+    subject: `You've received a guest nomination — ${propertyName}`,
+    html: `<h1>Hi ${staffName},</h1>
+<p>A guest just nominated you on IntuitiveStay at <strong>${propertyName}</strong>.</p>
+<p>View your updated Service Signature to see how your score is growing:</p>
+<p><a href="${profileUrl}" style="display:inline-block;background:#f97316;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">View My Profile →</a></p>
+<p style="font-size:12px;color:#64748b">Keep delivering exceptional service — every nomination counts.</p>`,
+  })
+}
+
+export async function sendStaffCommendationEmail(
+  staffEmail: string,
+  staffName: string,
+  authorName: string,
+  propertyName: string,
+  staffProfileId: string,
+) {
+  const profileUrl = `${env.PUBLIC_PORTAL_URL}/staff-profile/${staffProfileId}`
+
+  await resend.emails.send({
+    from: FROM,
+    to: staffEmail,
+    subject: `New commendation from ${authorName} — ${propertyName}`,
+    html: `<h1>Hi ${staffName},</h1>
+<p>Your manager <strong>${authorName}</strong> at <strong>${propertyName}</strong> has written a commendation on your Service Signature.</p>
+<p>Log in to your profile to read it:</p>
+<p><a href="${profileUrl}" style="display:inline-block;background:#f97316;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">View My Profile →</a></p>`,
+  })
+}
+
+export async function sendProfileLinkEmail(
+  staffEmail: string,
+  profiles: Array<{ name: string; propertyName: string; staffProfileId: string }>,
+) {
+  const profileLinks = profiles
+    .map(
+      (p) =>
+        `<div style="margin:12px 0;padding:12px;border:1px solid #e2e8f0;border-radius:8px">
+  <p style="margin:0 0 8px;font-weight:bold">${p.name} · ${p.propertyName}</p>
+  <a href="${env.PUBLIC_PORTAL_URL}/staff-profile/${p.staffProfileId}" style="display:inline-block;background:#f97316;color:white;padding:8px 20px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px">View Profile →</a>
+</div>`,
+    )
+    .join("")
+
+  await resend.emails.send({
+    from: FROM,
+    to: staffEmail,
+    subject: "Your Service Signature profile link",
+    html: `<h1>Your Service Signature profile</h1>
+<p>Here ${profiles.length === 1 ? "is" : "are"} your Service Signature profile ${profiles.length === 1 ? "link" : "links"}:</p>
+${profileLinks}
+<p style="font-size:12px;color:#64748b;margin-top:24px">Bookmark this link so you can access your profile at any time.</p>`,
+  })
+}
