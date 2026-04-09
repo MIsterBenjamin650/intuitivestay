@@ -80,7 +80,12 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
       }
 
-      return { propertyName: property.name, propertyId: property.id }
+      return {
+        propertyName: property.name,
+        propertyId: property.id,
+        tripAdvisorUrl: property.tripAdvisorUrl ?? null,
+        googlePlaceId: property.googlePlaceId ?? null,
+      }
     }),
 
   /**
