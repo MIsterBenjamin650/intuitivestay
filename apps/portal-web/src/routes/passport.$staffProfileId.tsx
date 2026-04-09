@@ -98,6 +98,7 @@ function PassportPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">{data.name}</h1>
+            {data.role && <p className="text-xs text-muted-foreground italic">{data.role}</p>}
             <p className="text-sm text-muted-foreground">{data.propertyName}</p>
           </div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
@@ -145,6 +146,54 @@ function PassportPage() {
                 <PillarBar label="Empathy" value={data.pillarAverages.empathy} />
                 <PillarBar label="Anticipation" value={data.pillarAverages.anticipation} />
                 <PillarBar label="Recognition" value={data.pillarAverages.recognition} />
+              </div>
+
+              <div className="border-t border-border" />
+
+              {/* Guest Insights */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground text-center">
+                  Guest Insights
+                </p>
+
+                {/* 2-column grid: nominations/month + consistency */}
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                    <p className="text-lg font-bold">{data.nominationsPerMonth}</p>
+                    <p className="text-xs text-muted-foreground">Noms / month</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2">
+                    <p className={`text-sm font-bold ${data.consistencyRating === "Very Consistent" ? "text-green-600" : data.consistencyRating === "Variable" ? "text-orange-500" : "text-gray-600"}`}>
+                      {data.consistencyRating}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Consistency</p>
+                  </div>
+                </div>
+
+                {/* Peak meal time */}
+                {data.peakMealTime && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Peak meal time</span>
+                    <span className="font-semibold capitalize">{data.peakMealTime}</span>
+                  </div>
+                )}
+
+                {/* Top adjectives */}
+                {data.topAdjectives.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs text-muted-foreground">Guests describe this team member as</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {data.topAdjectives.map((adj) => (
+                        <span
+                          key={adj}
+                          className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700"
+                        >
+                          {adj}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -97,6 +97,7 @@ export const staffRouter = router({
         token: z.string(),
         name: z.string().min(1).max(100),
         email: z.string().email(),
+        role: z.string().max(80).optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -135,6 +136,7 @@ export const staffRouter = router({
       await db.insert(staffProfiles).values({
         id,
         name: input.name.trim(),
+        role: input.role?.trim() ?? null,
         email: input.email.toLowerCase(),
         propertyId: property.id,
         emailVerificationToken: verificationToken,
@@ -333,6 +335,67 @@ export const staffRouter = router({
         .from(feedback)
         .where(eq(feedback.staffProfileId, input.staffProfileId))
 
+      const peakMealRows = await db
+        .select({
+          mealTime: feedback.mealTime,
+          nominations: count(),
+        })
+        .from(feedback)
+        .where(and(eq(feedback.staffProfileId, input.staffProfileId), isNotNull(feedback.mealTime)))
+        .groupBy(feedback.mealTime)
+        .orderBy(desc(count()))
+        .limit(1)
+      const peakMealTime = peakMealRows[0]?.mealTime ?? null
+
+      const [trendStats] = await db
+        .select({
+          avgLast30: sql<string>`COALESCE(avg(${feedback.gcs}::numeric) FILTER (WHERE ${feedback.submittedAt} >= NOW() - INTERVAL '30 days'), 0)`,
+          avgPrior30: sql<string>`COALESCE(avg(${feedback.gcs}::numeric) FILTER (WHERE ${feedback.submittedAt} >= NOW() - INTERVAL '60 days' AND ${feedback.submittedAt} < NOW() - INTERVAL '30 days'), 0)`,
+        })
+        .from(feedback)
+        .where(and(eq(feedback.staffProfileId, input.staffProfileId), sql`${feedback.submittedAt} >= NOW() - INTERVAL '60 days'`))
+      const avgLast30 = Number(trendStats?.avgLast30 ?? 0)
+      const avgPrior30 = Number(trendStats?.avgPrior30 ?? 0)
+      const scoreTrend: "up" | "stable" | "down" =
+        avgLast30 === 0 && avgPrior30 === 0 ? "stable"
+        : avgLast30 >= avgPrior30 + 0.5 ? "up"
+        : avgLast30 <= avgPrior30 - 0.5 ? "down"
+        : "stable"
+
+      const [consistencyStats] = await db
+        .select({ stddev: sql<string>`COALESCE(stddev_pop(${feedback.gcs}::numeric), 0)` })
+        .from(feedback)
+        .where(eq(feedback.staffProfileId, input.staffProfileId))
+      const stddev = Number(consistencyStats?.stddev ?? 0)
+      const consistencyRating: "Very Consistent" | "Consistent" | "Variable" =
+        stddev < 1.0 ? "Very Consistent" : stddev < 2.0 ? "Consistent" : "Variable"
+
+      const adjectiveRows = await db
+        .select({
+          adjective: sql<string>`trim(unnest(string_to_array(${feedback.adjectives}, ',')))`,
+          occurrences: sql<string>`count(*)`,
+        })
+        .from(feedback)
+        .where(and(eq(feedback.staffProfileId, input.staffProfileId), isNotNull(feedback.adjectives), sql`${feedback.adjectives} <> ''`))
+        .groupBy(sql`trim(unnest(string_to_array(${feedback.adjectives}, ',')))`)
+        .orderBy(desc(sql`count(*)`))
+        .limit(8)
+      const topAdjectives = adjectiveRows.map((r) => r.adjective).filter(Boolean)
+
+      const [nomMonthStats] = await db
+        .select({
+          total: count(),
+          firstAt: sql<string>`min(${feedback.submittedAt})`,
+          last30: sql<string>`count(*) FILTER (WHERE ${feedback.submittedAt} >= NOW() - INTERVAL '30 days')`,
+        })
+        .from(feedback)
+        .where(eq(feedback.staffProfileId, input.staffProfileId))
+      const totalNoms = Number(nomMonthStats?.total ?? 0)
+      const last30Nominations = Number(nomMonthStats?.last30 ?? 0)
+      const firstAt = nomMonthStats?.firstAt ? new Date(nomMonthStats.firstAt) : null
+      const monthsActive = firstAt ? Math.max(1, (Date.now() - firstAt.getTime()) / (1000 * 60 * 60 * 24 * 30)) : 1
+      const nominationsPerMonth = totalNoms === 0 ? 0 : Math.round((totalNoms / monthsActive) * 10) / 10
+
       return {
         id: staff.id,
         name: staff.name,
@@ -348,6 +411,13 @@ export const staffRouter = router({
           anticipation: Number(stats?.avgAnticipation ?? 0),
           recognition: Number(stats?.avgRecognition ?? 0),
         },
+        role: staff.role ?? null,
+        peakMealTime,
+        scoreTrend,
+        consistencyRating,
+        topAdjectives,
+        nominationsPerMonth,
+        last30Nominations,
       }
     }),
 

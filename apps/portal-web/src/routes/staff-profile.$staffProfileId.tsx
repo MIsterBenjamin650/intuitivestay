@@ -130,6 +130,7 @@ function StaffProfilePage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">{data.name}</h1>
+            {data.role && <p className="text-xs text-muted-foreground italic">{data.role}</p>}
             <p className="text-sm text-muted-foreground">{data.propertyName}</p>
           </div>
           {data.emailVerifiedAt && (
@@ -180,6 +181,70 @@ function StaffProfilePage() {
                   <PillarBar label="Empathy" value={data.pillarAverages.empathy} />
                   <PillarBar label="Anticipation" value={data.pillarAverages.anticipation} />
                   <PillarBar label="Recognition" value={data.pillarAverages.recognition} />
+                </div>
+
+                <div className="border-t border-border" />
+
+                {/* Performance Insights */}
+                <div className="space-y-3">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground text-center">
+                    Performance Insights
+                  </p>
+
+                  {/* Score Trend */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Score trend</span>
+                    <span className={
+                      data.scoreTrend === "up" ? "font-semibold text-green-600"
+                      : data.scoreTrend === "down" ? "font-semibold text-red-500"
+                      : "font-semibold text-gray-500"
+                    }>
+                      {data.scoreTrend === "up" ? "↑ Improving" : data.scoreTrend === "down" ? "↓ Declining" : "→ Stable"}
+                    </span>
+                  </div>
+
+                  {/* Consistency */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Consistency</span>
+                    <span className={
+                      data.consistencyRating === "Very Consistent" ? "font-semibold text-green-600"
+                      : data.consistencyRating === "Variable" ? "font-semibold text-orange-500"
+                      : "font-semibold text-gray-500"
+                    }>
+                      {data.consistencyRating}
+                    </span>
+                  </div>
+
+                  {/* Peak meal time */}
+                  {data.peakMealTime && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Peak meal time</span>
+                      <span className="font-semibold capitalize">{data.peakMealTime}</span>
+                    </div>
+                  )}
+
+                  {/* Nominations per month */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Nominations / month</span>
+                    <span className="font-semibold">{data.nominationsPerMonth}</span>
+                  </div>
+
+                  {/* Top adjectives */}
+                  {data.topAdjectives.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <p className="text-xs text-muted-foreground">Guests describe you as</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {data.topAdjectives.map((adj) => (
+                          <span
+                            key={adj}
+                            className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700"
+                          >
+                            {adj}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}

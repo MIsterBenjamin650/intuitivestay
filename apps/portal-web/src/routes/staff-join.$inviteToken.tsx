@@ -19,6 +19,7 @@ function StaffJoinPage() {
   )
 
   const [name, setName] = useState("")
+  const [role, setRole] = useState("")
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -34,6 +35,7 @@ function StaffJoinPage() {
         token: inviteToken,
         name: name.trim(),
         email: email.trim(),
+        role: role.trim() || undefined,
       })
       setDone(true)
     } catch (err: unknown) {
@@ -110,6 +112,21 @@ function StaffJoinPage() {
               placeholder="Jane Smith"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
               maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="role" className="text-sm font-medium">
+              Job title <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <input
+              id="role"
+              type="text"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="e.g. Breakfast Waiter, Head of Housekeeping"
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              maxLength={80}
             />
           </div>
 

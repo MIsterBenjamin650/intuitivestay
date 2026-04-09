@@ -8,6 +8,7 @@ export const staffProfiles = pgTable(
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
+    role: text("role"),
     email: text("email").notNull(),
     propertyId: text("property_id")
       .notNull()
