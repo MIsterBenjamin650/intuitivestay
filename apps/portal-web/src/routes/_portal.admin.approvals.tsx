@@ -98,7 +98,7 @@ function ApprovalsPage() {
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Website:</span>{" "}
                   <a
-                    href={(property as { businessWebsite?: string | null }).businessWebsite!}
+                    href={(() => { const w = (property as { businessWebsite?: string | null }).businessWebsite!; return /^https?:\/\//i.test(w) ? w : `https://${w}`; })()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-orange-500 hover:underline"
