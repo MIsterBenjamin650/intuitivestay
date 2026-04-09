@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@intuitive-stay/ui/components/sidebar"
 import {
   createLink,
@@ -87,8 +88,14 @@ function SidebarLinkItem({
   badge?: React.ReactNode
   disabled?: boolean
 }) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const handleClick = () => {
+    if (isMobile) setOpenMobile(false)
+  }
+
   return (
-    <SidebarMenuItem className="relative">
+    <SidebarMenuItem className="relative" onClick={handleClick}>
       {isActive && !disabled && (
         <span className="pointer-events-none absolute left-0 top-1 bottom-1 z-10 w-[3px] rounded-r bg-[#f97316]" />
       )}
