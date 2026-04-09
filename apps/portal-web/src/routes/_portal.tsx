@@ -105,7 +105,7 @@ function RouteComponent() {
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <SidebarTrigger className="-ml-1" />
                   <div className="relative w-full max-w-sm md:max-w-md">
-                    <SearchIcon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
+                    <SearchIcon size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="search"
                       placeholder="Search"
