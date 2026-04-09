@@ -31,7 +31,7 @@ function PassportPage() {
   const { staffProfileId } = Route.useParams()
   const trpc = useTRPC()
 
-  const { data, isLoading, isError } = useQuery(
+  const { data, isLoading, isError, error } = useQuery(
     trpc.staff.getStaffProfile.queryOptions({ staffProfileId }),
   )
 
@@ -44,12 +44,18 @@ function PassportPage() {
   }
 
   if (isError || !data) {
+    const isRemoved = error?.message === "This profile is no longer active."
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="text-center space-y-2">
-          <p className="font-semibold">Passport not found</p>
+          <ShieldCheckIcon className="mx-auto size-8 text-muted-foreground/40" />
+          <p className="font-semibold">
+            {isRemoved ? "Passport deactivated" : "Passport not found"}
+          </p>
           <p className="text-sm text-muted-foreground">
-            This passport does not exist or the link is incorrect.
+            {isRemoved
+              ? "This Service Signature passport is no longer active."
+              : "This passport does not exist or the link is incorrect."}
           </p>
         </div>
       </div>

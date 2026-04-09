@@ -38,7 +38,7 @@ function StaffProfilePage() {
   const trpc = useTRPC()
   const trpcClient = useTRPCClient()
 
-  const { data, isLoading, isError, refetch } = useQuery(
+  const { data, isLoading, isError, error, refetch } = useQuery(
     trpc.staff.getStaffProfile.queryOptions({ staffProfileId }),
   )
 
@@ -84,12 +84,17 @@ function StaffProfilePage() {
   }
 
   if (isError || !data) {
+    const isRemoved = error?.message === "This profile is no longer active."
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="text-center space-y-2">
-          <p className="font-semibold">Profile not found</p>
+          <p className="font-semibold">
+            {isRemoved ? "Profile deactivated" : "Profile not found"}
+          </p>
           <p className="text-sm text-muted-foreground">
-            This profile does not exist or the link is incorrect.
+            {isRemoved
+              ? "This Service Signature profile is no longer active."
+              : "This profile does not exist or the link is incorrect."}
           </p>
         </div>
       </div>
