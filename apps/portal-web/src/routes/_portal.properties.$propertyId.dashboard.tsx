@@ -15,6 +15,8 @@ import {
   Legend,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -261,19 +263,83 @@ function RouteComponent() {
               {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>
-          <div className="flex items-end gap-3">
-            <span className="text-8xl font-black leading-none text-orange-500">
-              {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
-            </span>
-            <span className="text-2xl font-light text-gray-300 mb-2">/10</span>
+          {/* GCS donut */}
+          <div className="relative flex justify-center items-center">
+            <ResponsiveContainer width="100%" height={190}>
+              <PieChart>
+                {/* Background ring — tier zone segments */}
+                <Pie
+                  data={[
+                    { value: 50 },
+                    { value: 20 },
+                    { value: 10 },
+                    { value: 15 },
+                    { value: 5 },
+                  ]}
+                  cx="50%" cy="50%"
+                  innerRadius={64} outerRadius={82}
+                  startAngle={90} endAngle={-270}
+                  dataKey="value"
+                  stroke="white"
+                  strokeWidth={3}
+                  isAnimationActive={false}
+                >
+                  <Cell fill="#e5e7eb" />
+                  <Cell fill="#fde68a" />
+                  <Cell fill="#cbd5e1" />
+                  <Cell fill="#fef08a" />
+                  <Cell fill="#c7d2fe" />
+                </Pie>
+                {/* Foreground ring — filled up to current score */}
+                <Pie
+                  data={[
+                    { value: tierScore },
+                    { value: Math.max(0, 100 - tierScore) },
+                  ]}
+                  cx="50%" cy="50%"
+                  innerRadius={64} outerRadius={82}
+                  startAngle={90} endAngle={-270}
+                  dataKey="value"
+                  strokeWidth={0}
+                  isAnimationActive={true}
+                >
+                  <Cell fill="#f97316" />
+                  <Cell fill="transparent" />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Centre label */}
+            <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-4xl font-black leading-none text-orange-500">
+                {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
+              </span>
+              <span className="text-xs font-light text-gray-400 mt-0.5">/10</span>
+              <span
+                className="mt-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
+              >
+                {TIER_CONFIG[displayTier].label}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className="rounded-full px-3 py-1 text-xs font-bold"
-              style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
-            >
-              {TIER_CONFIG[displayTier].label} Seal
-            </span>
+          {/* Next tier indicator */}
+          <div className="text-center -mt-2">
+            {tierScore >= 95 ? (
+              <p className="text-xs text-indigo-500 font-semibold">🏆 Platinum — highest tier reached</p>
+            ) : (
+              <p className="text-xs text-gray-400">
+                <span className="font-semibold text-gray-600">
+                  {Math.ceil(
+                    tierScore < 50 ? 50 - tierScore
+                    : tierScore < 70 ? 70 - tierScore
+                    : tierScore < 80 ? 80 - tierScore
+                    : 95 - tierScore
+                  )} pts
+                </span>
+                {" to "}
+                {tierScore < 50 ? "Bronze" : tierScore < 70 ? "Silver" : tierScore < 80 ? "Gold" : "Platinum"}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
             <div>
