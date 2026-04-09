@@ -2,7 +2,7 @@ import { db } from "@intuitive-stay/db"
 import { feedback, organisations, properties, staffProfiles } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, asc, count, eq, isNotNull, sql } from "drizzle-orm"
+import { and, asc, count, eq, isNotNull, isNull, sql } from "drizzle-orm"
 import Stripe from "stripe"
 import { z } from "zod"
 
@@ -193,7 +193,12 @@ export const staffRouter = router({
       const staff = await db
         .select()
         .from(staffProfiles)
-        .where(eq(staffProfiles.propertyId, input.propertyId))
+        .where(
+          and(
+            eq(staffProfiles.propertyId, input.propertyId),
+            isNull(staffProfiles.removedAt),
+          ),
+        )
         .orderBy(asc(staffProfiles.name))
 
       return staff.map((s) => ({
@@ -204,6 +209,40 @@ export const staffRouter = router({
         emailVerifiedAt: s.emailVerifiedAt,
         nominations: 0,
       }))
+    }),
+
+  /**
+   * Protected — owner soft-deletes a staff member by setting removedAt.
+   * Validates that the staff member belongs to a property owned by the calling user's org.
+   */
+  removeStaff: protectedProcedure
+    .input(z.object({ staffProfileId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.id, input.staffProfileId),
+      })
+      if (!staff) throw new TRPCError({ code: "NOT_FOUND", message: "Staff member not found." })
+
+      // Verify the staff member belongs to a property owned by this org
+      const property = await db.query.properties.findFirst({
+        where: and(
+          eq(properties.id, staff.propertyId),
+          eq(properties.organisationId, org.id),
+        ),
+      })
+      if (!property) throw new TRPCError({ code: "FORBIDDEN" })
+
+      await db
+        .update(staffProfiles)
+        .set({ removedAt: new Date() })
+        .where(eq(staffProfiles.id, input.staffProfileId))
+
+      return { ok: true }
     }),
 
   /**
@@ -224,6 +263,7 @@ export const staffRouter = router({
           and(
             eq(staffProfiles.propertyId, input.propertyId),
             isNotNull(staffProfiles.emailVerifiedAt),
+            isNull(staffProfiles.removedAt),
           ),
         )
         .orderBy(asc(staffProfiles.name))
@@ -251,6 +291,9 @@ export const staffRouter = router({
       })
       if (!staff) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." })
+      }
+      if (staff.removedAt) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "This profile is no longer active." })
       }
 
       const property = await db.query.properties.findFirst({
