@@ -33,13 +33,6 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/dashboard"
 
 type Days = 1 | 7 | 30 | 90
 
-const PILLAR_COLORS = {
-  resilience:   "#f97316",
-  empathy:      "#fb923c",
-  anticipation: "#ea580c",
-  recognition:  "#c2410c",
-} as const
-
 const TIER_CONFIG = {
   member:   { label: "Member",   color: "#9ca3af", bg: "#f3f4f6" },
   bronze:   { label: "Bronze",   color: "#b45309", bg: "#fef3c7" },
@@ -93,7 +86,7 @@ function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => 
     { label: "90 days", value: 90 },
   ]
   return (
-    <div className="flex gap-1 rounded-lg bg-[#f0ede8] p-1">
+    <div className="flex gap-1 rounded-lg bg-[#e8e3dc] p-1">
       {options.map((o) => (
         <button
           key={o.value}
@@ -102,7 +95,7 @@ function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => 
           className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
             days === o.value
               ? "bg-white text-[#1c1917] shadow-sm"
-              : "text-[#78716c] hover:text-[#44403c]"
+              : "text-[#78716c] hover:text-[#1c1917]"
           }`}
         >
           {o.label}
@@ -165,6 +158,17 @@ function RouteComponent() {
       }
     : { resilience: null, empathy: null, anticipation: null, recognition: null }
 
+  const maxPillarKey = (["resilience", "empathy", "anticipation", "recognition"] as const)
+    .filter(k => avgPillars[k] !== null)
+    .sort((a, b) => (avgPillars[b] ?? 0) - (avgPillars[a] ?? 0))[0] ?? "anticipation"
+
+  const PILLAR_COLORS = {
+    resilience:   maxPillarKey === "resilience"   ? "#f97316" : "#1c1917",
+    empathy:      maxPillarKey === "empathy"      ? "#f97316" : "#1c1917",
+    anticipation: maxPillarKey === "anticipation" ? "#f97316" : "#1c1917",
+    recognition:  maxPillarKey === "recognition"  ? "#f97316" : "#1c1917",
+  } as const
+
   const TIME_EMOJIS: Record<string, string> = {
     morning: "☀️",
     lunch: "🌤",
@@ -175,7 +179,7 @@ function RouteComponent() {
   const maxStaffCount = Math.max(...(staffBubbles?.map((s) => s.count) ?? [1]), 1)
   const MAX_BUBBLE = 56
   const SENTIMENT_COLORS = { positive: "#f97316", neutral: "#d6d3d1", negative: "#dc2626" }
-  const PILL_PALETTE = ["#f97316", "#ea580c", "#fb923c", "#c2410c", "#f59e0b", "#d97706"]
+  const PILL_PALETTE = ["#f97316", "#1c1917", "#ea580c", "#44403c", "#78716c", "#c2410c"]
 
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
@@ -258,7 +262,7 @@ function RouteComponent() {
         {/* GCS hero card */}
         <div className="rounded-2xl bg-white shadow-sm p-6 flex flex-col justify-between gap-4">
           <div className="flex items-start justify-between">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">GCS Score</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">GCS Score</p>
             <p className="text-[10px] text-[#78716c] tabular-nums">
               {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
               {" · "}
@@ -309,7 +313,7 @@ function RouteComponent() {
               <div className="relative flex justify-center items-center py-2">
                 <svg viewBox="-28 -28 256 256" className="w-full max-w-[320px]">
                   {/* Track */}
-                  <circle cx={100} cy={100} r={R} fill="none" stroke="#e7e2db" strokeWidth={SW} />
+                  <circle cx={100} cy={100} r={R} fill="none" stroke="#e8e3dc" strokeWidth={SW} />
                   {/* Orange arc — starts at 12 o'clock */}
                   {tierScore > 0 && (
                     <circle
@@ -409,13 +413,13 @@ function RouteComponent() {
         <div className="rounded-2xl bg-white shadow-sm p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">AI Daily Summary</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">AI Daily Summary</p>
           </div>
           {aiSummary ? (
             <>
               <p className="mb-3 text-xs text-[#78716c]">{aiSummary.date}</p>
               <p className="mb-4 text-sm leading-relaxed text-[#44403c]">{aiSummary.narrative}</p>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Today's Focus</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Today's Focus</p>
               <ul className="space-y-2">
                 {aiSummary.focusPoints.map((f, i) => {
                   const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
@@ -439,7 +443,7 @@ function RouteComponent() {
       <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
         {/* A2 — clean lines with dots */}
         <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Pillar Scores Over Time</p>
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Pillar Scores Over Time</p>
           {history?.length ? (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={history}>
@@ -447,13 +451,13 @@ function RouteComponent() {
                 <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#78716c" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#78716c" }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ borderRadius: 12, border: "1px solid #e7e2db", fontSize: 11, background: "white" }}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #e8e3dc", fontSize: 11, background: "white" }}
                   formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 11, color: "#78716c" }} />
-                <Line type="linear" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.resilience }} name="Resilience" />
-                <Line type="linear" dataKey="empathy" stroke={PILLAR_COLORS.empathy} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.empathy }} name="Empathy" />
-                <Line type="linear" dataKey="anticipation" stroke={PILLAR_COLORS.anticipation} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.anticipation }} name="Anticipation" />
-                <Line type="linear" dataKey="recognition" stroke={PILLAR_COLORS.recognition} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.recognition }} name="Recognition" />
+                <Legend iconSize={8} wrapperStyle={{ fontSize: 11, color: "#a8a29e" }} />
+                <Line type="linear" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={PILLAR_COLORS.resilience === "#f97316" ? 2.5 : 1.5} strokeDasharray={PILLAR_COLORS.resilience === "#f97316" ? undefined : "5 3"} dot={false} name="Resilience" />
+                <Line type="linear" dataKey="empathy" stroke={PILLAR_COLORS.empathy} strokeWidth={PILLAR_COLORS.empathy === "#f97316" ? 2.5 : 1.5} strokeDasharray={PILLAR_COLORS.empathy === "#f97316" ? undefined : "5 3"} dot={false} name="Empathy" />
+                <Line type="linear" dataKey="anticipation" stroke={PILLAR_COLORS.anticipation} strokeWidth={PILLAR_COLORS.anticipation === "#f97316" ? 2.5 : 1.5} strokeDasharray={PILLAR_COLORS.anticipation === "#f97316" ? undefined : "5 3"} dot={false} name="Anticipation" />
+                <Line type="linear" dataKey="recognition" stroke={PILLAR_COLORS.recognition} strokeWidth={PILLAR_COLORS.recognition === "#f97316" ? 2.5 : 1.5} strokeDasharray={PILLAR_COLORS.recognition === "#f97316" ? undefined : "5 3"} dot={false} name="Recognition" />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -463,7 +467,7 @@ function RouteComponent() {
 
         {/* B1 — GCS by service period */}
         <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">GCS by Service Period</p>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">GCS by Service Period</p>
           <p className="mb-4 text-[10px] text-[#78716c]">Average score per time of day</p>
           {mealTimes?.length ? (
             <ResponsiveContainer width="100%" height={220}>
@@ -479,7 +483,7 @@ function RouteComponent() {
                 <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#78716c" }} axisLine={false} tickLine={false} width={20} />
                 <Tooltip
                   cursor={false}
-                  contentStyle={{ borderRadius: 12, border: "1px solid #e7e2db", fontSize: 11, background: "white" }}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #e8e3dc", fontSize: 11, background: "white" }}
                   formatter={(v: unknown, _: unknown, props: { payload?: { count?: number } }) => [
                     typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
                     "Avg GCS",
@@ -487,17 +491,15 @@ function RouteComponent() {
                   labelFormatter={(l: string) => l.charAt(0).toUpperCase() + l.slice(1)}
                 />
                 <Bar dataKey="avgGcs" radius={[6, 6, 0, 0]} name="Avg GCS">
-                  {(mealTimes ?? []).map((entry) => (
-                    <Cell
-                      key={entry.mealTime}
-                      fill={
-                        entry.avgGcs == null ? "#e7e2db"
-                        : entry.avgGcs >= 8 ? "#f97316"
-                        : entry.avgGcs >= 6 ? "#fb923c"
-                        : "#dc2626"
-                      }
-                    />
-                  ))}
+                  {(() => {
+                    const maxGcs = Math.max(...(mealTimes ?? []).filter(e => e.avgGcs != null).map(e => e.avgGcs!))
+                    return (mealTimes ?? []).map((entry) => (
+                      <Cell
+                        key={entry.mealTime}
+                        fill={entry.avgGcs == null ? "#e8e3dc" : entry.avgGcs === maxGcs ? "#f97316" : "#1c1917"}
+                      />
+                    ))
+                  })()}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -509,7 +511,7 @@ function RouteComponent() {
 
       {/* Row 4: D1 — gradient horizontal bars for all pillars */}
       <div className="rounded-2xl bg-white shadow-sm p-5">
-        <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Pillar Scores</p>
+        <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Pillar Scores</p>
         <div className="grid gap-5 sm:grid-cols-2">
           {(["resilience", "empathy", "anticipation", "recognition"] as const).map((pillar) => {
             const avgVal = history?.length
@@ -517,12 +519,6 @@ function RouteComponent() {
               : null
             const pct = avgVal != null ? Math.min(Math.max((avgVal / 10) * 100, 0), 100) : 0
             const color = PILLAR_COLORS[pillar]
-            const gradientMap: Record<string, string> = {
-              resilience:   "linear-gradient(90deg, #fb923c, #f97316)",
-              empathy:      "linear-gradient(90deg, #fdba74, #fb923c)",
-              anticipation: "linear-gradient(90deg, #f97316, #ea580c)",
-              recognition:  "linear-gradient(90deg, #ea580c, #c2410c)",
-            }
             return (
               <div key={pillar}>
                 <div className="flex justify-between items-baseline mb-2">
@@ -532,10 +528,10 @@ function RouteComponent() {
                     <span className="text-xs font-normal text-[#78716c] ml-0.5">/10</span>
                   </span>
                 </div>
-                <div className="h-2.5 w-full rounded-full bg-[#f5f0eb] overflow-hidden">
+                <div className="h-2.5 w-full rounded-full bg-[#f0ede8] overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%`, background: gradientMap[pillar] }}
+                    style={{ width: `${pct}%`, background: color }}
                   />
                 </div>
               </div>
@@ -547,7 +543,7 @@ function RouteComponent() {
       {/* Row 5: Word cloud + Staff bubbles */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Guest Adjectives</p>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Guest Adjectives</p>
           {wordCloud?.length ? (
             <div className="flex flex-wrap gap-2">
               {wordCloud.map(({ word, count }) => {
@@ -571,7 +567,7 @@ function RouteComponent() {
           )}
         </div>
         <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Staff Mentions</p>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Staff Mentions</p>
           {staffBubbles?.length ? (
             <div className="flex flex-wrap gap-3">
               {staffBubbles.map(({ name, count, sentiment }) => {
@@ -603,23 +599,23 @@ function RouteComponent() {
 
       {/* Row 6: Recent feedback */}
       <div className="rounded-2xl bg-white shadow-sm p-5">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Recent Feedback</p>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Recent Feedback</p>
         {recentFeedback?.length ? (
           <div className="space-y-3">
             {recentFeedback.map((f) => (
-              <div key={f.id} className="flex gap-4 rounded-xl border border-[#f0ede8] p-3">
+              <div key={f.id} className="flex gap-4 rounded-xl bg-[#f0ede8] p-3">
                 <div className="text-2xl leading-none">{TIME_EMOJIS[f.mealTime ?? ""] ?? "🕐"}</div>
                 <div className="flex flex-1 flex-col gap-1.5">
                   <div className="flex flex-wrap gap-1.5">
                     {(
                       [
-                        { label: "R", value: f.resilience, color: PILLAR_COLORS.resilience },
-                        { label: "E", value: f.empathy, color: PILLAR_COLORS.empathy },
-                        { label: "A", value: f.anticipation, color: PILLAR_COLORS.anticipation },
-                        { label: "Rec", value: f.recognition, color: PILLAR_COLORS.recognition },
-                      ] as const
-                    ).map(({ label, value, color }) => (
-                      <span key={label} className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: color }}>
+                        { label: "R", value: f.resilience, pillarKey: "resilience" as const },
+                        { label: "E", value: f.empathy, pillarKey: "empathy" as const },
+                        { label: "A", value: f.anticipation, pillarKey: "anticipation" as const },
+                        { label: "Rec", value: f.recognition, pillarKey: "recognition" as const },
+                      ]
+                    ).map(({ label, value, pillarKey }) => (
+                      <span key={label} className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: pillarKey === maxPillarKey ? "#f97316" : "#1c1917" }}>
                         {label} {value}/10
                       </span>
                     ))}
@@ -646,7 +642,7 @@ function RouteComponent() {
         <div className="rounded-2xl bg-white shadow-sm p-5">
           {/* Header row with rank badge */}
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">
               City Leaderboard{leaderboard?.city ? ` — ${leaderboard.city}` : ""}
             </p>
             {leaderboard?.ownRank != null && leaderboard.totalCount != null && (
@@ -699,7 +695,7 @@ function RouteComponent() {
                   />
                   <Tooltip
                     cursor={{ fill: "rgba(0,0,0,0.03)" }}
-                    contentStyle={{ borderRadius: 10, border: "1px solid #e7e2db", fontSize: 11, background: "white" }}
+                    contentStyle={{ borderRadius: 10, border: "1px solid #e8e3dc", fontSize: 11, background: "white" }}
                     formatter={(value: unknown, _name: unknown, props: { payload?: { rawGcs?: number | null } }) => {
                       const gcs = props.payload?.rawGcs
                       return [`${value}% (GCS ${gcs != null ? gcs.toFixed(1) : "—"})`, "Score"]
@@ -726,7 +722,7 @@ function RouteComponent() {
                     {chartData.map((entry, index) => (
                       <Cell
                         key={index}
-                        fill={entry.isOwn ? "#f97316" : "#f5f0eb"}
+                        fill={entry.isOwn ? "#f97316" : "#e8e3dc"}
                       />
                     ))}
                   </Bar>
@@ -752,7 +748,7 @@ function RouteComponent() {
         {canSeeAdvancedInsights ? (
           <div className="rounded-2xl bg-white shadow-sm p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Advanced Insights</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Advanced Insights</p>
               <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
             </div>
             <p className="text-sm text-[#44403c] leading-relaxed">Sentiment trend analysis, day-of-week consistency patterns, and reputation gap analysis will appear here once your property has sufficient data history.</p>
@@ -763,7 +759,7 @@ function RouteComponent() {
         {canSeeLocalMarket ? (
           <div className="rounded-2xl bg-white shadow-sm p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Local Market</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Local Market</p>
               <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
             </div>
             <p className="text-sm text-[#44403c] leading-relaxed">Benchmarking your GCS against other hospitality properties in your local market will appear here once your city has enough active properties.</p>

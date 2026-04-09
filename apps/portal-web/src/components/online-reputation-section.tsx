@@ -178,7 +178,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">
             Online Reputation
           </p>
           {hasCache && (
@@ -191,7 +191,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSetup((v) => !v)}
-            className="flex items-center gap-1.5 rounded-md border border-[#e7e2db] px-2.5 py-1.5 text-xs text-[#78716c] hover:bg-[#f5f0eb]"
+            className="flex items-center gap-1.5 rounded-md border border-[#e8e3dc] px-2.5 py-1.5 text-xs text-[#78716c] hover:bg-[#f0ede8]"
           >
             <Settings className="h-3 w-3" />
             Setup
@@ -230,7 +230,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
               value={taUrl}
               onChange={(e) => setTaUrl(e.target.value)}
               placeholder="https://www.tripadvisor.co.uk/Restaurant_Review-..."
-              className="mt-1 w-full rounded-md border border-[#e7e2db] bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"
+              className="mt-1 w-full rounded-md border border-[#e8e3dc] bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300"
             />
           </div>
           <div>
@@ -243,7 +243,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
               className={`mt-1 w-full rounded-md border px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-300 ${
                 googleId && !googleId.includes("/maps/")
                   ? "border-red-300 bg-red-50"
-                  : "border-[#e7e2db] bg-white"
+                  : "border-[#e8e3dc] bg-white"
               }`}
             />
             {googleId && !googleId.includes("/maps/") && (
@@ -277,13 +277,13 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
       {/* No setup yet */}
       {!hasSetup && !showSetup && (
-        <div className="rounded-xl border border-dashed border-[#e7e2db] p-8 text-center">
+        <div className="rounded-xl border border-dashed border-[#e8e3dc] p-8 text-center">
           <p className="text-sm text-[#44403c]">
             Connect your TripAdvisor and Google listings to compare your online reputation with your GCS scores.
           </p>
           <button
             onClick={() => setShowSetup(true)}
-            className="mt-3 rounded-md border border-orange-300 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-50"
+            className="mt-3 rounded-md border border-orange-300 px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50"
           >
             Get started
           </button>
@@ -292,7 +292,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
       {/* Setup done but no data yet */}
       {hasSetup && !hasCache && !showSetup && (
-        <div className="rounded-xl border border-dashed border-[#e7e2db] p-8 text-center">
+        <div className="rounded-xl border border-dashed border-[#e8e3dc] p-8 text-center">
           <p className="text-sm text-[#44403c]">
             Click "Refresh Reviews" to pull in your latest online reviews and generate a comparison.
           </p>
@@ -306,7 +306,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
             <ResponsiveContainer width="100%" height={240}>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="#f0ede8" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#78716c" }} />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#a8a29e" }} />
                 <Radar
                   name="GCS Score"
                   dataKey="GCS"
@@ -334,7 +334,7 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
                 )}
                 <Legend iconSize={14} iconType="line" wrapperStyle={{ fontSize: 11, display: "flex", gap: "16px", justifyContent: "center", paddingTop: "8px" }} />
                 <Tooltip
-                  contentStyle={{ borderRadius: 8, border: "1px solid #e7e2db", fontSize: 11 }}
+                  contentStyle={{ borderRadius: 8, border: "1px solid #e8e3dc", fontSize: 11, background: "white" }}
                   formatter={(v: unknown) =>
                     typeof v === "number" ? v.toFixed(1) : (String(v) as string)
                   }
@@ -370,8 +370,8 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
           {/* Summary */}
           {summary && (
-            <div className="mt-4 rounded-xl bg-[#faf9f7] border border-[#e7e2db] p-4 space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#78716c]">Reputation Insight</p>
+            <div className="mt-4 rounded-xl bg-[#f9f7f4] border border-[#e8e3dc] p-4 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Reputation Insight</p>
               <p className="text-xs text-[#44403c] leading-relaxed">{summary.alignment}</p>
               <p className="text-xs text-[#44403c] leading-relaxed">{summary.pillarInsight}</p>
             </div>
