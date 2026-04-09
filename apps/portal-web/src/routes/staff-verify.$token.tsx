@@ -1,5 +1,5 @@
 // apps/portal-web/src/routes/staff-verify.$token.tsx
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 
 import { useTRPCClient } from "@/utils/trpc"
@@ -11,29 +11,23 @@ export const Route = createFileRoute("/staff-verify/$token")({
 function StaffVerifyPage() {
   const { token } = Route.useParams()
   const trpcClient = useTRPCClient()
+  const navigate = useNavigate()
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
-  const [name, setName] = useState<string | null>(null)
+  const [status, setStatus] = useState<"loading" | "error">("loading")
 
   useEffect(() => {
     trpcClient.staff.verifyStaffEmail
       .mutate({ token })
       .then((result) => {
-        setName(result.name)
-        setStatus("success")
+        void navigate({
+          to: "/staff-profile/$staffProfileId",
+          params: { staffProfileId: result.staffProfileId },
+        })
       })
       .catch(() => {
         setStatus("error")
       })
   }, [token])
-
-  if (status === "loading") {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Verifying your email…</p>
-      </div>
-    )
-  }
 
   if (status === "error") {
     return (
@@ -49,15 +43,8 @@ function StaffVerifyPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center space-y-4 px-6 max-w-sm">
-        <div className="text-5xl">✅</div>
-        <h2 className="text-xl font-bold">Email verified!</h2>
-        <p className="text-sm text-muted-foreground">
-          {name ? `Hi ${name} — your` : "Your"} Service Signature profile is now active. Guest
-          feedback will be attributed to your profile going forward.
-        </p>
-      </div>
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-sm text-muted-foreground">Verifying your email…</p>
     </div>
   )
 }
