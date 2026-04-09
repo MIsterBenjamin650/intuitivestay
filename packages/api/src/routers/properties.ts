@@ -1791,7 +1791,7 @@ export const propertiesRouter = router({
     .query(async ({ input }) => {
       const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
       // Only show actual meal periods — exclude "none" (entire stay visits)
-      const ORDER = ["breakfast", "lunch", "dinner"]
+      const ORDER = ["morning", "lunch", "dinner"]
 
       const rows = await db
         .select({

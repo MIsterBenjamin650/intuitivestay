@@ -166,7 +166,7 @@ function RouteComponent() {
     : { resilience: null, empathy: null, anticipation: null, recognition: null }
 
   const TIME_EMOJIS: Record<string, string> = {
-    breakfast: "☀️",
+    morning: "☀️",
     lunch: "🌤",
     dinner: "🌙",
     none: "🕐",

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/f/$uniqueCode")({
   component: FeedbackPage,
 })
 
-type MealTime = "breakfast" | "lunch" | "dinner" | "none"
+type MealTime = "morning" | "lunch" | "dinner" | "none"
 
 const RATING_LABELS: Record<number, string> = {
   0: "Very Poor",
@@ -378,7 +378,7 @@ function FeedbackPage() {
         <div className="space-y-2">
           <p className="text-sm font-semibold text-center">When did you visit?</p>
           <div className="flex gap-2 flex-wrap justify-center">
-            {(["breakfast", "lunch", "dinner", "none"] as MealTime[]).map((m) => (
+            {(["morning", "lunch", "dinner", "none"] as MealTime[]).map((m) => (
               <button
                 key={m}
                 type="button"

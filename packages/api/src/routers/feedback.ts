@@ -95,7 +95,7 @@ export const feedbackRouter = router({
         empathy: z.number().int().min(1).max(10),
         anticipation: z.number().int().min(1).max(10),
         recognition: z.number().int().min(1).max(10),
-        mealTime: z.enum(["breakfast", "lunch", "dinner", "none"]).nullable().optional(),
+        mealTime: z.enum(["morning", "lunch", "dinner", "none"]).nullable().optional(),
         guestEmail: z.string().email().optional(),
         adjectives: z.string().optional(),
         /** Browser-derived device fingerprint for duplicate prevention */
