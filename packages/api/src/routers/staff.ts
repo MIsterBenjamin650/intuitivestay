@@ -1,16 +1,15 @@
 import { db } from "@intuitive-stay/db"
-import {
-  organisations,
-  properties,
-  staffProfiles,
-} from "@intuitive-stay/db/schema"
+import { feedback, organisations, properties, staffProfiles } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, asc, eq, isNotNull } from "drizzle-orm"
+import { and, asc, count, eq, isNotNull, sql } from "drizzle-orm"
+import Stripe from "stripe"
 import { z } from "zod"
 
 import { sendStaffVerificationEmail } from "../lib/email"
 import { protectedProcedure, publicProcedure, router } from "../index"
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 export const staffRouter = router({
   /**
@@ -171,7 +170,7 @@ export const staffRouter = router({
         })
         .where(eq(staffProfiles.id, staff.id))
 
-      return { ok: true, name: staff.name, propertyId: staff.propertyId }
+      return { ok: true, name: staff.name, propertyId: staff.propertyId, staffProfileId: staff.id }
     }),
 
   /**
@@ -237,5 +236,97 @@ export const staffRouter = router({
             : `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`
         return { id: s.id, displayName }
       })
+    }),
+
+  /**
+   * Public — returns a staff member's profile and attribution stats.
+   * Email is never returned (public endpoint).
+   * Stats only include feedback rows with staffProfileId set (Phase 2+).
+   */
+  getStaffProfile: publicProcedure
+    .input(z.object({ staffProfileId: z.string() }))
+    .query(async ({ input }) => {
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.id, input.staffProfileId),
+      })
+      if (!staff) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." })
+      }
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, staff.propertyId),
+      })
+
+      const [stats] = await db
+        .select({
+          nominations: count(),
+          avgGcs: sql<string>`COALESCE(avg(${feedback.gcs}::numeric), 0)`,
+          avgResilience: sql<string>`COALESCE(avg(${feedback.resilience}::numeric), 0)`,
+          avgEmpathy: sql<string>`COALESCE(avg(${feedback.empathy}::numeric), 0)`,
+          avgAnticipation: sql<string>`COALESCE(avg(${feedback.anticipation}::numeric), 0)`,
+          avgRecognition: sql<string>`COALESCE(avg(${feedback.recognition}::numeric), 0)`,
+        })
+        .from(feedback)
+        .where(eq(feedback.staffProfileId, input.staffProfileId))
+
+      return {
+        id: staff.id,
+        name: staff.name,
+        propertyName: property?.name ?? "Unknown Property",
+        createdAt: staff.createdAt,
+        activatedAt: staff.activatedAt ?? null,
+        nominations: stats?.nominations ?? 0,
+        avgGcs: Number(stats?.avgGcs ?? 0),
+        pillarAverages: {
+          resilience: Number(stats?.avgResilience ?? 0),
+          empathy: Number(stats?.avgEmpathy ?? 0),
+          anticipation: Number(stats?.avgAnticipation ?? 0),
+          recognition: Number(stats?.avgRecognition ?? 0),
+        },
+      }
+    }),
+
+  /**
+   * Public — creates a £9.99 one-time Stripe checkout session for staff activation.
+   * Validates that the profile exists and is not already activated.
+   */
+  createStaffActivationCheckout: publicProcedure
+    .input(z.object({ staffProfileId: z.string() }))
+    .mutation(async ({ input }) => {
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.id, input.staffProfileId),
+      })
+      if (!staff) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." })
+      }
+      if (staff.activatedAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Profile is already activated." })
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "gbp",
+              unit_amount: 999,
+              product_data: {
+                name: "Service Signature — Lifetime Access",
+                description: "One-time fee. Unlock your digital staff passport and shareable link.",
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: { staffProfileId: input.staffProfileId },
+        success_url: `${env.PUBLIC_PORTAL_URL}/staff-profile/${input.staffProfileId}?activated=true`,
+        cancel_url: `${env.PUBLIC_PORTAL_URL}/staff-profile/${input.staffProfileId}`,
+      })
+
+      if (!session.url) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe did not return a checkout URL." })
+      }
+
+      return { checkoutUrl: session.url }
     }),
 })
