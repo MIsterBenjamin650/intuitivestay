@@ -1844,11 +1844,27 @@ export const propertiesRouter = router({
       return { url: null }
     }
 
-    const session = await stripe.billingPortal.sessions.create({
+    // subscription_cancel flow requires the subscription ID
+    const subscriptions = await stripe.subscriptions.list({
+      customer: org.stripeCustomerId,
+      status: "active",
+      limit: 1,
+    })
+    const subscriptionId = subscriptions.data[0]?.id
+
+    const sessionParams: Parameters<typeof stripe.billingPortal.sessions.create>[0] = {
       customer: org.stripeCustomerId,
       return_url: env.PUBLIC_PORTAL_URL + "/organisation/billing",
-      flow_data: { type: "subscription_cancel" },
-    })
+    }
+
+    if (subscriptionId) {
+      sessionParams.flow_data = {
+        type: "subscription_cancel",
+        subscription_cancel: { subscription: subscriptionId },
+      }
+    }
+
+    const session = await stripe.billingPortal.sessions.create(sessionParams)
 
     return { url: session.url }
   }),
