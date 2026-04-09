@@ -464,11 +464,15 @@ export const staffRouter = router({
   /**
    * Public — staff enter their email to receive profile link(s).
    * Always returns { ok: true } — never reveals if an email has a profile.
+   * Verified profiles get a profile link; unverified profiles get a verification email.
    */
   requestProfileLink: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .mutation(async ({ input }) => {
-      const profiles = await db
+      const normalizedEmail = input.email.toLowerCase()
+
+      // Verified profiles → send profile link
+      const verifiedProfiles = await db
         .select({
           id: staffProfiles.id,
           name: staffProfiles.name,
@@ -477,15 +481,15 @@ export const staffRouter = router({
         .from(staffProfiles)
         .where(
           and(
-            eq(staffProfiles.email, input.email.toLowerCase()),
+            eq(staffProfiles.email, normalizedEmail),
             isNotNull(staffProfiles.emailVerifiedAt),
             isNull(staffProfiles.removedAt),
           ),
         )
 
-      if (profiles.length > 0) {
+      if (verifiedProfiles.length > 0) {
         const profilesWithProperty = await Promise.all(
-          profiles.map(async (p) => {
+          verifiedProfiles.map(async (p) => {
             const property = await db.query.properties.findFirst({
               where: eq(properties.id, p.propertyId),
             })
@@ -496,9 +500,87 @@ export const staffRouter = router({
             }
           }),
         )
-
-        sendProfileLinkEmail(input.email.toLowerCase(), profilesWithProperty).catch(console.error)
+        sendProfileLinkEmail(normalizedEmail, profilesWithProperty).catch(console.error)
       }
+
+      // Unverified profiles → resend verification email
+      const unverifiedProfiles = await db
+        .select({
+          id: staffProfiles.id,
+          name: staffProfiles.name,
+          propertyId: staffProfiles.propertyId,
+          emailVerificationToken: staffProfiles.emailVerificationToken,
+        })
+        .from(staffProfiles)
+        .where(
+          and(
+            eq(staffProfiles.email, normalizedEmail),
+            isNull(staffProfiles.emailVerifiedAt),
+            isNull(staffProfiles.removedAt),
+          ),
+        )
+
+      for (const p of unverifiedProfiles) {
+        const property = await db.query.properties.findFirst({
+          where: eq(properties.id, p.propertyId),
+        })
+        const token = p.emailVerificationToken ?? crypto.randomUUID()
+        if (!p.emailVerificationToken) {
+          await db
+            .update(staffProfiles)
+            .set({ emailVerificationToken: token })
+            .where(eq(staffProfiles.id, p.id))
+        }
+        sendStaffVerificationEmail(
+          normalizedEmail,
+          p.name,
+          property?.name ?? "Unknown Property",
+          token,
+        ).catch(console.error)
+      }
+
+      return { ok: true }
+    }),
+
+  /**
+   * Protected — owner resends the verification email for a pending (unverified) staff member.
+   * Regenerates the token each time so old links are invalidated.
+   */
+  resendVerificationEmail: protectedProcedure
+    .input(z.object({ staffProfileId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.id, input.staffProfileId),
+      })
+      if (!staff) throw new TRPCError({ code: "NOT_FOUND", message: "Staff member not found." })
+      if (staff.removedAt) throw new TRPCError({ code: "FORBIDDEN", message: "This staff member has been removed." })
+      if (staff.emailVerifiedAt) throw new TRPCError({ code: "BAD_REQUEST", message: "This staff member has already verified their email." })
+
+      const property = await db.query.properties.findFirst({
+        where: and(
+          eq(properties.id, staff.propertyId),
+          eq(properties.organisationId, org.id),
+        ),
+      })
+      if (!property) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const newToken = crypto.randomUUID()
+      await db
+        .update(staffProfiles)
+        .set({ emailVerificationToken: newToken })
+        .where(eq(staffProfiles.id, input.staffProfileId))
+
+      sendStaffVerificationEmail(
+        staff.email,
+        staff.name,
+        property.name,
+        newToken,
+      ).catch(console.error)
 
       return { ok: true }
     }),
