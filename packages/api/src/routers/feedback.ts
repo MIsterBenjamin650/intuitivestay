@@ -1,5 +1,5 @@
 import { db } from "@intuitive-stay/db"
-import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyScores, qrCodes } from "@intuitive-stay/db/schema"
+import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyScores, qrCodes, staffProfiles } from "@intuitive-stay/db/schema"
 import { TRPCError } from "@trpc/server"
 import { and, count, desc, eq, gt, inArray, isNotNull, like, sql } from "drizzle-orm"
 import { z } from "zod"
@@ -143,6 +143,20 @@ export const feedbackRouter = router({
         input.anticipation === input.recognition
 
       const feedbackId = crypto.randomUUID()
+
+      // Validate staffProfileId belongs to this property and is verified
+      let resolvedStaffProfileId: string | null = null
+      if (input.staffProfileId && gcs >= 8) {
+        const staffMember = await db.query.staffProfiles.findFirst({
+          where: and(
+            eq(staffProfiles.id, input.staffProfileId),
+            eq(staffProfiles.propertyId, qrCode.propertyId),
+            isNotNull(staffProfiles.emailVerifiedAt),
+          ),
+        })
+        resolvedStaffProfileId = staffMember ? staffMember.id : null
+      }
+
       await db.insert(feedback).values({
         id: feedbackId,
         propertyId: qrCode.propertyId,
@@ -156,7 +170,7 @@ export const feedbackRouter = router({
         guestEmail: input.guestEmail ?? null,
         adjectives: input.adjectives ?? null,
         isUniformScore,
-        staffProfileId: input.staffProfileId && gcs >= 8 ? input.staffProfileId : null,
+        staffProfileId: resolvedStaffProfileId,
         source: "qr_form",
         submittedAt: new Date(),
       })
