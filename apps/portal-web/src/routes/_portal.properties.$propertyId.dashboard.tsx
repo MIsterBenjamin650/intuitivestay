@@ -446,9 +446,12 @@ function RouteComponent() {
                 <CartesianGrid strokeDasharray="0" stroke="#292524" />
                 <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#57534e" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "#57534e" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #292524", fontSize: 11, background: "#1c1917", color: "#a8a29e" }}
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: "1px solid #292524", fontSize: 11, background: "#1c1917" }}
+                  labelStyle={{ color: "#e7e5e4", fontWeight: 600 }}
+                  itemStyle={{ color: "#a8a29e" }}
                   formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v)]} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                <Legend iconSize={8} wrapperStyle={{ fontSize: 11, color: "#a8a29e" }} />
                 <Line type="linear" dataKey="resilience" stroke={PILLAR_COLORS.resilience} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.resilience }} name="Resilience" />
                 <Line type="linear" dataKey="empathy" stroke={PILLAR_COLORS.empathy} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.empathy }} name="Empathy" />
                 <Line type="linear" dataKey="anticipation" stroke={PILLAR_COLORS.anticipation} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: PILLAR_COLORS.anticipation }} name="Anticipation" />
@@ -478,7 +481,9 @@ function RouteComponent() {
                 <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#57534e" }} axisLine={false} tickLine={false} width={20} />
                 <Tooltip
                   cursor={false}
-                  contentStyle={{ borderRadius: 12, border: "1px solid #292524", fontSize: 11, background: "#1c1917", color: "#a8a29e" }}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #292524", fontSize: 11, background: "#1c1917" }}
+                  labelStyle={{ color: "#e7e5e4", fontWeight: 600 }}
+                  itemStyle={{ color: "#a8a29e" }}
                   formatter={(v: unknown, _: unknown, props: { payload?: { count?: number } }) => [
                     typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
                     "Avg GCS",
@@ -698,7 +703,8 @@ function RouteComponent() {
                   />
                   <Tooltip
                     cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                    contentStyle={{ borderRadius: 10, border: "1px solid #292524", fontSize: 11, background: "#1c1917", color: "#a8a29e" }}
+                    contentStyle={{ borderRadius: 10, border: "1px solid #292524", fontSize: 11, background: "#1c1917" }}
+                    itemStyle={{ color: "#a8a29e" }}
                     formatter={(value: unknown, _name: unknown, props: { payload?: { rawGcs?: number | null } }) => {
                       const gcs = props.payload?.rawGcs
                       return [`${value}% (GCS ${gcs != null ? gcs.toFixed(1) : "—"})`, "Score"]
