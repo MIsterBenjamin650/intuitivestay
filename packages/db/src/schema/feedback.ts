@@ -3,6 +3,7 @@ import { pgTable, text, timestamp, integer, numeric, index, boolean } from "driz
 
 import { properties } from "./properties";
 import { qrCodes } from "./qr-codes";
+import { staffProfiles } from "./staff-profiles";
 
 export const feedback = pgTable("feedback", {
   id: text("id").primaryKey(),
@@ -25,6 +26,11 @@ export const feedback = pgTable("feedback", {
   guestEmail: text("guest_email"),
   isUniformScore: boolean("is_uniform_score").default(false).notNull(), // true if all 4 pillars rated identically — flagged as low confidence
   seenByOwner: boolean("seen_by_owner").default(false).notNull(), // cleared to true when owner visits Alerts page — drives the notification badge
+  /**
+   * Set in Phase 2 when a guest picks a registered staff member from the
+   * feedback form picker. Null for all legacy and unattributed submissions.
+   */
+  staffProfileId: text("staff_profile_id").references(() => staffProfiles.id, { onDelete: "set null" }),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 },
 (table) => [

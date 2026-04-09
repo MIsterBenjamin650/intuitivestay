@@ -25,6 +25,11 @@ export const properties = pgTable("properties", {
   ownerEmail: text("owner_email").notNull(),
   ownerName: text("owner_name").notNull(),
   // ownerEmail/ownerName copied from Wix registration form; add userId FK in a later migration once owner creates their portal account
+  /**
+   * When set, staff can self-register at /staff-join/{staffInviteToken}.
+   * Regenerating this value invalidates all previous invite links.
+   */
+  staffInviteToken: text("staff_invite_token").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

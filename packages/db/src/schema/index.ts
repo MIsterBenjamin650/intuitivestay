@@ -11,3 +11,4 @@ export * from "./property-tiers";
 export * from "./online-reviews-cache"
 export * from "./leaderboard-cache"
 export * from "./dashboard-cache";
+export * from "./staff-profiles"
