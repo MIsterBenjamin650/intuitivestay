@@ -5,7 +5,7 @@ import { and, count, desc, eq, gt, inArray, isNotNull, like, sql } from "drizzle
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure, router } from "../index"
-import { sendAlertEmail, sendVelocityAlertEmail } from "../lib/email"
+import { sendAlertEmail, sendStaffNominationEmail, sendVelocityAlertEmail } from "../lib/email"
 
 /**
  * Recalculates running averages for a property after new feedback is submitted.
@@ -174,6 +174,24 @@ export const feedbackRouter = router({
         source: "qr_form",
         submittedAt: new Date(),
       })
+
+      // Notify nominated staff member — fire-and-forget
+      if (resolvedStaffProfileId) {
+        const nominatedStaff = await db.query.staffProfiles.findFirst({
+          where: eq(staffProfiles.id, resolvedStaffProfileId),
+        })
+        if (nominatedStaff) {
+          const nominatedProperty = await db.query.properties.findFirst({
+            where: eq(properties.id, qrCode.propertyId),
+          })
+          sendStaffNominationEmail(
+            nominatedStaff.email,
+            nominatedStaff.name,
+            nominatedProperty?.name ?? "your property",
+            resolvedStaffProfileId,
+          ).catch(console.error)
+        }
+      }
 
       // Save fingerprint to prevent duplicate submissions within 24 hours
       if (input.fingerprint) {
