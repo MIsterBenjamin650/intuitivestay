@@ -126,6 +126,7 @@ function RouteComponent() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,6 +140,17 @@ function RouteComponent() {
                         month: "short",
                         year: "numeric",
                       })}
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.emailVerifiedAt ? (
+                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                          Pending
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
