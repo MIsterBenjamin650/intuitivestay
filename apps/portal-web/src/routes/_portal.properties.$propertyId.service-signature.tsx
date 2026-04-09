@@ -187,6 +187,7 @@ function RouteComponent() {
                               onClick={() => {
                                 setCommendingStaffId(commendingStaffId === s.id ? null : s.id)
                                 setCommendBody("")
+                                commendMutation.reset()
                               }}
                               className="text-xs font-medium text-orange-500 hover:text-orange-600 transition-colors"
                             >
@@ -250,22 +251,29 @@ function RouteComponent() {
                                     Commendation added ✓
                                   </span>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      commendMutation.mutate({
-                                        staffProfileId: s.id,
-                                        body: commendBody,
-                                      })
-                                    }
-                                    disabled={
-                                      commendBody.trim().length < 10 ||
-                                      commendMutation.isPending
-                                    }
-                                    className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-60 transition-colors"
-                                  >
-                                    {commendMutation.isPending ? "Submitting…" : "Submit"}
-                                  </button>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        commendMutation.mutate({
+                                          staffProfileId: s.id,
+                                          body: commendBody,
+                                        })
+                                      }
+                                      disabled={
+                                        commendBody.trim().length < 10 ||
+                                        commendMutation.isPending
+                                      }
+                                      className="rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 disabled:opacity-60 transition-colors"
+                                    >
+                                      {commendMutation.isPending ? "Submitting…" : "Submit"}
+                                    </button>
+                                    {commendMutation.isError && (
+                                      <span className="text-xs text-red-600">
+                                        Failed to submit. Please try again.
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </div>
