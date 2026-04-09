@@ -18,6 +18,8 @@ export const staffProfiles = pgTable(
     activatedAt: timestamp("activated_at"),
     /** Stripe PaymentIntent ID stored for audit purposes. */
     stripePaymentIntentId: text("stripe_payment_intent_id"),
+    /** Set when a property owner removes the staff member. Soft delete — preserves feedback attribution history. */
+    removedAt: timestamp("removed_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
