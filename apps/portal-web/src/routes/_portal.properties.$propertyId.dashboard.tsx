@@ -15,8 +15,7 @@ import {
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
+
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -266,65 +265,62 @@ function RouteComponent() {
               {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
             </p>
           </div>
-          {/* GCS donut */}
-          <div className="relative flex justify-center items-center">
-            <ResponsiveContainer width="100%" height={190}>
-              <PieChart>
-                {/* Background ring — tier zone segments */}
-                <Pie
-                  data={[
-                    { value: 50 },
-                    { value: 20 },
-                    { value: 10 },
-                    { value: 15 },
-                    { value: 5 },
-                  ]}
-                  cx="50%" cy="50%"
-                  innerRadius={64} outerRadius={82}
-                  startAngle={90} endAngle={-270}
-                  dataKey="value"
-                  stroke="white"
-                  strokeWidth={3}
-                  isAnimationActive={false}
-                >
-                  <Cell fill="#e5e7eb" />
-                  <Cell fill="#e5e7eb" />
-                  <Cell fill="#e5e7eb" />
-                  <Cell fill="#e5e7eb" />
-                  <Cell fill="#e5e7eb" />
-                </Pie>
-                {/* Foreground ring — filled up to current score */}
-                <Pie
-                  data={[
-                    { value: tierScore },
-                    { value: Math.max(0, 100 - tierScore) },
-                  ]}
-                  cx="50%" cy="50%"
-                  innerRadius={64} outerRadius={82}
-                  startAngle={90} endAngle={-270}
-                  dataKey="value"
-                  strokeWidth={0}
-                  isAnimationActive={true}
-                >
-                  <Cell fill="#f97316" />
-                  <Cell fill="transparent" />
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Centre label */}
-            <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-6xl font-black leading-none text-orange-500">
-                {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
-              </span>
-              <span className="text-sm font-light text-gray-400 mt-1">/10</span>
-              <span
-                className="mt-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
-              >
-                {TIER_CONFIG[displayTier].label}
-              </span>
-            </div>
-          </div>
+          {/* GCS donut — pure SVG */}
+          {(() => {
+            const R = 74
+            const SW = 22
+            const C = 2 * Math.PI * R
+            const filled = (tierScore / 100) * C
+            const offset = C * 0.25
+            const notches = [0.5, 0.7, 0.8, 0.95]
+            function pt(pct: number, r: number) {
+              const a = pct * 2 * Math.PI - Math.PI / 2
+              return { x: 100 + r * Math.cos(a), y: 100 + r * Math.sin(a) }
+            }
+            return (
+              <div className="relative flex justify-center items-center py-1">
+                <svg viewBox="0 0 200 200" className="w-full max-w-[210px]">
+                  {/* Track */}
+                  <circle cx={100} cy={100} r={R} fill="none" stroke="#e5e7eb" strokeWidth={SW} />
+                  {/* Orange arc */}
+                  {tierScore > 0 && (
+                    <circle
+                      cx={100} cy={100} r={R}
+                      fill="none"
+                      stroke="#f97316"
+                      strokeWidth={SW}
+                      strokeDasharray={`${filled} ${C}`}
+                      strokeDashoffset={offset}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 0.8s ease-out" }}
+                    />
+                  )}
+                  {/* Tier notches */}
+                  {notches.map((pct) => {
+                    const i = pt(pct, R - SW / 2 + 1)
+                    const o = pt(pct, R + SW / 2 - 1)
+                    return (
+                      <line key={pct} x1={i.x} y1={i.y} x2={o.x} y2={o.y}
+                        stroke="white" strokeWidth={2.5} strokeLinecap="round" />
+                    )
+                  })}
+                </svg>
+                {/* Centre overlay */}
+                <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-6xl font-black leading-none text-orange-500">
+                    {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
+                  </span>
+                  <span className="text-sm font-light text-gray-400 mt-1">/10</span>
+                  <span
+                    className="mt-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold"
+                    style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
+                  >
+                    {TIER_CONFIG[displayTier].label}
+                  </span>
+                </div>
+              </div>
+            )
+          })()}
           {/* Next tier indicator */}
           <div className="text-center -mt-2">
             {tierScore >= 95 ? (
