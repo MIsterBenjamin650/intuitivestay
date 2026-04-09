@@ -1,6 +1,7 @@
 import { cn } from "@intuitive-stay/ui/lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
+import { ShieldCheckIcon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 import { useTRPC, useTRPCClient } from "@/utils/trpc"
@@ -354,15 +355,35 @@ function FeedbackPage() {
 
   // ─── Thank You ───
   if (submitted) {
+    const nominatedStaff = selectedStaffProfileId
+      ? verifiedStaff?.find((s) => s.id === selectedStaffProfileId)
+      : null
+
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-4 px-6">
-          <div className="text-5xl">🙏</div>
-          <h2 className="text-xl font-bold">Thank you for your feedback!</h2>
-          <p className="text-sm text-muted-foreground">
-            Your response has been recorded. It helps us improve the experience for every
-            guest.
-          </p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
+        <div className="mx-auto max-w-sm w-full space-y-6 text-center">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-orange-100 p-4">
+              <ShieldCheckIcon className="size-10 text-orange-500" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Thank you!</h2>
+            <p className="text-sm text-muted-foreground">
+              Your feedback for <span className="font-medium text-foreground">{data?.propertyName}</span> has been recorded.
+              It helps us improve the experience for every guest.
+            </p>
+          </div>
+          {nominatedStaff && (
+            <div className="rounded-xl bg-orange-50 border border-orange-100 px-5 py-4 space-y-1">
+              <p className="text-sm font-semibold text-orange-800">
+                Nomination received
+              </p>
+              <p className="text-sm text-orange-700">
+                Your kind words about <span className="font-medium">{nominatedStaff.displayName}</span> have been passed on. They'll be notified.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     )
