@@ -1845,12 +1845,12 @@ export const propertiesRouter = router({
     }
 
     // subscription_cancel flow requires the subscription ID
-    const subscriptions = await stripe.subscriptions.list({
-      customer: org.stripeCustomerId,
-      status: "active",
-      limit: 1,
-    })
-    const subscriptionId = subscriptions.data[0]?.id
+    // Check both active and trialing (trial subscriptions have status "trialing")
+    const [activeSubs, trialingSubs] = await Promise.all([
+      stripe.subscriptions.list({ customer: org.stripeCustomerId, status: "active", limit: 1 }),
+      stripe.subscriptions.list({ customer: org.stripeCustomerId, status: "trialing", limit: 1 }),
+    ])
+    const subscriptionId = activeSubs.data[0]?.id ?? trialingSubs.data[0]?.id
 
     const sessionParams: Parameters<typeof stripe.billingPortal.sessions.create>[0] = {
       customer: org.stripeCustomerId,
