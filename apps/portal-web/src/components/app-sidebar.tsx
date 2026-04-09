@@ -314,6 +314,20 @@ export function AppSidebar({
                     }
                     isActive={isRouteActive(location.pathname, buildPropertyPath(activePropertyId, "team"))}
                   />
+                  <SidebarLinkItem
+                    label="Service Signature"
+                    icon={<ShieldCheckIcon />}
+                    link={
+                      <AppSidebarLink
+                        to="/properties/$propertyId/service-signature"
+                        params={{ propertyId: activePropertyId! }}
+                      />
+                    }
+                    isActive={isRouteActive(
+                      location.pathname,
+                      buildPropertyPath(activePropertyId, "service-signature"),
+                    )}
+                  />
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
