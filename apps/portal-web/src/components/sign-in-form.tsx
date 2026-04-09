@@ -5,12 +5,15 @@ import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
 export default function SignInForm({ onSwitchToSignUp, onForgotPassword }: { onSwitchToSignUp: () => void; onForgotPassword: () => void }) {
   const { isPending } = authClient.useSession();
+  const navigate = useNavigate();
 
   const form = useForm({
     defaultValues: {
@@ -25,8 +28,8 @@ export default function SignInForm({ onSwitchToSignUp, onForgotPassword }: { onS
         },
         {
           onSuccess: () => {
-            window.location.href = "/";
             toast.success("Sign in successful");
+            void navigate({ to: "/" });
           },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
