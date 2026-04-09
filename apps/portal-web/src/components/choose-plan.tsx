@@ -158,6 +158,7 @@ export function ChoosePlan() {
               href={PLAN_URLS[plan.urlKey]}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => localStorage.setItem("pendingPayment", "1")}
               className={`block w-full rounded-lg py-2.5 text-center text-sm font-semibold transition-colors ${plan.buttonStyle}`}
             >
               {plan.buttonText}

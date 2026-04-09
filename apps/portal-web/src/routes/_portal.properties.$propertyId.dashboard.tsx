@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, useRouteContext } from "@tanstack/react-router"
+import { createFileRoute, useRouteContext, useRouter } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
 
 import { CompletePaymentButton } from "@/components/complete-payment-button"
@@ -184,9 +184,39 @@ function RouteComponent() {
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
   const subscriptionStatus = (session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"
+  const router = useRouter()
+
+  // Poll after returning from payment — webhook may not have fired yet
+  const pendingPayment = typeof window !== "undefined" && localStorage.getItem("pendingPayment") === "1"
+  React.useEffect(() => {
+    if (subscriptionStatus !== "none") {
+      localStorage.removeItem("pendingPayment")
+      return
+    }
+    if (!pendingPayment) return
+    const id = setInterval(() => { void router.invalidate() }, 3000)
+    return () => clearInterval(id)
+  }, [subscriptionStatus, pendingPayment, router])
 
   // No plan yet — show dashboard in preview mode with a prompt to subscribe
   if (subscriptionStatus === "none") {
+    if (pendingPayment) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-4 p-12 min-h-screen bg-[#f0ede8]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-100">
+            <svg className="h-7 w-7 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          </div>
+          <h2 className="text-base font-bold text-[#1c1917]">Activating your subscription…</h2>
+          <p className="text-sm text-[#78716c] text-center max-w-xs">
+            We're waiting for your payment to confirm. This usually takes a few seconds.
+          </p>
+        </div>
+      )
+    }
+
     return (
       <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden bg-[#f0ede8] min-h-screen">
         <div className="rounded-xl border border-orange-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
