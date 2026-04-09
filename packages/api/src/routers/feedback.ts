@@ -91,10 +91,10 @@ export const feedbackRouter = router({
     .input(
       z.object({
         uniqueCode: z.string(),
-        resilience: z.number().int().min(1).max(10),
-        empathy: z.number().int().min(1).max(10),
-        anticipation: z.number().int().min(1).max(10),
-        recognition: z.number().int().min(1).max(10),
+        resilience: z.number().int().min(0).max(10),
+        empathy: z.number().int().min(0).max(10),
+        anticipation: z.number().int().min(0).max(10),
+        recognition: z.number().int().min(0).max(10),
         mealTime: z.enum(["morning", "lunch", "dinner", "none"]).nullable().optional(),
         guestEmail: z.string().email().optional(),
         adjectives: z.string().optional(),
