@@ -328,6 +328,7 @@ export const staffRouter = router({
         propertyName: property?.name ?? "Unknown Property",
         createdAt: staff.createdAt,
         activatedAt: staff.activatedAt ?? null,
+        emailVerifiedAt: staff.emailVerifiedAt ?? null,
         nominations: stats?.nominations ?? 0,
         avgGcs: Number(stats?.avgGcs ?? 0),
         pillarAverages: {

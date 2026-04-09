@@ -1,7 +1,7 @@
 // apps/portal-web/src/routes/staff-profile.$staffProfileId.tsx
 import { cn } from "@intuitive-stay/ui/lib/utils"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { CheckIcon, CopyIcon, LockIcon, ShieldCheckIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -40,6 +40,10 @@ function StaffProfilePage() {
 
   const { data, isLoading, isError, error, refetch } = useQuery(
     trpc.staff.getStaffProfile.queryOptions({ staffProfileId }),
+  )
+
+  const { data: commendations } = useQuery(
+    trpc.staff.getCommendations.queryOptions({ staffProfileId }),
   )
 
   const [isCheckingOut, setIsCheckingOut] = useState(false)
@@ -84,25 +88,27 @@ function StaffProfilePage() {
   }
 
   if (isError || !data) {
-    const isRemoved = error?.message === "This profile is no longer active."
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="text-center space-y-2">
-          <p className="font-semibold">
-            {isRemoved ? "Profile deactivated" : "Profile not found"}
-          </p>
+          <ShieldCheckIcon className="mx-auto size-8 text-muted-foreground/40" />
+          <p className="font-semibold">Profile not found</p>
           <p className="text-sm text-muted-foreground">
-            {isRemoved
-              ? "This Service Signature profile is no longer active."
-              : "This profile does not exist or the link is incorrect."}
+            {error?.message ?? "This profile does not exist or the link is incorrect."}
           </p>
+          <Link
+            to="/staff-login"
+            className="text-xs text-orange-500 hover:text-orange-600 underline underline-offset-2"
+          >
+            Recover your profile link →
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
+    <div className="min-h-screen bg-gray-50 px-4 py-10">
       <div className="mx-auto max-w-sm space-y-6">
 
         {/* Payment success banner */}
@@ -112,23 +118,29 @@ function StaffProfilePage() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="text-center space-y-2">
+        {/* Header — matches passport */}
+        <div className="text-center space-y-3">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            IntuitiveStay · Service Signature
+          </p>
           <div className="flex justify-center">
             <div className="rounded-full bg-orange-100 p-3">
-              <ShieldCheckIcon className="size-7 text-orange-500" />
+              <ShieldCheckIcon className="size-8 text-orange-500" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold">{data.name}</h1>
-          <p className="text-sm text-muted-foreground">{data.propertyName}</p>
-          <p className="text-xs text-muted-foreground">
-            {isActivated
-              ? `Active since ${new Date(data.activatedAt!).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`
-              : `Member since ${new Date(data.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`}
-          </p>
+          <div>
+            <h1 className="text-2xl font-bold">{data.name}</h1>
+            <p className="text-sm text-muted-foreground">{data.propertyName}</p>
+          </div>
+          {data.emailVerifiedAt && (
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+              <span className="size-1.5 rounded-full bg-green-500" />
+              Verified
+            </div>
+          )}
         </div>
 
-        {/* Stats — blurred when not activated */}
+        {/* Stats card — blurred when not activated */}
         <div className="relative rounded-xl border bg-white shadow-sm overflow-hidden">
           <div className={cn("p-5 space-y-5", !isActivated && "blur-sm select-none pointer-events-none")}>
 
@@ -141,7 +153,7 @@ function StaffProfilePage() {
                 {data.nominations > 0 ? tierScore : "—"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {data.nominations > 0 ? "/ 100" : "No nominations yet"}
+                {data.nominations > 0 ? "/ 100" : "No data yet"}
               </p>
             </div>
 
@@ -155,18 +167,22 @@ function StaffProfilePage() {
               </p>
             </div>
 
-            <div className="border-t border-border" />
+            {data.nominations > 0 && (
+              <>
+                <div className="border-t border-border" />
 
-            {/* Pillar breakdown */}
-            <div className="space-y-3">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground text-center">
-                Pillar Breakdown
-              </p>
-              <PillarBar label="Resilience" value={data.pillarAverages.resilience} />
-              <PillarBar label="Empathy" value={data.pillarAverages.empathy} />
-              <PillarBar label="Anticipation" value={data.pillarAverages.anticipation} />
-              <PillarBar label="Recognition" value={data.pillarAverages.recognition} />
-            </div>
+                {/* Pillar breakdown */}
+                <div className="space-y-3">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground text-center">
+                    Pillar Breakdown
+                  </p>
+                  <PillarBar label="Resilience" value={data.pillarAverages.resilience} />
+                  <PillarBar label="Empathy" value={data.pillarAverages.empathy} />
+                  <PillarBar label="Anticipation" value={data.pillarAverages.anticipation} />
+                  <PillarBar label="Recognition" value={data.pillarAverages.recognition} />
+                </div>
+              </>
+            )}
           </div>
 
           {/* Unlock overlay */}
@@ -190,6 +206,32 @@ function StaffProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Commendations — only shown when activated and there are entries */}
+        {isActivated && commendations && commendations.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground text-center">
+              Manager Commendations
+            </p>
+            {commendations.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl border bg-white shadow-sm p-4 space-y-2"
+              >
+                <p className="text-sm text-foreground leading-relaxed">"{c.body}"</p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="font-medium">{c.authorName} · {c.propertyName}</span>
+                  <span>
+                    {new Date(c.createdAt).toLocaleDateString("en-GB", {
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Shareable link — only when activated */}
         {isActivated && (
@@ -221,6 +263,17 @@ function StaffProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Footer — login recovery link */}
+        <p className="text-center text-xs text-muted-foreground">
+          Lost your profile link?{" "}
+          <Link
+            to="/staff-login"
+            className="text-orange-500 hover:text-orange-600 underline underline-offset-2"
+          >
+            Send it to your email
+          </Link>
+        </p>
 
       </div>
     </div>
