@@ -211,6 +211,9 @@ function FeedbackPage() {
   const [staffName2, setStaffName2] = useState("")
   const [staffName3, setStaffName3] = useState("")
 
+  // Staff picker — shown when gcs >= 8 and verified staff exist
+  const [selectedStaffProfileId, setSelectedStaffProfileId] = useState<string | null>(null)
+
   // Private message / vent text
   const [ventText, setVentText] = useState("")
 
@@ -225,6 +228,13 @@ function FeedbackPage() {
   // Real-time GCS average — used to adapt the form layout
   const gcs = (resilience + empathy + anticipation + recognition) / 4
   const isLowScore = gcs <= 5
+
+  const { data: verifiedStaff } = useQuery({
+    ...trpc.staff.getVerifiedStaffAtProperty.queryOptions({
+      propertyId: data?.propertyId ?? "",
+    }),
+    enabled: gcs >= 8 && phase2Visible && !!data?.propertyId,
+  })
 
   // Reveal phase 2 smoothly once all sliders are touched
   useEffect(() => {
@@ -265,6 +275,7 @@ function FeedbackPage() {
         guestEmail: guestEmail.trim() || undefined,
         adjectives: selectedAdjectives.length > 0 ? selectedAdjectives.join(',') : undefined,
         fingerprint: fingerprint || undefined,
+        staffProfileId: selectedStaffProfileId ?? undefined,
       })
 
       // Device already submitted in the last 24 hours — show friendly block screen
@@ -276,8 +287,8 @@ function FeedbackPage() {
       // feedbackId is guaranteed non-null when blocked === false
       const feedbackId = result.feedbackId as string
 
-      // 2. Submit any staff name recognitions (high score path only)
-      if (!isLowScore) {
+      // 2. Submit any staff name recognitions (high score path, free-text only when gcs < 8)
+      if (!isLowScore && gcs < 8) {
         const names = [staffName1, staffName2, staffName3].filter((n) => n.trim())
         for (const staffName of names) {
           await trpcClient.feedback.submitNameDrop.mutate({
@@ -518,44 +529,77 @@ function FeedbackPage() {
 
                 <div className="border-t border-border" />
 
-                {/* Staff names */}
-                <div className="space-y-3">
-                  <div className="text-center space-y-1">
-                    <p className="text-sm font-semibold text-center">
-                      Did any particular staff members stand out?
-                      <span className="ml-2 text-xs font-normal text-muted-foreground">(Optional)</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Did someone go above and beyond? Let us know their name.
-                    </p>
+                {/* Staff attribution — picker when gcs >= 8 with verified staff, free-text otherwise */}
+                {gcs >= 8 && verifiedStaff && verifiedStaff.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="text-center space-y-1">
+                      <p className="text-sm font-semibold text-center">
+                        Did any particular staff member stand out?
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">(Optional)</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Tap their name if someone went above and beyond.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {verifiedStaff.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() =>
+                            setSelectedStaffProfileId((prev) => (prev === s.id ? null : s.id))
+                          }
+                          className={cn(
+                            "px-4 py-2 rounded-full text-sm border transition-colors",
+                            selectedStaffProfileId === s.id
+                              ? "bg-orange-500 text-white border-orange-500"
+                              : "border-border hover:bg-muted",
+                          )}
+                        >
+                          {s.displayName}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-2 flex flex-col items-center">
-                    <input
-                      type="text"
-                      value={staffName1}
-                      onChange={(e) => setStaffName1(e.target.value)}
-                      placeholder="Staff member's name"
-                      className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                      maxLength={100}
-                    />
-                    <input
-                      type="text"
-                      value={staffName2}
-                      onChange={(e) => setStaffName2(e.target.value)}
-                      placeholder="Staff member's name"
-                      className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                      maxLength={100}
-                    />
-                    <input
-                      type="text"
-                      value={staffName3}
-                      onChange={(e) => setStaffName3(e.target.value)}
-                      placeholder="Staff member's name"
-                      className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                      maxLength={100}
-                    />
+                ) : gcs < 8 ? (
+                  <div className="space-y-3">
+                    <div className="text-center space-y-1">
+                      <p className="text-sm font-semibold text-center">
+                        Did any particular staff members stand out?
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">(Optional)</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Did someone go above and beyond? Let us know their name.
+                      </p>
+                    </div>
+                    <div className="space-y-2 flex flex-col items-center">
+                      <input
+                        type="text"
+                        value={staffName1}
+                        onChange={(e) => setStaffName1(e.target.value)}
+                        placeholder="Staff member's name"
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                        maxLength={100}
+                      />
+                      <input
+                        type="text"
+                        value={staffName2}
+                        onChange={(e) => setStaffName2(e.target.value)}
+                        placeholder="Staff member's name"
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                        maxLength={100}
+                      />
+                      <input
+                        type="text"
+                        value={staffName3}
+                        onChange={(e) => setStaffName3(e.target.value)}
+                        placeholder="Staff member's name"
+                        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                        maxLength={100}
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 <div className="border-t border-border" />
 
