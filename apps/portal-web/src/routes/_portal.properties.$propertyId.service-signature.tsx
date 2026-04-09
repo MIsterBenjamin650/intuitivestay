@@ -167,6 +167,7 @@ function RouteComponent() {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Joined</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nominations</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
@@ -174,7 +175,14 @@ function RouteComponent() {
                 {staffList.map((s) => (
                   <React.Fragment key={s.id}>
                     <tr className="border-b">
-                      <td className="px-4 py-3 font-medium">{s.name}</td>
+                      <td className="px-4 py-3 font-medium">
+                        <span className="flex items-center gap-1.5">
+                          {staffList && staffList[0]?.id === s.id && s.nominations > 0 && (
+                            <span title="Top nominee">🥇</span>
+                          )}
+                          {s.name}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground">{s.email}</td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {new Date(s.createdAt).toLocaleDateString("en-GB", {
@@ -192,6 +200,20 @@ function RouteComponent() {
                           <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
                             Pending
                           </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {s.emailVerifiedAt ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-sm">{s.nominations}</span>
+                            {s.nominations > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {s.avgGcs > 0 ? `· avg ${(s.avgGcs * 10).toFixed(0)}` : ""}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -256,7 +278,7 @@ function RouteComponent() {
                     </tr>
                     {commendingStaffId === s.id && (
                       <tr className="bg-orange-50/40 border-b">
-                        <td colSpan={5} className="px-4 py-4">
+                        <td colSpan={6} className="px-4 py-4">
                           <div className="space-y-3 max-w-lg">
                             <p className="text-xs font-semibold">
                               Write a commendation for {s.name}

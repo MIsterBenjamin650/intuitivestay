@@ -204,15 +204,25 @@ export const staffRouter = router({
       if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
 
       const staff = await db
-        .select()
+        .select({
+          id: staffProfiles.id,
+          name: staffProfiles.name,
+          email: staffProfiles.email,
+          createdAt: staffProfiles.createdAt,
+          emailVerifiedAt: staffProfiles.emailVerifiedAt,
+          nominations: count(feedback.id),
+          avgGcs: sql<string>`COALESCE(avg(${feedback.gcs}::numeric), 0)`,
+        })
         .from(staffProfiles)
+        .leftJoin(feedback, eq(feedback.staffProfileId, staffProfiles.id))
         .where(
           and(
             eq(staffProfiles.propertyId, input.propertyId),
             isNull(staffProfiles.removedAt),
           ),
         )
-        .orderBy(asc(staffProfiles.name))
+        .groupBy(staffProfiles.id)
+        .orderBy(desc(count(feedback.id)), asc(staffProfiles.name))
 
       return staff.map((s) => ({
         id: s.id,
@@ -220,7 +230,8 @@ export const staffRouter = router({
         email: s.email,
         createdAt: s.createdAt,
         emailVerifiedAt: s.emailVerifiedAt,
-        nominations: 0,
+        nominations: s.nominations,
+        avgGcs: Number(s.avgGcs),
       }))
     }),
 
