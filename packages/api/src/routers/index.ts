@@ -4,6 +4,7 @@ import { contactRouter } from "./contact"
 import { feedbackRouter } from "./feedback"
 import { inviteRouter } from "./invite"
 import { propertiesRouter } from "./properties"
+import { staffRouter } from "./staff"
 import { teamRouter } from "./team"
 import { reviewsRouter } from "./reviews"
 
@@ -24,6 +25,7 @@ export const appRouter = router({
   reviews: reviewsRouter,
   invite: inviteRouter,
   contact: contactRouter,
+  staff: staffRouter,
 })
 
 export type AppRouter = typeof appRouter
