@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/dashboard"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-type Days = 7 | 30 | 90
+type Days = 1 | 7 | 30 | 90
 
 const PILLAR_COLORS = {
   resilience: "#6366f1",
@@ -88,6 +88,7 @@ function LockedSection({ title, description }: { title: string; description: str
 
 function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => void }) {
   const options: { label: string; value: Days }[] = [
+    { label: "24h", value: 1 },
     { label: "7 days", value: 7 },
     { label: "30 days", value: 30 },
     { label: "90 days", value: 90 },
@@ -285,10 +286,10 @@ function RouteComponent() {
                   isAnimationActive={false}
                 >
                   <Cell fill="#e5e7eb" />
-                  <Cell fill="#fde68a" />
-                  <Cell fill="#cbd5e1" />
-                  <Cell fill="#fef08a" />
-                  <Cell fill="#c7d2fe" />
+                  <Cell fill="#e5e7eb" />
+                  <Cell fill="#e5e7eb" />
+                  <Cell fill="#e5e7eb" />
+                  <Cell fill="#e5e7eb" />
                 </Pie>
                 {/* Foreground ring — filled up to current score */}
                 <Pie
@@ -310,10 +311,10 @@ function RouteComponent() {
             </ResponsiveContainer>
             {/* Centre label */}
             <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-4xl font-black leading-none text-orange-500">
+              <span className="text-6xl font-black leading-none text-orange-500">
                 {stats?.avgGcs != null ? stats.avgGcs.toFixed(1) : "—"}
               </span>
-              <span className="text-xs font-light text-gray-400 mt-0.5">/10</span>
+              <span className="text-sm font-light text-gray-400 mt-1">/10</span>
               <span
                 className="mt-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold"
                 style={{ background: TIER_CONFIG[displayTier].bg, color: TIER_CONFIG[displayTier].color }}
