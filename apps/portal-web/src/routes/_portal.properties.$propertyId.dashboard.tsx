@@ -272,7 +272,7 @@ function RouteComponent() {
           {/* GCS donut — pure SVG */}
           {(() => {
             const R = 70
-            const SW = 20
+            const SW = 10
             const C = 2 * Math.PI * R
             const filled = (tierScore / 100) * C
             const LABEL_R = R + SW / 2 + 13
@@ -346,7 +346,7 @@ function RouteComponent() {
                   })}
                   {/* Centre content rendered in SVG for perfect alignment */}
                   <text x={100} y={88} textAnchor="middle" dominantBaseline="middle"
-                    fontSize="38" fontWeight="900" fill="#f97316" fontFamily="inherit">
+                    fontSize="38" fontWeight="900" fill="#1c1917" fontFamily="inherit">
                     {stats?.avgGcs != null ? Math.round(tierScore) : "—"}
                   </text>
                   <text x={100} y={115} textAnchor="middle" dominantBaseline="middle"
