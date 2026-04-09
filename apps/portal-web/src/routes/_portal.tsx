@@ -26,7 +26,10 @@ export const Route = createFileRoute("/_portal")({
 
     const isAdmin = (session as { isAdmin?: boolean })?.isAdmin === true
     const isChoosingPlan = location.pathname === "/choose-plan"
-    if (!isAdmin && !isChoosingPlan && session.subscriptionStatus === "none") {
+    // Allow dashboard routes through so new users can see their empty dashboard
+    // with a "choose a plan" prompt rather than being hard-redirected away.
+    const isDashboard = location.pathname.includes("/dashboard")
+    if (!isAdmin && !isChoosingPlan && !isDashboard && session.subscriptionStatus === "none") {
       throw redirect({ to: "/choose-plan" })
     }
 

@@ -26,7 +26,8 @@ export async function generateAndActivateProperty(property: PropertyToActivate):
     where: eq(qrCodes.propertyId, property.id),
   })
 
-  const magicLinkUrl = await generateMagicLinkUrl(property.ownerEmail).catch(() => null)
+  const dashboardUrl = `${env.PUBLIC_PORTAL_URL}/properties/${property.id}/dashboard`
+  const magicLinkUrl = await generateMagicLinkUrl(property.ownerEmail, dashboardUrl).catch(() => null)
 
   if (!existingQr) {
     const uniqueCode = generateUniqueCode()

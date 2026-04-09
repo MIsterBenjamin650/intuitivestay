@@ -183,6 +183,38 @@ function RouteComponent() {
 
   const maxWordCount = Math.max(...(wordCloud?.map((w) => w.count) ?? [1]), 1)
 
+  const subscriptionStatus = (session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"
+
+  // No plan yet — show dashboard in preview mode with a prompt to subscribe
+  if (subscriptionStatus === "none") {
+    return (
+      <div className="flex flex-col gap-5 p-4 md:p-5 min-w-0 w-full overflow-x-hidden bg-[#f0ede8] min-h-screen">
+        <div className="rounded-xl border border-orange-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100">
+            <svg className="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold text-[#1c1917]">Your property is approved — choose a plan to start collecting feedback</h2>
+            <p className="mt-1 text-sm text-[#78716c]">
+              Your QR code and dashboard will be activated as soon as you select a plan. No commitment required — start with a free trial.
+            </p>
+          </div>
+          <a
+            href="/choose-plan"
+            className="shrink-0 inline-block rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+          >
+            Choose a plan →
+          </a>
+        </div>
+        <div className="rounded-xl bg-white/60 border border-[#e8e3dc] p-8 text-center text-sm text-[#a8a29e]">
+          Your dashboard will appear here once your plan is active.
+        </div>
+      </div>
+    )
+  }
+
   // Payment gate: property is approved but payment hasn't been made yet
   if (paymentStatus === "pending") {
     return (
