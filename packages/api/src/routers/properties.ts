@@ -302,7 +302,16 @@ export const propertiesRouter = router({
 
       const approvedCount = countResult?.total ?? 0
       const planLimit = PLAN_PROPERTY_LIMITS[org.plan ?? "member"] ?? 0
-      const isAdditional = approvedCount >= planLimit
+
+      // If the org has no active subscription yet, don't treat any property as
+      // "additional" — approve it normally and let the portal redirect them to
+      // choose a plan when they first log in.
+      const hasActiveSubscription =
+        !!org.stripeCustomerId &&
+        !!org.subscriptionStatus &&
+        !["none", "cancelled"].includes(org.subscriptionStatus)
+
+      const isAdditional = hasActiveSubscription && approvedCount >= planLimit
 
       if (isAdditional) {
         // ── Additional property: needs payment ──────────────────────────────
