@@ -1,5 +1,5 @@
 import { db } from "@intuitive-stay/db"
-import { organisations, properties, user } from "@intuitive-stay/db/schema"
+import { organisations, properties, staffProfiles, user } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { sendSubscriptionNotificationEmail } from "@intuitive-stay/api/lib/email"
 import { generateAndActivateProperty } from "@intuitive-stay/api/lib/activate-property"
@@ -289,6 +289,28 @@ export async function stripeWebhookHandler(c: Context) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
 
+    // ── Staff activation payment ─────────────────────────────────────────────
+    const staffProfileId = session.metadata?.staffProfileId
+    if (staffProfileId) {
+      if (session.payment_status !== "paid") return c.json({ ok: true })
+
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent as Stripe.PaymentIntent | null)?.id ?? null
+
+      await db
+        .update(staffProfiles)
+        .set({
+          activatedAt: new Date(),
+          stripePaymentIntentId: paymentIntentId,
+        })
+        .where(eq(staffProfiles.id, staffProfileId))
+
+      return c.json({ ok: true })
+    }
+
+    // ── Additional property payment ──────────────────────────────────────────
     const propertyId = session.metadata?.propertyId
     if (!propertyId) return c.json({ ok: true })
 
