@@ -84,10 +84,29 @@ function ApprovalsPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                {[property.city, property.country, property.address, property.type]
+                {[property.address, property.city, property.postcode, property.country, property.type]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
+              {(property as { businessEmail?: string | null }).businessEmail && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Business email:</span>{" "}
+                  {(property as { businessEmail?: string | null }).businessEmail}
+                </p>
+              )}
+              {(property as { businessWebsite?: string | null }).businessWebsite && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Website:</span>{" "}
+                  <a
+                    href={(property as { businessWebsite?: string | null }).businessWebsite!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-500 hover:underline"
+                  >
+                    {(property as { businessWebsite?: string | null }).businessWebsite}
+                  </a>
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Submitted: {new Date(property.createdAt).toLocaleDateString()}
               </p>
