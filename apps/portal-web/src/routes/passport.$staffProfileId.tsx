@@ -35,6 +35,10 @@ function PassportPage() {
     trpc.staff.getStaffProfile.queryOptions({ staffProfileId }),
   )
 
+  const { data: commendations } = useQuery(
+    trpc.staff.getCommendations.queryOptions({ staffProfileId }),
+  )
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -145,6 +149,32 @@ function PassportPage() {
             </>
           )}
         </div>
+
+        {/* Commendations — only shown when there are entries */}
+        {commendations && commendations.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground text-center">
+              Manager Commendations
+            </p>
+            {commendations.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl border bg-white shadow-sm p-4 space-y-2"
+              >
+                <p className="text-sm text-foreground leading-relaxed">"{c.body}"</p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="font-medium">{c.authorName} · {c.propertyName}</span>
+                  <span>
+                    {new Date(c.createdAt).toLocaleDateString("en-GB", {
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
