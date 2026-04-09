@@ -6,7 +6,7 @@ import {
 } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, isNotNull } from "drizzle-orm"
 import { z } from "zod"
 
 import { sendStaffVerificationEmail } from "../lib/email"
@@ -205,5 +205,37 @@ export const staffRouter = router({
         emailVerifiedAt: s.emailVerifiedAt,
         nominations: 0,
       }))
+    }),
+
+  /**
+   * Public — returns verified staff at a property for the feedback form picker.
+   * Display name is "Firstname L." to protect staff surnames from guests.
+   * Only staff with emailVerifiedAt set are returned.
+   */
+  getVerifiedStaffAtProperty: publicProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .query(async ({ input }) => {
+      const staff = await db
+        .select({
+          id: staffProfiles.id,
+          name: staffProfiles.name,
+        })
+        .from(staffProfiles)
+        .where(
+          and(
+            eq(staffProfiles.propertyId, input.propertyId),
+            isNotNull(staffProfiles.emailVerifiedAt),
+          ),
+        )
+        .orderBy(asc(staffProfiles.name))
+
+      return staff.map((s) => {
+        const parts = s.name.trim().split(/\s+/)
+        const displayName =
+          parts.length === 1
+            ? parts[0]
+            : `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`
+        return { id: s.id, displayName }
+      })
     }),
 })

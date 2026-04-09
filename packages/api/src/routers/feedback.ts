@@ -80,7 +80,7 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
       }
 
-      return { propertyName: property.name }
+      return { propertyName: property.name, propertyId: property.id }
     }),
 
   /**
@@ -100,6 +100,8 @@ export const feedbackRouter = router({
         adjectives: z.string().optional(),
         /** Browser-derived device fingerprint for duplicate prevention */
         fingerprint: z.string().optional(),
+        /** Verified staff profile to attribute this high-score feedback to (optional). */
+        staffProfileId: z.string().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -154,6 +156,7 @@ export const feedbackRouter = router({
         guestEmail: input.guestEmail ?? null,
         adjectives: input.adjectives ?? null,
         isUniformScore,
+        staffProfileId: input.staffProfileId && gcs >= 8 ? input.staffProfileId : null,
         source: "qr_form",
         submittedAt: new Date(),
       })
