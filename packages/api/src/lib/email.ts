@@ -358,3 +358,24 @@ ${profileLinks}
 <p style="font-size:12px;color:#64748b;margin-top:24px">Bookmark this link so you can access your profile at any time.</p>`,
   })
 }
+
+export async function sendBusinessEmailVerification(
+  businessEmail: string,
+  propertyName: string,
+  verificationUrl: string,
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: businessEmail,
+    subject: `Verify your business email for "${propertyName}"`,
+    html: `<div style="font-family:sans-serif;max-width:520px;margin:0 auto">
+<h1 style="font-size:22px;color:#1c1917">One step to go</h1>
+<p style="color:#44403c">We received a request to register <strong>${propertyName}</strong> on IntuitiveStay.</p>
+<p style="color:#44403c">To confirm you have access to this business email address, click the button below. Your submission will then be reviewed by our team.</p>
+<p style="margin:28px 0">
+  <a href="${verificationUrl}" style="display:inline-block;background:#f97316;color:white;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px">Verify business email →</a>
+</p>
+<p style="font-size:12px;color:#78716c">This link expires in 48 hours. If you did not submit this property, you can safely ignore this email.</p>
+</div>`,
+  })
+}

@@ -6,9 +6,9 @@ import { and, avg, count, desc, eq, gte, inArray, isNotNull, isNull, lt, max, ne
 import Stripe from "stripe"
 import { z } from "zod"
 
-import { adminProcedure, protectedProcedure, router } from "../index"
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "../index"
 import { generateAndActivateProperty } from "../lib/activate-property"
-import { sendAdditionalPropertyPaymentEmail, sendApprovalEmail, sendNewPropertyNotificationEmail, sendRejectionEmail } from "../lib/email"
+import { sendAdditionalPropertyPaymentEmail, sendApprovalEmail, sendBusinessEmailVerification, sendNewPropertyNotificationEmail, sendRejectionEmail } from "../lib/email"
 import { generateQrPdf } from "../lib/generate-qr"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
@@ -262,7 +262,14 @@ export const propertiesRouter = router({
     return db
       .select()
       .from(properties)
-      .where(eq(properties.status, "pending"))
+      .where(
+        and(
+          eq(properties.status, "pending"),
+          // Only surface submissions where the business email has been verified
+          // (or where businessEmail was never set, for backwards compatibility)
+          or(isNull(properties.businessEmail), eq(properties.businessEmailVerified, true)),
+        ),
+      )
       .orderBy(properties.createdAt)
   }),
 
@@ -784,6 +791,7 @@ export const propertiesRouter = router({
         city: z.string().min(1),
         postcode: z.string().optional(),
         country: z.string().min(1),
+        businessEmail: z.string().email().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -806,6 +814,11 @@ export const propertiesRouter = router({
       }
 
       const propertyId = crypto.randomUUID()
+      const verificationToken = input.businessEmail ? crypto.randomUUID() : null
+      const tokenExpires = input.businessEmail
+        ? new Date(Date.now() + 48 * 60 * 60 * 1000)
+        : null
+
       const [property] = await db
         .insert(properties)
         .values({
@@ -820,6 +833,10 @@ export const propertiesRouter = router({
           ownerEmail: ctx.session.user.email,
           ownerName: ctx.session.user.name,
           status: "pending",
+          businessEmail: input.businessEmail ?? null,
+          businessEmailVerified: false,
+          businessEmailToken: verificationToken,
+          businessEmailTokenExpires: tokenExpires,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -827,17 +844,93 @@ export const propertiesRouter = router({
 
       if (!property) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" })
 
-      // Fire-and-forget admin notification
-      sendNewPropertyNotificationEmail(
-        ctx.session.user.name,
-        ctx.session.user.email,
-        input.name,
-        input.city,
-        input.country,
-        env.PUBLIC_PORTAL_URL,
-      ).catch((err) => console.error("[submitProperty] Admin notification failed:", err))
+      if (input.businessEmail && verificationToken) {
+        // Send verification email — admin is NOT notified until verified
+        const verificationUrl = `${env.PUBLIC_PORTAL_URL}/verify-property/${verificationToken}`
+        sendBusinessEmailVerification(input.businessEmail, input.name, verificationUrl).catch(
+          (err) => console.error("[submitProperty] Verification email failed:", err),
+        )
+      } else {
+        // No business email provided — notify admin immediately
+        sendNewPropertyNotificationEmail(
+          ctx.session.user.name,
+          ctx.session.user.email,
+          input.name,
+          input.city,
+          input.country,
+          env.PUBLIC_PORTAL_URL,
+        ).catch((err) => console.error("[submitProperty] Admin notification failed:", err))
+      }
 
       return property
+    }),
+
+  verifyBusinessEmail: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .mutation(async ({ input }) => {
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.businessEmailToken, input.token),
+      })
+
+      if (!property) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invalid or already used verification link." })
+      }
+
+      if (property.businessEmailTokenExpires && property.businessEmailTokenExpires < new Date()) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This verification link has expired. Please request a new one from your dashboard." })
+      }
+
+      await db
+        .update(properties)
+        .set({
+          businessEmailVerified: true,
+          businessEmailToken: null,
+          businessEmailTokenExpires: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(properties.id, property.id))
+
+      // Now notify admin
+      sendNewPropertyNotificationEmail(
+        property.ownerName,
+        property.ownerEmail,
+        property.name,
+        property.city,
+        property.country,
+        env.PUBLIC_PORTAL_URL,
+      ).catch((err) => console.error("[verifyBusinessEmail] Admin notification failed:", err))
+
+      return { success: true, propertyName: property.name }
+    }),
+
+  resendBusinessVerification: protectedProcedure
+    .input(z.object({ propertyId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const property = await db.query.properties.findFirst({
+        where: and(eq(properties.id, input.propertyId), eq(properties.organisationId, org.id)),
+      })
+
+      if (!property) throw new TRPCError({ code: "NOT_FOUND" })
+      if (!property.businessEmail) throw new TRPCError({ code: "BAD_REQUEST", message: "No business email on file." })
+      if (property.businessEmailVerified) throw new TRPCError({ code: "BAD_REQUEST", message: "Email already verified." })
+
+      const newToken = crypto.randomUUID()
+      const newExpires = new Date(Date.now() + 48 * 60 * 60 * 1000)
+
+      await db
+        .update(properties)
+        .set({ businessEmailToken: newToken, businessEmailTokenExpires: newExpires, updatedAt: new Date() })
+        .where(eq(properties.id, property.id))
+
+      const verificationUrl = `${env.PUBLIC_PORTAL_URL}/verify-property/${newToken}`
+      await sendBusinessEmailVerification(property.businessEmail, property.name, verificationUrl)
+
+      return { success: true }
     }),
 
   /**

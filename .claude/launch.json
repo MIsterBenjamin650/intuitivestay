@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "portal-web",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@intuitive-stay/portal-web", "dev"],
-      "port": 5174
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "dev", "--port", "5173"],
+      "cwd": "apps/portal-web",
+      "port": 5173
     },
     {
       "name": "portal-server",

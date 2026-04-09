@@ -30,6 +30,11 @@ export const properties = pgTable("properties", {
    * Regenerating this value invalidates all previous invite links.
    */
   staffInviteToken: text("staff_invite_token").unique(),
+  /** Business email for the property (e.g. info@thebistro.com) — must be verified before admin review */
+  businessEmail: text("business_email"),
+  businessEmailVerified: boolean("business_email_verified").notNull().default(false),
+  businessEmailToken: text("business_email_token"),
+  businessEmailTokenExpires: timestamp("business_email_token_expires", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

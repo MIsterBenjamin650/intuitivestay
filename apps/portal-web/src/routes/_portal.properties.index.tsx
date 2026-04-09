@@ -86,6 +86,7 @@ type AddPropertyFormValues = {
   addressCity: string
   addressPostalCode: string
   addressCountry: string
+  businessEmail: string
 }
 
 const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
@@ -95,6 +96,7 @@ const DEFAULT_ADD_FORM_VALUES: AddPropertyFormValues = {
   addressCity: "",
   addressPostalCode: "",
   addressCountry: "United Kingdom",
+  businessEmail: "",
 }
 
 const PROPERTY_TYPE_OPTIONS = [
@@ -337,6 +339,7 @@ function RouteComponent() {
         city: addFormValues.addressCity,
         postcode: addFormValues.addressPostalCode || undefined,
         country: addFormValues.addressCountry,
+        businessEmail: addFormValues.businessEmail || undefined,
       })
     },
     [addFormValues, submitProperty],
@@ -439,11 +442,19 @@ function RouteComponent() {
         cell: ({ row }) => {
           const s = row.original.status
           const ps = (row.original as { paymentStatus?: string | null }).paymentStatus
+          const emailVerified = (row.original as { businessEmailVerified?: boolean }).businessEmailVerified
+          const businessEmail = (row.original as { businessEmail?: string | null }).businessEmail
+          const needsVerification = s === "pending" && businessEmail && !emailVerified
           return (
             <div className="flex flex-wrap items-center gap-1">
               <Badge variant={s === "approved" ? "default" : s === "rejected" ? "destructive" : "secondary"}>
-                {s === "pending" ? "Awaiting Approval" : s.charAt(0).toUpperCase() + s.slice(1)}
+                {needsVerification ? "Verify Email" : s === "pending" ? "Awaiting Approval" : s.charAt(0).toUpperCase() + s.slice(1)}
               </Badge>
+              {needsVerification && (
+                <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50">
+                  Check {businessEmail}
+                </Badge>
+              )}
               {s === "approved" && ps === "pending" && (
                 <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50">
                   Payment required
@@ -814,6 +825,27 @@ function RouteComponent() {
                     placeholder="e.g. 10 River Road"
                     className="h-10"
                   />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="business-email">
+                    Business Email
+                    <RequiredMark />
+                  </Label>
+                  <Input
+                    id="business-email"
+                    type="email"
+                    value={addFormValues.businessEmail}
+                    onChange={(event) =>
+                      updateAddFormValue("businessEmail", event.target.value)
+                    }
+                    placeholder="e.g. info@thebistro.com"
+                    className="h-10"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The publicly listed email for your property. We'll send a one-time verification link to confirm you manage this business.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">

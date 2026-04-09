@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StaffLoginRouteImport } from './routes/staff-login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InviteRouteImport } from './routes/invite'
 import { Route as PortalRouteImport } from './routes/_portal'
 import { Route as PortalIndexRouteImport } from './routes/_portal.index'
+import { Route as VerifyPropertyTokenRouteImport } from './routes/verify-property.$token'
+import { Route as StaffVerifyTokenRouteImport } from './routes/staff-verify.$token'
+import { Route as StaffProfileStaffProfileIdRouteImport } from './routes/staff-profile.$staffProfileId'
+import { Route as StaffJoinInviteTokenRouteImport } from './routes/staff-join.$inviteToken'
+import { Route as PassportStaffProfileIdRouteImport } from './routes/passport.$staffProfileId'
 import { Route as FUniqueCodeRouteImport } from './routes/f.$uniqueCode'
 import { Route as PortalPropertiesRouteImport } from './routes/_portal.properties'
 import { Route as PortalInsightsRouteImport } from './routes/_portal.insights'
@@ -26,6 +32,7 @@ import { Route as PortalOrganisationAlertsRouteImport } from './routes/_portal.o
 import { Route as PortalOrganisationAccountRouteImport } from './routes/_portal.organisation.account'
 import { Route as PortalAdminApprovalsRouteImport } from './routes/_portal.admin.approvals'
 import { Route as PortalPropertiesPropertyIdTeamRouteImport } from './routes/_portal.properties.$propertyId.team'
+import { Route as PortalPropertiesPropertyIdServiceSignatureRouteImport } from './routes/_portal.properties.$propertyId.service-signature'
 import { Route as PortalPropertiesPropertyIdQrFormRouteImport } from './routes/_portal.properties.$propertyId.qr-form'
 import { Route as PortalPropertiesPropertyIdLocalMarketRouteImport } from './routes/_portal.properties.$propertyId.local-market'
 import { Route as PortalPropertiesPropertyIdInsightsRouteImport } from './routes/_portal.properties.$propertyId.insights'
@@ -35,6 +42,11 @@ import { Route as PortalPropertiesPropertyIdAlertsRouteImport } from './routes/_
 import { Route as PortalPropertiesPropertyIdAdvancedInsightsRouteImport } from './routes/_portal.properties.$propertyId.advanced-insights'
 import { Route as PortalAdminPropertiesPropertyIdRouteImport } from './routes/_portal.admin.properties.$propertyId'
 
+const StaffLoginRoute = StaffLoginRouteImport.update({
+  id: '/staff-login',
+  path: '/staff-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -58,6 +70,32 @@ const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalRoute,
+} as any)
+const VerifyPropertyTokenRoute = VerifyPropertyTokenRouteImport.update({
+  id: '/verify-property/$token',
+  path: '/verify-property/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffVerifyTokenRoute = StaffVerifyTokenRouteImport.update({
+  id: '/staff-verify/$token',
+  path: '/staff-verify/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffProfileStaffProfileIdRoute =
+  StaffProfileStaffProfileIdRouteImport.update({
+    id: '/staff-profile/$staffProfileId',
+    path: '/staff-profile/$staffProfileId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const StaffJoinInviteTokenRoute = StaffJoinInviteTokenRouteImport.update({
+  id: '/staff-join/$inviteToken',
+  path: '/staff-join/$inviteToken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PassportStaffProfileIdRoute = PassportStaffProfileIdRouteImport.update({
+  id: '/passport/$staffProfileId',
+  path: '/passport/$staffProfileId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const FUniqueCodeRoute = FUniqueCodeRouteImport.update({
   id: '/f/$uniqueCode',
@@ -125,6 +163,12 @@ const PortalPropertiesPropertyIdTeamRoute =
     path: '/$propertyId/team',
     getParentRoute: () => PortalPropertiesRoute,
   } as any)
+const PortalPropertiesPropertyIdServiceSignatureRoute =
+  PortalPropertiesPropertyIdServiceSignatureRouteImport.update({
+    id: '/$propertyId/service-signature',
+    path: '/$propertyId/service-signature',
+    getParentRoute: () => PortalPropertiesRoute,
+  } as any)
 const PortalPropertiesPropertyIdQrFormRoute =
   PortalPropertiesPropertyIdQrFormRouteImport.update({
     id: '/$propertyId/qr-form',
@@ -179,10 +223,16 @@ export interface FileRoutesByFullPath {
   '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/staff-login': typeof StaffLoginRoute
   '/choose-plan': typeof PortalChoosePlanRoute
   '/insights': typeof PortalInsightsRoute
   '/properties': typeof PortalPropertiesRouteWithChildren
   '/f/$uniqueCode': typeof FUniqueCodeRoute
+  '/passport/$staffProfileId': typeof PassportStaffProfileIdRoute
+  '/staff-join/$inviteToken': typeof StaffJoinInviteTokenRoute
+  '/staff-profile/$staffProfileId': typeof StaffProfileStaffProfileIdRoute
+  '/staff-verify/$token': typeof StaffVerifyTokenRoute
+  '/verify-property/$token': typeof VerifyPropertyTokenRoute
   '/admin/approvals': typeof PortalAdminApprovalsRoute
   '/organisation/account': typeof PortalOrganisationAccountRoute
   '/organisation/alerts': typeof PortalOrganisationAlertsRoute
@@ -198,15 +248,22 @@ export interface FileRoutesByFullPath {
   '/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
   '/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
   '/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
+  '/properties/$propertyId/service-signature': typeof PortalPropertiesPropertyIdServiceSignatureRoute
   '/properties/$propertyId/team': typeof PortalPropertiesPropertyIdTeamRoute
 }
 export interface FileRoutesByTo {
   '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/staff-login': typeof StaffLoginRoute
   '/choose-plan': typeof PortalChoosePlanRoute
   '/insights': typeof PortalInsightsRoute
   '/f/$uniqueCode': typeof FUniqueCodeRoute
+  '/passport/$staffProfileId': typeof PassportStaffProfileIdRoute
+  '/staff-join/$inviteToken': typeof StaffJoinInviteTokenRoute
+  '/staff-profile/$staffProfileId': typeof StaffProfileStaffProfileIdRoute
+  '/staff-verify/$token': typeof StaffVerifyTokenRoute
+  '/verify-property/$token': typeof VerifyPropertyTokenRoute
   '/': typeof PortalIndexRoute
   '/admin/approvals': typeof PortalAdminApprovalsRoute
   '/organisation/account': typeof PortalOrganisationAccountRoute
@@ -223,6 +280,7 @@ export interface FileRoutesByTo {
   '/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
   '/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
   '/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
+  '/properties/$propertyId/service-signature': typeof PortalPropertiesPropertyIdServiceSignatureRoute
   '/properties/$propertyId/team': typeof PortalPropertiesPropertyIdTeamRoute
 }
 export interface FileRoutesById {
@@ -231,10 +289,16 @@ export interface FileRoutesById {
   '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/staff-login': typeof StaffLoginRoute
   '/_portal/choose-plan': typeof PortalChoosePlanRoute
   '/_portal/insights': typeof PortalInsightsRoute
   '/_portal/properties': typeof PortalPropertiesRouteWithChildren
   '/f/$uniqueCode': typeof FUniqueCodeRoute
+  '/passport/$staffProfileId': typeof PassportStaffProfileIdRoute
+  '/staff-join/$inviteToken': typeof StaffJoinInviteTokenRoute
+  '/staff-profile/$staffProfileId': typeof StaffProfileStaffProfileIdRoute
+  '/staff-verify/$token': typeof StaffVerifyTokenRoute
+  '/verify-property/$token': typeof VerifyPropertyTokenRoute
   '/_portal/': typeof PortalIndexRoute
   '/_portal/admin/approvals': typeof PortalAdminApprovalsRoute
   '/_portal/organisation/account': typeof PortalOrganisationAccountRoute
@@ -251,6 +315,7 @@ export interface FileRoutesById {
   '/_portal/properties/$propertyId/insights': typeof PortalPropertiesPropertyIdInsightsRoute
   '/_portal/properties/$propertyId/local-market': typeof PortalPropertiesPropertyIdLocalMarketRoute
   '/_portal/properties/$propertyId/qr-form': typeof PortalPropertiesPropertyIdQrFormRoute
+  '/_portal/properties/$propertyId/service-signature': typeof PortalPropertiesPropertyIdServiceSignatureRoute
   '/_portal/properties/$propertyId/team': typeof PortalPropertiesPropertyIdTeamRoute
 }
 export interface FileRouteTypes {
@@ -260,10 +325,16 @@ export interface FileRouteTypes {
     | '/invite'
     | '/login'
     | '/reset-password'
+    | '/staff-login'
     | '/choose-plan'
     | '/insights'
     | '/properties'
     | '/f/$uniqueCode'
+    | '/passport/$staffProfileId'
+    | '/staff-join/$inviteToken'
+    | '/staff-profile/$staffProfileId'
+    | '/staff-verify/$token'
+    | '/verify-property/$token'
     | '/admin/approvals'
     | '/organisation/account'
     | '/organisation/alerts'
@@ -279,15 +350,22 @@ export interface FileRouteTypes {
     | '/properties/$propertyId/insights'
     | '/properties/$propertyId/local-market'
     | '/properties/$propertyId/qr-form'
+    | '/properties/$propertyId/service-signature'
     | '/properties/$propertyId/team'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/invite'
     | '/login'
     | '/reset-password'
+    | '/staff-login'
     | '/choose-plan'
     | '/insights'
     | '/f/$uniqueCode'
+    | '/passport/$staffProfileId'
+    | '/staff-join/$inviteToken'
+    | '/staff-profile/$staffProfileId'
+    | '/staff-verify/$token'
+    | '/verify-property/$token'
     | '/'
     | '/admin/approvals'
     | '/organisation/account'
@@ -304,6 +382,7 @@ export interface FileRouteTypes {
     | '/properties/$propertyId/insights'
     | '/properties/$propertyId/local-market'
     | '/properties/$propertyId/qr-form'
+    | '/properties/$propertyId/service-signature'
     | '/properties/$propertyId/team'
   id:
     | '__root__'
@@ -311,10 +390,16 @@ export interface FileRouteTypes {
     | '/invite'
     | '/login'
     | '/reset-password'
+    | '/staff-login'
     | '/_portal/choose-plan'
     | '/_portal/insights'
     | '/_portal/properties'
     | '/f/$uniqueCode'
+    | '/passport/$staffProfileId'
+    | '/staff-join/$inviteToken'
+    | '/staff-profile/$staffProfileId'
+    | '/staff-verify/$token'
+    | '/verify-property/$token'
     | '/_portal/'
     | '/_portal/admin/approvals'
     | '/_portal/organisation/account'
@@ -331,6 +416,7 @@ export interface FileRouteTypes {
     | '/_portal/properties/$propertyId/insights'
     | '/_portal/properties/$propertyId/local-market'
     | '/_portal/properties/$propertyId/qr-form'
+    | '/_portal/properties/$propertyId/service-signature'
     | '/_portal/properties/$propertyId/team'
   fileRoutesById: FileRoutesById
 }
@@ -339,11 +425,24 @@ export interface RootRouteChildren {
   InviteRoute: typeof InviteRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  StaffLoginRoute: typeof StaffLoginRoute
   FUniqueCodeRoute: typeof FUniqueCodeRoute
+  PassportStaffProfileIdRoute: typeof PassportStaffProfileIdRoute
+  StaffJoinInviteTokenRoute: typeof StaffJoinInviteTokenRoute
+  StaffProfileStaffProfileIdRoute: typeof StaffProfileStaffProfileIdRoute
+  StaffVerifyTokenRoute: typeof StaffVerifyTokenRoute
+  VerifyPropertyTokenRoute: typeof VerifyPropertyTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/staff-login': {
+      id: '/staff-login'
+      path: '/staff-login'
+      fullPath: '/staff-login'
+      preLoaderRoute: typeof StaffLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -378,6 +477,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof PortalIndexRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/verify-property/$token': {
+      id: '/verify-property/$token'
+      path: '/verify-property/$token'
+      fullPath: '/verify-property/$token'
+      preLoaderRoute: typeof VerifyPropertyTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-verify/$token': {
+      id: '/staff-verify/$token'
+      path: '/staff-verify/$token'
+      fullPath: '/staff-verify/$token'
+      preLoaderRoute: typeof StaffVerifyTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-profile/$staffProfileId': {
+      id: '/staff-profile/$staffProfileId'
+      path: '/staff-profile/$staffProfileId'
+      fullPath: '/staff-profile/$staffProfileId'
+      preLoaderRoute: typeof StaffProfileStaffProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-join/$inviteToken': {
+      id: '/staff-join/$inviteToken'
+      path: '/staff-join/$inviteToken'
+      fullPath: '/staff-join/$inviteToken'
+      preLoaderRoute: typeof StaffJoinInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passport/$staffProfileId': {
+      id: '/passport/$staffProfileId'
+      path: '/passport/$staffProfileId'
+      fullPath: '/passport/$staffProfileId'
+      preLoaderRoute: typeof PassportStaffProfileIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/f/$uniqueCode': {
       id: '/f/$uniqueCode'
@@ -463,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalPropertiesPropertyIdTeamRouteImport
       parentRoute: typeof PortalPropertiesRoute
     }
+    '/_portal/properties/$propertyId/service-signature': {
+      id: '/_portal/properties/$propertyId/service-signature'
+      path: '/$propertyId/service-signature'
+      fullPath: '/properties/$propertyId/service-signature'
+      preLoaderRoute: typeof PortalPropertiesPropertyIdServiceSignatureRouteImport
+      parentRoute: typeof PortalPropertiesRoute
+    }
     '/_portal/properties/$propertyId/qr-form': {
       id: '/_portal/properties/$propertyId/qr-form'
       path: '/$propertyId/qr-form'
@@ -531,6 +672,7 @@ interface PortalPropertiesRouteChildren {
   PortalPropertiesPropertyIdInsightsRoute: typeof PortalPropertiesPropertyIdInsightsRoute
   PortalPropertiesPropertyIdLocalMarketRoute: typeof PortalPropertiesPropertyIdLocalMarketRoute
   PortalPropertiesPropertyIdQrFormRoute: typeof PortalPropertiesPropertyIdQrFormRoute
+  PortalPropertiesPropertyIdServiceSignatureRoute: typeof PortalPropertiesPropertyIdServiceSignatureRoute
   PortalPropertiesPropertyIdTeamRoute: typeof PortalPropertiesPropertyIdTeamRoute
 }
 
@@ -548,6 +690,8 @@ const PortalPropertiesRouteChildren: PortalPropertiesRouteChildren = {
   PortalPropertiesPropertyIdLocalMarketRoute:
     PortalPropertiesPropertyIdLocalMarketRoute,
   PortalPropertiesPropertyIdQrFormRoute: PortalPropertiesPropertyIdQrFormRoute,
+  PortalPropertiesPropertyIdServiceSignatureRoute:
+    PortalPropertiesPropertyIdServiceSignatureRoute,
   PortalPropertiesPropertyIdTeamRoute: PortalPropertiesPropertyIdTeamRoute,
 }
 
@@ -591,7 +735,13 @@ const rootRouteChildren: RootRouteChildren = {
   InviteRoute: InviteRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  StaffLoginRoute: StaffLoginRoute,
   FUniqueCodeRoute: FUniqueCodeRoute,
+  PassportStaffProfileIdRoute: PassportStaffProfileIdRoute,
+  StaffJoinInviteTokenRoute: StaffJoinInviteTokenRoute,
+  StaffProfileStaffProfileIdRoute: StaffProfileStaffProfileIdRoute,
+  StaffVerifyTokenRoute: StaffVerifyTokenRoute,
+  VerifyPropertyTokenRoute: VerifyPropertyTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
