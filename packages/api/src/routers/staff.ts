@@ -1,8 +1,8 @@
 import { db } from "@intuitive-stay/db"
-import { feedback, organisations, properties, staffProfiles } from "@intuitive-stay/db/schema"
+import { feedback, organisations, properties, staffCommendations, staffProfiles } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, asc, count, eq, isNotNull, isNull, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, isNotNull, isNull, sql } from "drizzle-orm"
 import Stripe from "stripe"
 import { z } from "zod"
 
@@ -381,5 +381,73 @@ export const staffRouter = router({
       }
 
       return { checkoutUrl: session.url }
+    }),
+
+  /**
+   * Protected — owner writes a commendation for a verified, non-removed staff member
+   * at their own property. authorName is stored at write time from the session.
+   */
+  addCommendation: protectedProcedure
+    .input(
+      z.object({
+        staffProfileId: z.string(),
+        body: z.string().min(10).max(500),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.id, input.staffProfileId),
+      })
+      if (!staff) throw new TRPCError({ code: "NOT_FOUND", message: "Staff member not found." })
+      if (staff.removedAt) throw new TRPCError({ code: "FORBIDDEN", message: "This staff member has been removed." })
+      if (!staff.emailVerifiedAt) throw new TRPCError({ code: "FORBIDDEN", message: "Staff member has not verified their email." })
+
+      // Verify staff belongs to a property owned by this org
+      const property = await db.query.properties.findFirst({
+        where: and(
+          eq(properties.id, staff.propertyId),
+          eq(properties.organisationId, org.id),
+        ),
+      })
+      if (!property) throw new TRPCError({ code: "FORBIDDEN" })
+
+      await db.insert(staffCommendations).values({
+        id: crypto.randomUUID(),
+        staffProfileId: input.staffProfileId,
+        propertyId: staff.propertyId,
+        authorName: ctx.session.user.name ?? "Property Manager",
+        body: input.body.trim(),
+        createdAt: new Date(),
+      })
+
+      return { ok: true }
+    }),
+
+  /**
+   * Public — returns all commendations for a staff member, newest first.
+   * Joins properties to include propertyName alongside each entry.
+   */
+  getCommendations: publicProcedure
+    .input(z.object({ staffProfileId: z.string() }))
+    .query(async ({ input }) => {
+      const rows = await db
+        .select({
+          id: staffCommendations.id,
+          authorName: staffCommendations.authorName,
+          body: staffCommendations.body,
+          createdAt: staffCommendations.createdAt,
+          propertyName: properties.name,
+        })
+        .from(staffCommendations)
+        .innerJoin(properties, eq(staffCommendations.propertyId, properties.id))
+        .where(eq(staffCommendations.staffProfileId, input.staffProfileId))
+        .orderBy(desc(staffCommendations.createdAt))
+
+      return rows
     }),
 })
