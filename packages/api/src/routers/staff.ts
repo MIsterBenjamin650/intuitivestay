@@ -6,7 +6,7 @@ import { and, asc, count, desc, eq, isNotNull, isNull, sql } from "drizzle-orm"
 import Stripe from "stripe"
 import { z } from "zod"
 
-import { sendStaffVerificationEmail } from "../lib/email"
+import { sendProfileLinkEmail, sendStaffCommendationEmail, sendStaffVerificationEmail } from "../lib/email"
 import { protectedProcedure, publicProcedure, router } from "../index"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
@@ -425,6 +425,15 @@ export const staffRouter = router({
         createdAt: new Date(),
       })
 
+      // Fire-and-forget — don't block response if email fails
+      sendStaffCommendationEmail(
+        staff.email,
+        staff.name,
+        ctx.session.user.name ?? "Property Manager",
+        property.name,
+        input.staffProfileId,
+      ).catch(console.error)
+
       return { ok: true }
     }),
 
@@ -449,5 +458,47 @@ export const staffRouter = router({
         .orderBy(desc(staffCommendations.createdAt))
 
       return rows
+    }),
+
+  /**
+   * Public — staff enter their email to receive profile link(s).
+   * Always returns { ok: true } — never reveals if an email has a profile.
+   */
+  requestProfileLink: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const profiles = await db
+        .select({
+          id: staffProfiles.id,
+          name: staffProfiles.name,
+          propertyId: staffProfiles.propertyId,
+        })
+        .from(staffProfiles)
+        .where(
+          and(
+            eq(staffProfiles.email, input.email.toLowerCase()),
+            isNotNull(staffProfiles.emailVerifiedAt),
+            isNull(staffProfiles.removedAt),
+          ),
+        )
+
+      if (profiles.length > 0) {
+        const profilesWithProperty = await Promise.all(
+          profiles.map(async (p) => {
+            const property = await db.query.properties.findFirst({
+              where: eq(properties.id, p.propertyId),
+            })
+            return {
+              name: p.name,
+              propertyName: property?.name ?? "Unknown Property",
+              staffProfileId: p.id,
+            }
+          }),
+        )
+
+        sendProfileLinkEmail(input.email.toLowerCase(), profilesWithProperty).catch(console.error)
+      }
+
+      return { ok: true }
     }),
 })
