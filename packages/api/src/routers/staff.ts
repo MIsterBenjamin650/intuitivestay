@@ -9,6 +9,7 @@ import { TRPCError } from "@trpc/server"
 import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 
+import { sendStaffVerificationEmail } from "../lib/email"
 import { protectedProcedure, publicProcedure, router } from "../index"
 
 export const staffRouter = router({
@@ -124,15 +125,53 @@ export const staffRouter = router({
       }
 
       const id = crypto.randomUUID()
+      const verificationToken = crypto.randomUUID()
+
       await db.insert(staffProfiles).values({
         id,
         name: input.name.trim(),
         email: input.email.toLowerCase(),
         propertyId: property.id,
+        emailVerificationToken: verificationToken,
         createdAt: new Date(),
       })
 
+      // Fire-and-forget — don't block registration if email fails
+      sendStaffVerificationEmail(
+        input.email.toLowerCase(),
+        input.name.trim(),
+        property.name,
+        verificationToken,
+      ).catch(console.error)
+
       return { ok: true, staffProfileId: id }
+    }),
+
+  /**
+   * Public — verifies a staff member's email using their verification token.
+   */
+  verifyStaffEmail: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .mutation(async ({ input }) => {
+      const staff = await db.query.staffProfiles.findFirst({
+        where: eq(staffProfiles.emailVerificationToken, input.token),
+      })
+      if (!staff) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "This verification link is invalid or has already been used.",
+        })
+      }
+
+      await db
+        .update(staffProfiles)
+        .set({
+          emailVerifiedAt: new Date(),
+          emailVerificationToken: null,
+        })
+        .where(eq(staffProfiles.id, staff.id))
+
+      return { ok: true, name: staff.name, propertyId: staff.propertyId }
     }),
 
   /**
@@ -163,6 +202,7 @@ export const staffRouter = router({
         name: s.name,
         email: s.email,
         createdAt: s.createdAt,
+        emailVerifiedAt: s.emailVerifiedAt,
         nominations: 0,
       }))
     }),

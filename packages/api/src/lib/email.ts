@@ -254,6 +254,26 @@ export async function sendVelocityAlertEmail(
   })
 }
 
+export async function sendStaffVerificationEmail(
+  staffEmail: string,
+  staffName: string,
+  propertyName: string,
+  token: string,
+) {
+  const verifyUrl = `${env.PUBLIC_PORTAL_URL}/staff-verify/${token}`
+
+  await resend.emails.send({
+    from: FROM,
+    to: staffEmail,
+    subject: `Verify your Service Signature profile — ${propertyName}`,
+    html: `<h1>Hi ${staffName},</h1>
+<p>You've registered your Service Signature profile at <strong>${propertyName}</strong>.</p>
+<p>Click the button below to verify your email address and activate your profile:</p>
+<p><a href="${verifyUrl}" style="display:inline-block;background:#f97316;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Verify My Email →</a></p>
+<p style="font-size:12px;color:#64748b">If you didn't register for a Service Signature profile, you can safely ignore this email.</p>`,
+  })
+}
+
 export async function sendStaffInviteEmail(
   invitedEmail: string,
   propertyName: string,
