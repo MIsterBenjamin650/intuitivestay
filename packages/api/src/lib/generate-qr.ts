@@ -15,7 +15,7 @@ export async function generateQrPdf(feedbackUrl: string, propertyName: string): 
   const qrPngBuffer = await QRCode.toBuffer(feedbackUrl, {
     width: 300,
     margin: 2,
-    color: { dark: "#f97316", light: "#ffffff" },
+    color: { dark: "#000000", light: "#ffffff" },
   })
 
   // 2. Build PDF (420 × 580 points)
