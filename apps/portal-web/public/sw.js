@@ -1,13 +1,25 @@
 self.addEventListener("push", (event) => {
   if (!event.data) return
 
-  const data = event.data.json()
+  let data
+  try {
+    data = event.data.json()
+  } catch {
+    data = { title: "IntuitiveStay Alert", body: "" }
+  }
+
+  // Only allow same-origin URLs to prevent open redirect via push payload
+  const rawUrl = data.url ?? "/"
+  const safeUrl = rawUrl.startsWith(self.location.origin) || rawUrl.startsWith("/")
+    ? rawUrl
+    : "/"
+
   const title = data.title ?? "IntuitiveStay Alert"
   const options = {
     body: data.body ?? "",
     icon: "/favicon.png",
     badge: "/favicon.png",
-    data: { url: data.url ?? "/" },
+    data: { url: safeUrl },
     requireInteraction: true,
   }
 

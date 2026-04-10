@@ -8,12 +8,13 @@ export const contactRouter = router({
     .input(
       z.object({
         name: z.string().min(1).max(100),
-        email: z.string().email(),
         message: z.string().min(1).max(2000),
       }),
     )
-    .mutation(async ({ input }) => {
-      await sendContactEmail(input.name, input.email, input.message)
+    .mutation(async ({ input, ctx }) => {
+      // Use the authenticated session email — never trust user-supplied email
+      const email = ctx.session.user.email
+      await sendContactEmail(input.name, email, input.message)
       return { success: true }
     }),
 })
