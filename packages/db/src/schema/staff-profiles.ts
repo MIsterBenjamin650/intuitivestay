@@ -14,6 +14,7 @@ export const staffProfiles = pgTable(
       .notNull()
       .references(() => properties.id, { onDelete: "cascade" }),
     emailVerificationToken: text("email_verification_token"),
+    emailVerificationTokenExpiresAt: timestamp("email_verification_token_expires_at"),
     emailVerifiedAt: timestamp("email_verified_at"),
     /** Set when staff completes the £9.99 one-time Stripe payment. */
     activatedAt: timestamp("activated_at"),

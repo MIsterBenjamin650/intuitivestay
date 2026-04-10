@@ -138,6 +138,7 @@ export const staffRouter = router({
         email: input.email.toLowerCase(),
         propertyId: property.id,
         emailVerificationToken: verificationToken,
+        emailVerificationTokenExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
         createdAt: new Date(),
       })
 
@@ -175,11 +176,19 @@ export const staffRouter = router({
         })
       }
 
+      if (staff.emailVerificationTokenExpiresAt && staff.emailVerificationTokenExpiresAt < new Date()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Verification link has expired. Please request a new one.",
+        })
+      }
+
       await db
         .update(staffProfiles)
         .set({
           emailVerifiedAt: new Date(),
           emailVerificationToken: null,
+          emailVerificationTokenExpiresAt: null,
         })
         .where(eq(staffProfiles.id, staff.id))
 
@@ -635,13 +644,14 @@ export const staffRouter = router({
         const property = await db.query.properties.findFirst({
           where: eq(properties.id, p.propertyId),
         })
-        const token = p.emailVerificationToken ?? crypto.randomUUID()
-        if (!p.emailVerificationToken) {
-          await db
-            .update(staffProfiles)
-            .set({ emailVerificationToken: token })
-            .where(eq(staffProfiles.id, p.id))
-        }
+        const token = crypto.randomUUID()
+        await db
+          .update(staffProfiles)
+          .set({
+            emailVerificationToken: token,
+            emailVerificationTokenExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
+          })
+          .where(eq(staffProfiles.id, p.id))
         sendStaffVerificationEmail(
           normalizedEmail,
           p.name,
@@ -683,7 +693,10 @@ export const staffRouter = router({
       const newToken = crypto.randomUUID()
       await db
         .update(staffProfiles)
-        .set({ emailVerificationToken: newToken })
+        .set({
+          emailVerificationToken: newToken,
+          emailVerificationTokenExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
+        })
         .where(eq(staffProfiles.id, input.staffProfileId))
 
       sendStaffVerificationEmail(
