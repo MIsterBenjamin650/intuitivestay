@@ -2,8 +2,13 @@
  * Node.js HTTP server entry point for Railway deployment.
  * TanStack Start builds a Web Fetch handler; this wraps it for Node.js.
  * Also proxies /api/auth/* to portal-server so auth cookies are same-domain.
+ *
+ * IMPORTANT: The auth proxy uses https.request (NOT fetch) because the
+ * WHATWG Fetch API filters Set-Cookie headers from cross-origin responses,
+ * which would silently drop the session cookie after sign-in.
  */
 import http from 'node:http'
+import https from 'node:https'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { resolve, extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -36,35 +41,47 @@ const MIME_TYPES = {
 }
 
 const server = http.createServer(async (req, res) => {
-  // Proxy /api/auth/* to portal-server so auth cookies are set on this domain
+  // Proxy /api/auth/* to portal-server so auth cookies are set on this domain.
+  // Uses https.request (NOT fetch) — fetch filters Set-Cookie from cross-origin
+  // responses per the WHATWG spec, which silently drops the session cookie.
   if (req.url.startsWith('/api/auth/')) {
-    const targetUrl = `${PORTAL_SERVER}${req.url}`
+    const target = new URL(`${PORTAL_SERVER}${req.url}`)
+
     const chunks = []
     for await (const chunk of req) chunks.push(chunk)
     const body = Buffer.concat(chunks)
 
-    const headers = {}
+    const reqHeaders = {}
     for (const [key, value] of Object.entries(req.headers)) {
-      if (key.toLowerCase() !== 'host') headers[key] = value
+      if (key.toLowerCase() === 'host') continue
+      reqHeaders[key] = value
     }
+    if (body.length > 0) reqHeaders['content-length'] = body.length
 
-    try {
-      const proxyRes = await fetch(targetUrl, {
+    const proxyReq = https.request(
+      {
+        hostname: target.hostname,
+        port: target.port || 443,
+        path: target.pathname + target.search,
         method: req.method,
-        headers,
-        body: ['GET', 'HEAD'].includes(req.method) ? undefined : body,
-      })
+        headers: reqHeaders,
+      },
+      (proxyRes) => {
+        // proxyRes.headers is a plain Node.js object — no header filtering,
+        // so Set-Cookie is always present and correctly passed through.
+        res.writeHead(proxyRes.statusCode, proxyRes.headers)
+        proxyRes.pipe(res)
+      },
+    )
 
-      const resHeaders = {}
-      proxyRes.headers.forEach((value, key) => { resHeaders[key] = value })
-      res.writeHead(proxyRes.status, resHeaders)
-      const resBody = await proxyRes.arrayBuffer()
-      res.end(Buffer.from(resBody))
-    } catch (err) {
+    proxyReq.on('error', (err) => {
       console.error('Auth proxy error:', err)
-      res.writeHead(502)
+      if (!res.headersSent) res.writeHead(502)
       res.end('Bad Gateway')
-    }
+    })
+
+    if (body.length > 0) proxyReq.write(body)
+    proxyReq.end()
     return
   }
 
