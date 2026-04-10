@@ -1,4 +1,3 @@
-import { getRequest } from "@tanstack/react-start/server";
 import { createMiddleware } from "@tanstack/react-start";
 
 // Portal-server URL — available as a runtime env var in Railway.
@@ -8,12 +7,12 @@ import { createMiddleware } from "@tanstack/react-start";
 const PORTAL_SERVER_URL =
   process.env.PORTAL_SERVER_URL ?? "https://intuitivestay-production.up.railway.app"
 
-export const authMiddleware = createMiddleware().server(async ({ next }) => {
-  // getRequest() returns the actual incoming HTTP request (with cookies).
-  // The `request` arg passed to middleware is a synthetic server-fn object
-  // that does NOT carry the browser's cookie header.
-  const httpRequest = getRequest()
-  const cookieHeader = httpRequest.headers.get("cookie") ?? ""
+export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
+  // `request` is provided by TanStack Start's RequestServerOptions — it IS the
+  // actual incoming browser Request (with the session cookie).  Using it directly
+  // is more reliable than getRequest() / AsyncLocalStorage, which can throw when
+  // the H3 event context isn't propagated through the SSR React rendering chain.
+  const cookieHeader = request?.headers?.get("cookie") ?? ""
 
   const session = await fetch(`${PORTAL_SERVER_URL}/api/auth/get-session`, {
     headers: { cookie: cookieHeader },
