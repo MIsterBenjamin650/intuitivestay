@@ -190,6 +190,23 @@ export async function sendPasswordResetEmail(
   })
 }
 
+export async function sendMagicLinkEmail(
+  email: string,
+  magicLinkUrl: string,
+) {
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: "Your IntuitiveStay sign-in link",
+    html: wrap(
+      h1("Sign in to IntuitiveStay") +
+      p("Click the button below to sign in. This link expires in 24 hours and can only be used once.") +
+      btn("Sign In →", magicLinkUrl) +
+      p("If you didn't request this link, you can safely ignore this email.", true),
+    ),
+  })
+}
+
 export async function sendAlertEmail(
   ownerEmail: string,
   ownerName: string,

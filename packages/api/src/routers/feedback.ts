@@ -1,10 +1,11 @@
 import { db } from "@intuitive-stay/db"
-import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyScores, pushSubscriptions, qrCodes, staffProfiles } from "@intuitive-stay/db/schema"
+import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyMembers, propertyScores, pushSubscriptions, qrCodes, staffProfiles } from "@intuitive-stay/db/schema"
 import { TRPCError } from "@trpc/server"
 import { and, count, desc, eq, gt, inArray, isNotNull, like, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure, router } from "../index"
+import { assertPropertyAccess } from "../lib/access"
 import { sendAlertEmail, sendStaffNominationEmail, sendVelocityAlertEmail } from "../lib/email"
 import { sendPushNotification } from "../lib/web-push"
 
@@ -406,20 +407,36 @@ export const feedbackRouter = router({
    * owner's properties. Used by the portal topbar notification badge.
    */
   getRedAlertCount: protectedProcedure.query(async ({ ctx }) => {
+    let propertyIds: string[]
+
+    // Owner path: get all properties in their org
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
     })
 
-    if (!org) return 0
+    if (org) {
+      const userProperties = await db
+        .select({ id: properties.id })
+        .from(properties)
+        .where(eq(properties.organisationId, org.id))
+      propertyIds = userProperties.map((p) => p.id)
+    } else {
+      // Staff path: scope to their one property
+      const membership = await db
+        .select({ propertyId: propertyMembers.propertyId })
+        .from(propertyMembers)
+        .where(
+          and(
+            eq(propertyMembers.userId, ctx.session.user.id),
+            eq(propertyMembers.status, "active"),
+          ),
+        )
+        .limit(1)
+      if (!membership.length || !membership[0]) return 0
+      propertyIds = [membership[0].propertyId]
+    }
 
-    const userProperties = await db
-      .select({ id: properties.id })
-      .from(properties)
-      .where(eq(properties.organisationId, org.id))
-
-    if (userProperties.length === 0) return 0
-
-    const propertyIds = userProperties.map((p) => p.id)
+    if (propertyIds.length === 0) return 0
 
     const [result] = await db
       .select({ total: count() })
@@ -441,20 +458,43 @@ export const feedbackRouter = router({
    * Capped at 10 entries.
    */
   getRecentUnreadAlerts: protectedProcedure.query(async ({ ctx }) => {
+    let propertyIds: string[]
+    let propertyNameMap: Record<string, string>
+
+    // Owner path
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
     })
-    if (!org) return []
 
-    const userProperties = await db
-      .select({ id: properties.id, name: properties.name })
-      .from(properties)
-      .where(eq(properties.organisationId, org.id))
-
-    if (userProperties.length === 0) return []
-
-    const propertyIds = userProperties.map((p) => p.id)
-    const propertyNameMap = Object.fromEntries(userProperties.map((p) => [p.id, p.name]))
+    if (org) {
+      const userProperties = await db
+        .select({ id: properties.id, name: properties.name })
+        .from(properties)
+        .where(eq(properties.organisationId, org.id))
+      if (userProperties.length === 0) return []
+      propertyIds = userProperties.map((p) => p.id)
+      propertyNameMap = Object.fromEntries(userProperties.map((p) => [p.id, p.name]))
+    } else {
+      // Staff path: scope to their one property
+      const membership = await db
+        .select({ propertyId: propertyMembers.propertyId })
+        .from(propertyMembers)
+        .where(
+          and(
+            eq(propertyMembers.userId, ctx.session.user.id),
+            eq(propertyMembers.status, "active"),
+          ),
+        )
+        .limit(1)
+      if (!membership.length || !membership[0]) return []
+      const propertyId = membership[0].propertyId
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, propertyId),
+      })
+      if (!property) return []
+      propertyIds = [propertyId]
+      propertyNameMap = { [propertyId]: property.name }
+    }
 
     const rows = await db
       .select({
@@ -492,16 +532,7 @@ export const feedbackRouter = router({
   markAlertsRead: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       await db
         .update(feedback)
@@ -520,16 +551,7 @@ export const feedbackRouter = router({
   getPropertyFeedbackSummary: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       const scores = await db.query.propertyScores.findFirst({
         where: eq(propertyScores.propertyId, input.propertyId),
@@ -580,16 +602,7 @@ export const feedbackRouter = router({
   getPropertyAlertFeedback: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       const alertRows = await db
         .select()
@@ -624,16 +637,7 @@ export const feedbackRouter = router({
   getUniformScoreFeedback: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       const rows = await db
         .select()
@@ -668,16 +672,7 @@ export const feedbackRouter = router({
     .query(async ({ ctx, input }) => {
       const PAGE_SIZE = 50
 
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       const [rows, totalResult] = await Promise.all([
         db

@@ -32,7 +32,7 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
       message: "Authentication required",
     })
   }
-  if (ctx.session.user.email !== env.ADMIN_EMAIL) {
+  if (ctx.session.user.email.toLowerCase().trim() !== env.ADMIN_EMAIL.toLowerCase().trim()) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Admin access required",

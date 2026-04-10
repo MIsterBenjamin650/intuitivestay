@@ -8,6 +8,7 @@ import { z } from "zod"
 
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "../index"
 import { generateAndActivateProperty } from "../lib/activate-property"
+import { assertPropertyAccess } from "../lib/access"
 import { sendAdditionalPropertyPaymentEmail, sendApprovalEmail, sendBusinessEmailVerification, sendNewPropertyNotificationEmail, sendRejectionEmail } from "../lib/email"
 import { generateQrPdf } from "../lib/generate-qr"
 
@@ -1162,16 +1163,12 @@ export const propertiesRouter = router({
   getPropertyDashboard: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
       })
       if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
 
       const scores = await db.query.propertyScores.findFirst({
         where: eq(propertyScores.propertyId, input.propertyId),

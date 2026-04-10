@@ -72,7 +72,7 @@ export const inviteRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invite has expired" })
       }
 
-      if (ctx.session.user.email !== m.invitedEmail) {
+      if (ctx.session.user.email.toLowerCase().trim() !== m.invitedEmail.toLowerCase().trim()) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You must sign in with the email address this invitation was sent to",

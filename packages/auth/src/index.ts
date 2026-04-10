@@ -2,7 +2,7 @@ import { expo } from "@better-auth/expo";
 import { db } from "@intuitive-stay/db";
 import * as schema from "@intuitive-stay/db/schema/auth";
 import { env } from "@intuitive-stay/env/server";
-import { sendPasswordResetEmail } from "@intuitive-stay/api/lib/email";
+import { sendMagicLinkEmail, sendPasswordResetEmail } from "@intuitive-stay/api/lib/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
@@ -45,7 +45,7 @@ export const auth = betterAuth({
     expo(),
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        pendingMagicLinks.set(email, url);
+        await sendMagicLinkEmail(email, url)
       },
       expiresIn: 60 * 60 * 24, // 24 hours
     }),
