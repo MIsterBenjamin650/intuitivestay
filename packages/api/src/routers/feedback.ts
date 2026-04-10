@@ -328,6 +328,10 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Feedback not found" })
       }
 
+      if (row.gcs < 8) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Name drop only available for high scores" })
+      }
+
       await db
         .update(feedback)
         .set({ namedStaffMember: input.staffName })
@@ -354,6 +358,10 @@ export const feedbackRouter = router({
 
       if (!row) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Feedback not found" })
+      }
+
+      if (row.gcs > 5) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Vent text only available for low scores" })
       }
 
       await db
