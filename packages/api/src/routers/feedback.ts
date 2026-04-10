@@ -1,11 +1,12 @@
 import { db } from "@intuitive-stay/db"
-import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyScores, qrCodes, staffProfiles } from "@intuitive-stay/db/schema"
+import { dashboardCache, feedback, feedbackFingerprints, organisations, properties, propertyScores, pushSubscriptions, qrCodes, staffProfiles } from "@intuitive-stay/db/schema"
 import { TRPCError } from "@trpc/server"
 import { and, count, desc, eq, gt, inArray, isNotNull, like, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, publicProcedure, router } from "../index"
 import { sendAlertEmail, sendStaffNominationEmail, sendVelocityAlertEmail } from "../lib/email"
+import { sendPushNotification } from "../lib/web-push"
 
 /**
  * Recalculates running averages for a property after new feedback is submitted.
@@ -243,6 +244,36 @@ export const feedbackRouter = router({
               recognition: input.recognition,
             },
           ).catch((err) => console.error("Failed to send alert email:", err))
+
+          // Send push notification to all owner's registered devices
+          const org = await db.query.organisations.findFirst({
+            where: eq(organisations.id, property.organisationId),
+          })
+
+          if (org?.ownerId) {
+            const subs = await db.query.pushSubscriptions.findMany({
+              where: eq(pushSubscriptions.userId, org.ownerId),
+            })
+
+            for (const sub of subs) {
+              sendPushNotification(
+                { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+                {
+                  title: "🔴 Red Alert — Low Guest Score",
+                  body: `${property.name} received a GCS of ${gcs}/10. Tap to review.`,
+                  url: `/properties/${property.id}/dashboard`,
+                },
+              ).catch((err: unknown) => {
+                if (typeof err === "object" && err !== null && "statusCode" in err && (err as { statusCode: number }).statusCode === 410) {
+                  db.delete(pushSubscriptions)
+                    .where(eq(pushSubscriptions.endpoint, sub.endpoint))
+                    .catch(console.error)
+                } else {
+                  console.error("Push notification failed:", err)
+                }
+              })
+            }
+          }
         }
       }
 
