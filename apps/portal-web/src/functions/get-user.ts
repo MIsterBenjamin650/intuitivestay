@@ -1,3 +1,4 @@
+import { env } from "@intuitive-stay/env/server"
 import { db } from "@intuitive-stay/db"
 import { organisations, properties, propertyMembers } from "@intuitive-stay/db/schema"
 import { createServerFn } from "@tanstack/react-start"
@@ -38,7 +39,7 @@ export const getUser = createServerFn({ method: "GET" })
           ...user,
           properties: orgProperties,
         },
-        isAdmin: user.email === process.env.ADMIN_EMAIL,
+        isAdmin: user.email === env.ADMIN_EMAIL,
         isStaff: false,
         staffPropertyId: null,
         staffPermissions: null,
@@ -89,7 +90,7 @@ export const getUser = createServerFn({ method: "GET" })
         ...user,
         properties: [],
       },
-      isAdmin: user.email === process.env.ADMIN_EMAIL,
+      isAdmin: user.email === env.ADMIN_EMAIL,
       isStaff: false,
       staffPropertyId: null,
       staffPermissions: null,
