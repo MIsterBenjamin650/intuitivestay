@@ -11,6 +11,7 @@ import {
 } from "recharts"
 
 import { AdminDashboard } from "@/components/admin-dashboard"
+import { PushNotificationPrompt } from "@/components/push-notification-prompt"
 import { useTRPC } from "@/utils/trpc"
 
 export const Route = createFileRoute("/_portal/")({
@@ -107,6 +108,7 @@ function PortfolioDashboard() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <PushNotificationPrompt />
       <div>
         <h1 className="text-xl font-bold text-[#1c1917]">Portfolio Overview</h1>
         <p className="text-xs text-gray-400 mt-0.5">All your properties at a glance</p>
