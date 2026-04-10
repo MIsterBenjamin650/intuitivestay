@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { organisations } from "./organisations";
 
@@ -22,6 +22,8 @@ export const properties = pgTable("properties", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   tripAdvisorUrl: text("tripadvisor_url"),
   googlePlaceId: text("google_place_id"),
+  reviewPromptThreshold: integer("review_prompt_threshold").notNull().default(8),
+  reviewPromptPlatforms: text("review_prompt_platforms").notNull().default("google,tripadvisor"),
   ownerEmail: text("owner_email").notNull(),
   ownerName: text("owner_name").notNull(),
   // ownerEmail/ownerName copied from Wix registration form; add userId FK in a later migration once owner creates their portal account

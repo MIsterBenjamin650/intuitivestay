@@ -98,12 +98,14 @@ export const reviewsRouter = router({
         .select({
           tripAdvisorUrl: properties.tripAdvisorUrl,
           googlePlaceId: properties.googlePlaceId,
+          reviewPromptThreshold: properties.reviewPromptThreshold,
+          reviewPromptPlatforms: properties.reviewPromptPlatforms,
         })
         .from(properties)
         .where(eq(properties.id, input.propertyId))
         .limit(1)
 
-      const sources = prop[0] ?? { tripAdvisorUrl: null, googlePlaceId: null }
+      const sources = prop[0] ?? { tripAdvisorUrl: null, googlePlaceId: null, reviewPromptThreshold: 8, reviewPromptPlatforms: "google,tripadvisor" }
 
       const cached = await db
         .select()
@@ -113,6 +115,8 @@ export const reviewsRouter = router({
       return {
         tripAdvisorUrl: sources.tripAdvisorUrl,
         googlePlaceId: sources.googlePlaceId,
+        reviewPromptThreshold: sources.reviewPromptThreshold,
+        reviewPromptPlatforms: sources.reviewPromptPlatforms,
         tripadvisor: cached.find((c) => c.source === "tripadvisor") ?? null,
         google: cached.find((c) => c.source === "google") ?? null,
       }
@@ -262,5 +266,27 @@ export const reviewsRouter = router({
       }
 
       return { scraped: results.map((r) => r.source), errors: scrapeErrors }
+    }),
+
+  updateReviewPromptSettings: protectedProcedure
+    .input(
+      z.object({
+        propertyId: z.string(),
+        threshold: z.number().int().min(1).max(10),
+        platforms: z.array(z.enum(["google", "tripadvisor"])).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertPropertyOwner(ctx.session.user.id, input.propertyId)
+
+      await db
+        .update(properties)
+        .set({
+          reviewPromptThreshold: input.threshold,
+          reviewPromptPlatforms: input.platforms.join(","),
+        })
+        .where(eq(properties.id, input.propertyId))
+
+      return { ok: true }
     }),
 })

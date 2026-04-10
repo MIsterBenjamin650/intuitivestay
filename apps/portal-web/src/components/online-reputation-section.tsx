@@ -44,6 +44,8 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
   const [taUrl, setTaUrl] = React.useState("")
   const [googleId, setGoogleId] = React.useState("")
   const [scrapeError, setScrapeError] = React.useState<string | null>(null)
+  const [localThreshold, setLocalThreshold] = React.useState(8)
+  const [localPlatforms, setLocalPlatforms] = React.useState<string[]>(["google", "tripadvisor"])
 
   const { data, isLoading } = useQuery(
     trpc.reviews.getComparison.queryOptions({ propertyId }),
@@ -51,11 +53,14 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
 
   const saveMutation = useMutation(trpc.reviews.setReviewSources.mutationOptions())
   const scrapeMutation = useMutation(trpc.reviews.triggerScrape.mutationOptions())
+  const saveSettingsMutation = useMutation(trpc.reviews.updateReviewPromptSettings.mutationOptions())
 
   React.useEffect(() => {
     if (data) {
       setTaUrl(data.tripAdvisorUrl ?? "")
       setGoogleId(data.googlePlaceId ?? "")
+      setLocalThreshold(data.reviewPromptThreshold ?? 8)
+      setLocalPlatforms((data.reviewPromptPlatforms ?? "google,tripadvisor").split(",").map((p) => p.trim()))
     }
   }, [data])
 
@@ -378,6 +383,96 @@ export function OnlineReputationSection({ propertyId, gcs }: Props) {
           )}
         </>
       )}
+
+      {/* Review Prompt Settings */}
+      <div className="mt-5 rounded-xl border bg-white shadow-sm p-5 space-y-4">
+        <div>
+          <p className="font-semibold text-sm">Review Prompt Settings</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            When a guest's score meets your threshold, they'll be prompted to share their experience publicly.
+          </p>
+        </div>
+
+        {/* Threshold slider */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Minimum score to trigger prompt</label>
+            <span className="text-sm font-bold text-orange-500">{localThreshold} / 10</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            step={1}
+            value={localThreshold}
+            onChange={(e) => setLocalThreshold(Number(e.target.value))}
+            className="w-full accent-orange-500"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>1 (all guests)</span>
+            <span>10 (perfect only)</span>
+          </div>
+        </div>
+
+        {/* Platform toggles */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Platforms to show</p>
+          <div className="flex gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localPlatforms.includes("google")}
+                onChange={(e) =>
+                  setLocalPlatforms(
+                    e.target.checked
+                      ? [...localPlatforms, "google"]
+                      : localPlatforms.filter((p) => p !== "google"),
+                  )
+                }
+                className="accent-orange-500"
+              />
+              <span className="text-sm">Google</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localPlatforms.includes("tripadvisor")}
+                onChange={(e) =>
+                  setLocalPlatforms(
+                    e.target.checked
+                      ? [...localPlatforms, "tripadvisor"]
+                      : localPlatforms.filter((p) => p !== "tripadvisor"),
+                  )
+                }
+                className="accent-orange-500"
+              />
+              <span className="text-sm">TripAdvisor</span>
+            </label>
+          </div>
+          {localPlatforms.length === 0 && (
+            <p className="text-xs text-red-500">Select at least one platform</p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            saveSettingsMutation.mutate({
+              propertyId,
+              threshold: localThreshold,
+              platforms: localPlatforms as ("google" | "tripadvisor")[],
+            })
+          }
+          disabled={saveSettingsMutation.isPending || localPlatforms.length === 0}
+          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
+        >
+          {saveSettingsMutation.isPending ? "Saving…" : "Save settings"}
+        </button>
+
+        {saveSettingsMutation.isSuccess && (
+          <p className="text-xs text-green-600">Settings saved.</p>
+        )}
+      </div>
     </div>
   )
 }

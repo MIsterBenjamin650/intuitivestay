@@ -165,6 +165,112 @@ function generateFingerprint(): string {
   return (hash >>> 0).toString(16)
 }
 
+function ThankYouScreen({
+  propertyName,
+  nominatedStaff,
+  shouldShowReviewPrompt,
+  reviewText,
+  showGoogle,
+  showTripAdvisor,
+  googlePlaceId,
+  tripAdvisorUrl,
+}: {
+  propertyName: string
+  nominatedStaff: { displayName: string } | null
+  shouldShowReviewPrompt: boolean
+  reviewText: string
+  showGoogle: boolean
+  showTripAdvisor: boolean
+  googlePlaceId: string | null
+  tripAdvisorUrl: string | null
+}) {
+  useEffect(() => {
+    if (shouldShowReviewPrompt && reviewText) {
+      navigator.clipboard.writeText(reviewText).catch(() => {})
+    }
+  }, [shouldShowReviewPrompt, reviewText])
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
+      <div className="mx-auto max-w-sm w-full space-y-6 text-center">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-orange-100 p-4">
+            <ShieldCheckIcon className="size-10 text-orange-500" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Thank you!</h2>
+          <p className="text-sm text-muted-foreground">
+            Your feedback for <span className="font-medium text-foreground">{propertyName}</span> has been recorded.
+            It helps us improve the experience for every guest.
+          </p>
+        </div>
+        {nominatedStaff && (
+          <div className="rounded-xl bg-orange-50 border border-orange-100 px-5 py-4 space-y-1">
+            <p className="text-sm font-semibold text-orange-800">
+              Nomination received
+            </p>
+            <p className="text-sm text-orange-700">
+              Your kind words about <span className="font-medium">{nominatedStaff.displayName}</span> have been passed on. They'll be notified.
+            </p>
+          </div>
+        )}
+
+        {/* Review prompt — only when GCS >= threshold and platform links exist */}
+        {shouldShowReviewPrompt && (
+          <div className="mt-6 rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-4 text-left">
+            <div className="text-center space-y-1">
+              <p className="font-semibold text-[#1c1917]">Enjoying your experience?</p>
+              <p className="text-sm text-[#78716c]">We've copied your review — just tap a button below and paste it in.</p>
+            </div>
+
+            {/* Copied review preview */}
+            <div className="rounded-lg bg-white border border-orange-100 px-4 py-3 text-sm text-[#44403c] italic leading-relaxed">
+              "{reviewText}"
+            </div>
+
+            <p className="text-xs text-center text-[#a8a29e]">✓ Copied to clipboard</p>
+
+            {/* Platform buttons */}
+            <div className="flex flex-col gap-2">
+              {showGoogle && googlePlaceId && (
+                <a
+                  href={googlePlaceId}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-white border border-[#e8e3dc] px-4 py-3 text-sm font-semibold text-[#1c1917] hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  <svg className="size-4" viewBox="0 0 24 24" fill="none">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Post to Google Reviews
+                </a>
+              )}
+              {showTripAdvisor && tripAdvisorUrl && (
+                <a
+                  href={tripAdvisorUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-white border border-[#e8e3dc] px-4 py-3 text-sm font-semibold text-[#1c1917] hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  <svg className="size-4" viewBox="0 0 24 24" fill="#00AF87">
+                    <circle cx="12" cy="12" r="12"/>
+                    <path d="M12 7C9.24 7 6.8 8.28 5.24 10.31L3 9l1.5 3.5S3 13 3 15c0 2.76 2.24 5 5 5s5-2.24 5-5c0-.34-.04-.68-.1-1H12h.1c-.06.32-.1.66-.1 1 0 2.76 2.24 5 5 5s5-2.24 5-5c0-2-.97-3.08-1.5-3.5L21 9l-2.24 1.31C17.2 8.28 14.76 7 12 7z" fill="white"/>
+                  </svg>
+                  Post to TripAdvisor
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function FeedbackPage() {
   const { uniqueCode } = Route.useParams()
   const trpc = useTRPC()
@@ -184,6 +290,8 @@ function FeedbackPage() {
   })
 
   const [submitted, setSubmitted] = useState(false)
+  const [submittedGcs, setSubmittedGcs] = useState<number>(0)
+  const [submittedAdjectives, setSubmittedAdjectives] = useState<string>("")
   const [alreadySubmitted, setAlreadySubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(false)
@@ -309,12 +417,39 @@ function FeedbackPage() {
         })
       }
 
+      setSubmittedGcs(gcs)
+      setSubmittedAdjectives(selectedAdjectives.join(","))
       setSubmitted(true)
     } catch {
       setSubmitError(true)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  function generateReviewText(propertyName: string, score: number, adjectives: string): string {
+    const adjList = adjectives ? adjectives.split(",").map((a) => a.trim()).filter(Boolean) : []
+
+    const scoreWord =
+      score >= 9.5
+        ? "outstanding"
+        : score >= 8.5
+          ? "excellent"
+          : score >= 7.5
+            ? "really impressive"
+            : "great"
+
+    let adjSentence = ""
+    if (adjList.length >= 3) {
+      const picked = adjList.slice(0, 3)
+      adjSentence = `The experience was ${picked[0]}, ${picked[1]} and ${picked[2]}. `
+    } else if (adjList.length === 2) {
+      adjSentence = `The experience was ${adjList[0]} and ${adjList[1]}. `
+    } else if (adjList.length === 1) {
+      adjSentence = `The experience was ${adjList[0]}. `
+    }
+
+    return `I recently visited ${propertyName} and had a ${scoreWord} experience. ${adjSentence}I would highly recommend ${propertyName} to anyone looking for great hospitality.`
   }
 
   if (isLoading) {
@@ -359,72 +494,26 @@ function FeedbackPage() {
       ? verifiedStaff?.find((s) => s.id === selectedStaffProfileId)
       : null
 
+    const threshold = data?.reviewPromptThreshold ?? 8
+    const platforms = (data?.reviewPromptPlatforms ?? "google,tripadvisor").split(",").map((p) => p.trim())
+    const showGoogle = platforms.includes("google") && !!data?.googlePlaceId
+    const showTripAdvisor = platforms.includes("tripadvisor") && !!data?.tripAdvisorUrl
+    const shouldShowReviewPrompt = submittedGcs >= threshold && (showGoogle || showTripAdvisor)
+    const reviewText = data?.propertyName
+      ? generateReviewText(data.propertyName, submittedGcs, submittedAdjectives)
+      : ""
+
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
-        <div className="mx-auto max-w-sm w-full space-y-6 text-center">
-          <div className="flex justify-center">
-            <div className="rounded-full bg-orange-100 p-4">
-              <ShieldCheckIcon className="size-10 text-orange-500" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Thank you!</h2>
-            <p className="text-sm text-muted-foreground">
-              Your feedback for <span className="font-medium text-foreground">{data?.propertyName}</span> has been recorded.
-              It helps us improve the experience for every guest.
-            </p>
-          </div>
-          {nominatedStaff && (
-            <div className="rounded-xl bg-orange-50 border border-orange-100 px-5 py-4 space-y-1">
-              <p className="text-sm font-semibold text-orange-800">
-                Nomination received
-              </p>
-              <p className="text-sm text-orange-700">
-                Your kind words about <span className="font-medium">{nominatedStaff.displayName}</span> have been passed on. They'll be notified.
-              </p>
-            </div>
-          )}
-          {(data?.tripAdvisorUrl || data?.googlePlaceId) && (
-            <div className="space-y-3">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Enjoyed your stay?
-              </p>
-              <div className="flex flex-col gap-2">
-                {data.googlePlaceId && (
-                  <a
-                    href={`https://search.google.com/local/writereview?placeid=${data.googlePlaceId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground hover:bg-gray-50 transition-colors shadow-sm"
-                  >
-                    <svg viewBox="0 0 24 24" className="size-4 shrink-0" aria-hidden="true">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Leave a Google review
-                  </a>
-                )}
-                {data.tripAdvisorUrl && (
-                  <a
-                    href={data.tripAdvisorUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground hover:bg-gray-50 transition-colors shadow-sm"
-                  >
-                    <svg viewBox="0 0 24 24" className="size-4 shrink-0" aria-hidden="true">
-                      <path fill="#34E0A1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                      <circle fill="#34E0A1" cx="12" cy="12" r="3"/>
-                    </svg>
-                    Leave a TripAdvisor review
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <ThankYouScreen
+        propertyName={data?.propertyName ?? ""}
+        nominatedStaff={nominatedStaff ?? null}
+        shouldShowReviewPrompt={shouldShowReviewPrompt}
+        reviewText={reviewText}
+        showGoogle={showGoogle}
+        showTripAdvisor={showTripAdvisor}
+        googlePlaceId={data?.googlePlaceId ?? null}
+        tripAdvisorUrl={data?.tripAdvisorUrl ?? null}
+      />
     )
   }
 

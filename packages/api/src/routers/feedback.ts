@@ -85,6 +85,8 @@ export const feedbackRouter = router({
         propertyId: property.id,
         tripAdvisorUrl: property.tripAdvisorUrl ?? null,
         googlePlaceId: property.googlePlaceId ?? null,
+        reviewPromptThreshold: property.reviewPromptThreshold,
+        reviewPromptPlatforms: property.reviewPromptPlatforms,
       }
     }),
 
