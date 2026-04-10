@@ -29,7 +29,7 @@ export default function SignInForm({ onSwitchToSignUp, onForgotPassword }: { onS
         {
           onSuccess: () => {
             toast.success("Sign in successful");
-            void navigate({ to: "/" });
+            window.location.href = "/";
           },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
