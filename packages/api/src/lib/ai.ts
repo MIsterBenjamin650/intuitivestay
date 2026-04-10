@@ -30,13 +30,14 @@ Pillar scores: Resilience ${input.avgResilience?.toFixed(1) ?? "N/A"}, Empathy $
 ${input.ventTexts.length > 0 ? `Guest comments: ${input.ventTexts.slice(0, 3).join(" | ")}` : "No guest comments yesterday."}
 ${input.staffMentions.length > 0 ? `Staff mentioned: ${[...new Set(input.staffMentions)].join(", ")}` : ""}
 
-Respond with valid JSON only, no markdown:
+Respond with valid JSON only, no markdown. You MUST include all four pillars in the focus array — Resilience, Empathy, Anticipation, and Recognition — each with a short actionable tip relevant to today's scores:
 {
   "narrative": "3-4 sentence summary of performance",
   "focus": [
-    { "pillar": "PillarName", "action": "Short actionable tip for today" },
-    { "pillar": "PillarName", "action": "Short actionable tip for today" },
-    { "pillar": "PillarName", "action": "Short actionable tip for today" }
+    { "pillar": "Resilience", "action": "Short actionable tip for today" },
+    { "pillar": "Empathy", "action": "Short actionable tip for today" },
+    { "pillar": "Anticipation", "action": "Short actionable tip for today" },
+    { "pillar": "Recognition", "action": "Short actionable tip for today" }
   ]
 }`
 
