@@ -10,22 +10,11 @@ const PORTAL_SERVER_URL =
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
   const cookieHeader = request?.headers?.get("cookie") ?? ""
 
-  console.log("[AUTH] cookie header length:", cookieHeader.length)
-  console.log("[AUTH] cookie preview:", cookieHeader.slice(0, 120))
-  console.log("[AUTH] PORTAL_SERVER_URL:", PORTAL_SERVER_URL)
+  const session = await fetch(`${PORTAL_SERVER_URL}/api/auth/get-session`, {
+    headers: { cookie: cookieHeader },
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null)
 
-  let sessionRaw: unknown = null
-  try {
-    const res = await fetch(`${PORTAL_SERVER_URL}/api/auth/get-session`, {
-      headers: { cookie: cookieHeader },
-    })
-    console.log("[AUTH] get-session status:", res.status)
-    sessionRaw = res.ok ? await res.json() : null
-  } catch (err) {
-    console.error("[AUTH] get-session fetch error:", err)
-  }
-
-  console.log("[AUTH] session present:", sessionRaw !== null)
-
-  return next({ context: { session: sessionRaw } })
+  return next({ context: { session } })
 });
