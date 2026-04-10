@@ -7,6 +7,7 @@ import { propertiesRouter } from "./properties"
 import { staffRouter } from "./staff"
 import { teamRouter } from "./team"
 import { reviewsRouter } from "./reviews"
+import { pushRouter } from "./push"
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
@@ -26,6 +27,7 @@ export const appRouter = router({
   invite: inviteRouter,
   contact: contactRouter,
   staff: staffRouter,
+  push: pushRouter,
 })
 
 export type AppRouter = typeof appRouter
