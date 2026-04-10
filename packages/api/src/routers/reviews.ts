@@ -8,6 +8,34 @@ import { z } from "zod"
 import { protectedProcedure, router } from "../index"
 import { analyseReviewsForPillars } from "../lib/ai"
 
+const ALLOWED_REVIEW_HOSTNAMES = [
+  "tripadvisor.com",
+  "www.tripadvisor.com",
+  "tripadvisor.co.uk",
+  "www.tripadvisor.co.uk",
+  "google.com",
+  "www.google.com",
+  "maps.google.com",
+  "google.co.uk",
+  "www.google.co.uk",
+]
+
+function assertReviewUrl(url: string | null | undefined, fieldName: string): void {
+  if (!url) return
+  try {
+    const { hostname } = new URL(url)
+    if (!ALLOWED_REVIEW_HOSTNAMES.includes(hostname)) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `${fieldName} must be a TripAdvisor or Google Maps URL`,
+      })
+    }
+  } catch (e) {
+    if (e instanceof TRPCError) throw e
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Invalid ${fieldName} URL` })
+  }
+}
+
 async function assertPropertyOwner(userId: string, propertyId: string) {
   const row = await db
     .select({ orgId: organisations.id })
@@ -77,6 +105,9 @@ export const reviewsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await assertPropertyOwner(ctx.session.user.id, input.propertyId)
+
+      assertReviewUrl(input.tripAdvisorUrl, "TripAdvisor URL")
+      assertReviewUrl(input.googlePlaceId, "Google Maps URL")
 
       await db
         .update(properties)
