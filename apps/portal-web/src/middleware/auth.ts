@@ -8,17 +8,24 @@ const PORTAL_SERVER_URL =
   process.env.PORTAL_SERVER_URL ?? "https://intuitivestay-production.up.railway.app"
 
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
-  // `request` is provided by TanStack Start's RequestServerOptions — it IS the
-  // actual incoming browser Request (with the session cookie).  Using it directly
-  // is more reliable than getRequest() / AsyncLocalStorage, which can throw when
-  // the H3 event context isn't propagated through the SSR React rendering chain.
   const cookieHeader = request?.headers?.get("cookie") ?? ""
 
-  const session = await fetch(`${PORTAL_SERVER_URL}/api/auth/get-session`, {
-    headers: { cookie: cookieHeader },
-  })
-    .then((r) => (r.ok ? r.json() : null))
-    .catch(() => null)
+  console.log("[AUTH] cookie header length:", cookieHeader.length)
+  console.log("[AUTH] cookie preview:", cookieHeader.slice(0, 120))
+  console.log("[AUTH] PORTAL_SERVER_URL:", PORTAL_SERVER_URL)
 
-  return next({ context: { session } })
+  let sessionRaw: unknown = null
+  try {
+    const res = await fetch(`${PORTAL_SERVER_URL}/api/auth/get-session`, {
+      headers: { cookie: cookieHeader },
+    })
+    console.log("[AUTH] get-session status:", res.status)
+    sessionRaw = res.ok ? await res.json() : null
+  } catch (err) {
+    console.error("[AUTH] get-session fetch error:", err)
+  }
+
+  console.log("[AUTH] session present:", sessionRaw !== null)
+
+  return next({ context: { session: sessionRaw } })
 });
