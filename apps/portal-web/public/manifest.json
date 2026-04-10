@@ -1,0 +1,21 @@
+{
+  "name": "IntuitiveStay",
+  "short_name": "IntuitiveStay",
+  "description": "Guest feedback and service intelligence for independent hospitality",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#E07820",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
