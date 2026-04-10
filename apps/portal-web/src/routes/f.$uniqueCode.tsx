@@ -184,11 +184,16 @@ function ThankYouScreen({
   googlePlaceId: string | null
   tripAdvisorUrl: string | null
 }) {
-  useEffect(() => {
-    if (shouldShowReviewPrompt && reviewText) {
-      navigator.clipboard.writeText(reviewText).catch(() => {})
-    }
-  }, [shouldShowReviewPrompt, reviewText])
+  const [useSuggested, setUseSuggested] = useState<boolean | null>(null)
+
+  function handleUseSuggested() {
+    navigator.clipboard.writeText(reviewText).catch(() => {})
+    setUseSuggested(true)
+  }
+
+  function handleWriteOwn() {
+    setUseSuggested(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
@@ -220,18 +225,47 @@ function ThankYouScreen({
         {shouldShowReviewPrompt && (
           <div className="mt-6 rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-4 text-left">
             <div className="text-center space-y-1">
-              <p className="font-semibold text-[#1c1917]">Enjoying your experience?</p>
-              <p className="text-sm text-[#78716c]">We've copied your review — just tap a button below and paste it in.</p>
+              <p className="font-semibold text-[#1c1917]">Would you like to share your experience?</p>
+              <p className="text-sm text-[#78716c]">Help others find great hospitality — it only takes a moment.</p>
             </div>
 
-            {/* Copied review preview */}
-            <div className="rounded-lg bg-white border border-orange-100 px-4 py-3 text-sm text-[#44403c] italic leading-relaxed">
-              "{reviewText}"
-            </div>
+            {/* Choice — only shown before a selection is made */}
+            {useSuggested === null && (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleUseSuggested}
+                  className="w-full rounded-lg bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+                >
+                  Use our suggested review
+                </button>
+                <button
+                  type="button"
+                  onClick={handleWriteOwn}
+                  className="w-full rounded-lg bg-white border border-[#e8e3dc] px-4 py-3 text-sm font-semibold text-[#1c1917] hover:bg-gray-50 transition-colors"
+                >
+                  I'd prefer to write my own
+                </button>
+              </div>
+            )}
 
-            <p className="text-xs text-center text-[#a8a29e]">✓ Copied to clipboard</p>
+            {/* Suggested review — shown after choosing "use suggested" */}
+            {useSuggested === true && (
+              <div className="space-y-3">
+                <div className="rounded-lg bg-white border border-orange-100 px-4 py-3 text-sm text-[#44403c] italic leading-relaxed">
+                  "{reviewText}"
+                </div>
+                <p className="text-xs text-center text-green-600 font-medium">✓ Copied to clipboard — just paste it in</p>
+              </div>
+            )}
 
-            {/* Platform buttons */}
+            {/* Write own — just a short nudge */}
+            {useSuggested === false && (
+              <p className="text-xs text-center text-[#78716c]">Tell them in your own words — tap a platform below to get started.</p>
+            )}
+
+            {/* Platform buttons — shown once a choice is made */}
+            {useSuggested !== null && (
             <div className="flex flex-col gap-2">
               {showGoogle && googlePlaceId && (
                 <a
@@ -264,6 +298,7 @@ function ThankYouScreen({
                 </a>
               )}
             </div>
+            )}
           </div>
         )}
       </div>
