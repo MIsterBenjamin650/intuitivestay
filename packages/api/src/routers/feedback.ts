@@ -8,6 +8,30 @@ import { protectedProcedure, publicProcedure, router } from "../index"
 import { sendAlertEmail, sendStaffNominationEmail, sendVelocityAlertEmail } from "../lib/email"
 import { sendPushNotification } from "../lib/web-push"
 
+// Simple in-memory rate limiter: max 5 feedback submissions per IP per hour
+const ipSubmissionTracker = new Map<string, { count: number; windowStart: number }>()
+const IP_RATE_LIMIT = 5
+const IP_RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+
+function checkIpRateLimit(ip: string): void {
+  const now = Date.now()
+  const entry = ipSubmissionTracker.get(ip)
+
+  if (!entry || now - entry.windowStart > IP_RATE_WINDOW_MS) {
+    ipSubmissionTracker.set(ip, { count: 1, windowStart: now })
+    return
+  }
+
+  if (entry.count >= IP_RATE_LIMIT) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Too many feedback submissions. Please try again later.",
+    })
+  }
+
+  entry.count++
+}
+
 /**
  * Recalculates running averages for a property after new feedback is submitted.
  * Uses incremental update: newAvg = (oldAvg * oldCount + newValue) / newCount
@@ -107,12 +131,18 @@ export const feedbackRouter = router({
         guestEmail: z.string().email().optional(),
         adjectives: z.string().optional(),
         /** Browser-derived device fingerprint for duplicate prevention */
-        fingerprint: z.string().optional(),
+        fingerprint: z.string().min(1),
         /** Verified staff profile to attribute this high-score feedback to (optional). */
         staffProfileId: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // IP rate limiting — extract IP from context headers
+      const ip = ctx.headers?.get?.("x-forwarded-for")?.split(",")[0]?.trim()
+        ?? ctx.headers?.get?.("x-real-ip")
+        ?? "unknown"
+      checkIpRateLimit(ip)
+
       const qrCode = await db.query.qrCodes.findFirst({
         where: eq(qrCodes.uniqueCode, input.uniqueCode),
       })
