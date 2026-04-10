@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm"
+import { TRPCError } from "@trpc/server"
+import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { db } from "@intuitive-stay/db"
@@ -22,7 +23,13 @@ export const pushRouter = router({
         where: eq(pushSubscriptions.endpoint, input.endpoint),
       })
 
-      if (existing) return { success: true }
+      if (existing) {
+        // If this endpoint belongs to a different user, reject it
+        if (existing.userId !== userId) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Subscription endpoint mismatch" })
+        }
+        return { success: true }
+      }
 
       await db.insert(pushSubscriptions).values({
         id: crypto.randomUUID(),
@@ -40,7 +47,12 @@ export const pushRouter = router({
     .mutation(async ({ ctx, input }) => {
       await db
         .delete(pushSubscriptions)
-        .where(eq(pushSubscriptions.endpoint, input.endpoint))
+        .where(
+          and(
+            eq(pushSubscriptions.endpoint, input.endpoint),
+            eq(pushSubscriptions.userId, ctx.session.user.id),
+          ),
+        )
 
       return { success: true }
     }),
