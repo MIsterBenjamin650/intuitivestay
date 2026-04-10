@@ -39,6 +39,7 @@ export const auth = betterAuth({
       sameSite: "lax",
       secure: true,
       httpOnly: true,
+      domain: ".intuitivestay.com",
     },
   },
   plugins: [
