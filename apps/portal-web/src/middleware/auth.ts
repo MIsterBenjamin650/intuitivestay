@@ -1,18 +1,11 @@
+import { auth } from "@intuitive-stay/auth";
 import { createMiddleware } from "@tanstack/react-start";
 
-import { authClient } from "@/lib/auth-client";
-
 export const authMiddleware = createMiddleware().server(async ({ next, request }) => {
-  // Only forward the cookie header — forwarding all headers (including
-  // Accept-Encoding: gzip) causes Node.js fetch to receive a compressed
-  // binary response it cannot decompress, returning garbage instead of JSON.
-  const cookieHeader = request.headers.get("cookie") ?? ""
-  const headers = new Headers()
-  headers.set("cookie", cookieHeader)
-
-  const session = await authClient.getSession({
-    fetchOptions: { headers },
-  }).catch(() => null)
+  // Call the auth library directly (in-process) instead of making an HTTP
+  // round-trip to /api/auth/get-session. This avoids proxy/network issues
+  // and is far more reliable for SSR session validation.
+  const session = await auth.api.getSession({ headers: request.headers }).catch(() => null)
 
   return next({ context: { session } })
 });
