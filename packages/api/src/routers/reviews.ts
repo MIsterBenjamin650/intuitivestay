@@ -36,7 +36,9 @@ function assertReviewUrl(url: string | null | undefined, fieldName: string): voi
   }
 }
 
-async function assertPropertyOwner(userId: string, propertyId: string) {
+async function assertPropertyOwner(userId: string, propertyId: string, isAdmin = false) {
+  if (isAdmin) return
+
   const row = await db
     .select({ orgId: organisations.id })
     .from(organisations)
@@ -104,7 +106,7 @@ export const reviewsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertPropertyOwner(ctx.session.user.id, input.propertyId)
+      await assertPropertyOwner(ctx.session.user.id, input.propertyId, ctx.isAdmin)
 
       assertReviewUrl(input.tripAdvisorUrl, "TripAdvisor URL")
       assertReviewUrl(input.googlePlaceId, "Google Maps URL")
@@ -123,7 +125,7 @@ export const reviewsRouter = router({
   getComparison: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      await assertPropertyOwner(ctx.session.user.id, input.propertyId)
+      await assertPropertyOwner(ctx.session.user.id, input.propertyId, ctx.isAdmin)
 
       const prop = await db
         .select({
@@ -156,7 +158,7 @@ export const reviewsRouter = router({
   triggerScrape: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      await assertPropertyOwner(ctx.session.user.id, input.propertyId)
+      await assertPropertyOwner(ctx.session.user.id, input.propertyId, ctx.isAdmin)
 
       if (!env.APIFY_API_TOKEN) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Apify not configured" })
@@ -308,7 +310,7 @@ export const reviewsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertPropertyOwner(ctx.session.user.id, input.propertyId)
+      await assertPropertyOwner(ctx.session.user.id, input.propertyId, ctx.isAdmin)
 
       await db
         .update(properties)

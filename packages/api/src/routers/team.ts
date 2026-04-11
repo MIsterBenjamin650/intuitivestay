@@ -22,8 +22,6 @@ async function assertOwner(userId: string, propertyId: string, userEmail: string
   // Admins can manage teams for any property
   if (userEmail.toLowerCase().trim() === env.ADMIN_EMAIL.toLowerCase().trim()) return
 
-  console.log("[assertOwner] userId:", userId, "| email:", userEmail, "| propertyId:", propertyId)
-
   const row = await db
     .select({ orgId: organisations.id })
     .from(organisations)

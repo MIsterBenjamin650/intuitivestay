@@ -773,6 +773,10 @@ export const propertiesRouter = router({
     }),
 
   getMyProperties: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.isAdmin) {
+      return db.select().from(properties)
+    }
+
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
     })
@@ -916,13 +920,25 @@ export const propertiesRouter = router({
   resendBusinessVerification: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+      let orgId: string | undefined
+      if (ctx.isAdmin) {
+        const prop = await db.query.properties.findFirst({
+          where: eq(properties.id, input.propertyId),
+          columns: { organisationId: true },
+        })
+        orgId = prop?.organisationId
+      } else {
+        const org = await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+          columns: { id: true },
+        })
+        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+        orgId = org.id
+      }
+      if (!orgId) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
 
       const property = await db.query.properties.findFirst({
-        where: and(eq(properties.id, input.propertyId), eq(properties.organisationId, org.id)),
+        where: and(eq(properties.id, input.propertyId), eq(properties.organisationId, orgId)),
       })
 
       if (!property) throw new TRPCError({ code: "NOT_FOUND" })
@@ -950,16 +966,26 @@ export const propertiesRouter = router({
   getAdditionalPropertyCheckoutUrl: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
       })
       if (!property) throw new TRPCError({ code: "NOT_FOUND" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      let org
+      if (ctx.isAdmin) {
+        org = await db.query.organisations.findFirst({
+          where: eq(organisations.id, property.organisationId),
+        })
+      } else {
+        org = await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+        })
+        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+        if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      }
+
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
       if (property.paymentStatus !== "pending") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Property does not require payment" })
       }
@@ -978,6 +1004,25 @@ export const propertiesRouter = router({
    * Used in the billing section to list add-ons with a Remove button.
    */
   getMyAdditionalProperties: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.isAdmin) {
+      return db
+        .select({
+          id: properties.id,
+          name: properties.name,
+          city: properties.city,
+          country: properties.country,
+          paymentStatus: properties.paymentStatus,
+          stripeSubscriptionId: properties.stripeSubscriptionId,
+        })
+        .from(properties)
+        .where(
+          or(
+            eq(properties.paymentStatus, "paid"),
+            eq(properties.paymentStatus, "cancelling"),
+          ),
+        )
+    }
+
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
     })
@@ -1011,16 +1056,19 @@ export const propertiesRouter = router({
   cancelAdditionalProperty: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
       })
       if (!property) throw new TRPCError({ code: "NOT_FOUND" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      if (!ctx.isAdmin) {
+        const org = await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+          columns: { id: true },
+        })
+        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+        if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      }
       if (property.paymentStatus !== "paid") {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -1057,18 +1105,20 @@ export const propertiesRouter = router({
     }),
 
   getPortfolioDashboard: protectedProcedure.query(async ({ ctx }) => {
-    const org = await db.query.organisations.findFirst({
-      where: eq(organisations.ownerId, ctx.session.user.id),
-    })
+    const org = ctx.isAdmin
+      ? null
+      : await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+        })
 
-    if (!org) {
+    if (!ctx.isAdmin && !org) {
       return { portfolioGcs: null, activeCount: 0, alertCount: 0, monthlyTrend: [] }
     }
 
     const orgProperties = await db
       .select({ id: properties.id, status: properties.status })
       .from(properties)
-      .where(eq(properties.organisationId, org.id))
+      .where(org ? eq(properties.organisationId, org.id) : undefined)
 
     const activeCount = orgProperties.filter((p) => p.status === "approved").length
     const propertyIds = orgProperties.map((p) => p.id)
@@ -1133,7 +1183,7 @@ export const propertiesRouter = router({
       })
       .from(properties)
       .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
-      .where(eq(properties.organisationId, org.id))
+      .where(org ? eq(properties.organisationId, org.id) : undefined)
       .orderBy(properties.name)
 
     // Alert flag per property: any feedback with GCS <= 5
@@ -1163,7 +1213,9 @@ export const propertiesRouter = router({
   getPropertyDashboard: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      await assertPropertyAccess(ctx.session.user.id, input.propertyId)
+      if (!ctx.isAdmin) {
+        await assertPropertyAccess(ctx.session.user.id, input.propertyId)
+      }
 
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
@@ -1192,16 +1244,19 @@ export const propertiesRouter = router({
   getPropertyQrData: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
       })
       if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      if (!ctx.isAdmin) {
+        const org = await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+          columns: { id: true },
+        })
+        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+        if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      }
 
       const qrCode = await db.query.qrCodes.findFirst({
         where: eq(qrCodes.propertyId, input.propertyId),
@@ -1231,24 +1286,42 @@ export const propertiesRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // 1. Verify property belongs to the user's org
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+      // 1. Verify property belongs to the user's org (or user is admin)
+      let org: { id: string; plan: string | null; subscriptionStatus: string | null } | undefined | null
 
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      if (ctx.isAdmin) {
+        const prop = await db.query.properties.findFirst({
+          where: eq(properties.id, input.propertyId),
+          columns: { organisationId: true },
+        })
+        if (!prop) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+        org = await db.query.organisations.findFirst({
+          where: eq(organisations.id, prop.organisationId),
+          columns: { id: true, plan: true, subscriptionStatus: true },
+        })
+      } else {
+        org = await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+        })
+        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+        const property = await db.query.properties.findFirst({
+          where: eq(properties.id, input.propertyId),
+        })
+        if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+        if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      }
+
+      if (!org) throw new TRPCError({ code: "NOT_FOUND", message: "Organisation not found" })
 
       // 2. Clamp time range to plan — restrict grace/expired orgs to host-level
-      const effectivePlan: Plan =
-        org.subscriptionStatus === "grace" || org.subscriptionStatus === "expired"
+      // Admin always gets founder-level (full) access
+      const effectivePlan: Plan = ctx.isAdmin
+        ? "founder"
+        : org.subscriptionStatus === "grace" || org.subscriptionStatus === "expired"
           ? "host"
-          : isPlan(org.plan)
-            ? org.plan
+          : isPlan(org.plan ?? "")
+            ? (org.plan as Plan)
             : "host"
       const effectiveRange = clampTimeRange(input.timeRange, effectivePlan)
       const startDate = new Date(Date.now() - RANGE_DAYS[effectiveRange] * 24 * 60 * 60 * 1000)
@@ -1389,17 +1462,28 @@ export const propertiesRouter = router({
   getCityLeaderboard: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // Verify ownership
-      const org = await db.query.organisations.findFirst({
-        where: eq(organisations.ownerId, ctx.session.user.id),
-      })
-      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-
+      // Verify ownership (or admin bypass)
       const property = await db.query.properties.findFirst({
         where: eq(properties.id, input.propertyId),
       })
       if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
-      if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+
+      let org: { id: string; plan: string | null } | undefined | null
+      if (ctx.isAdmin) {
+        org = await db.query.organisations.findFirst({
+          where: eq(organisations.id, property.organisationId),
+          columns: { id: true, plan: true },
+        })
+      } else {
+        org = await db.query.organisations.findFirst({
+          where: eq(organisations.ownerId, ctx.session.user.id),
+          columns: { id: true, plan: true },
+        })
+        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+        if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+      }
+
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
 
       const city = property.city
 
@@ -1473,18 +1557,27 @@ export const propertiesRouter = router({
         gapToCityAvg: yourGcs !== null && cityAvgGcs !== null ? Math.round((yourGcs - cityAvgGcs) * 10) / 10 : null,
         withinCityRankings,
         nationalCityRankings,
-        userPlan: isPlan(org.plan) ? org.plan : ("member" as Plan),
+        userPlan: isPlan(org.plan ?? "") ? (org.plan as Plan) : ("member" as Plan),
       }
     }),
 
   getFounderOverview: protectedProcedure.query(async ({ ctx }) => {
-    const org = await db.query.organisations.findFirst({
-      where: eq(organisations.ownerId, ctx.session.user.id),
-    })
-    if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-    if (org.plan !== "founder") throw new TRPCError({ code: "FORBIDDEN", message: "Founder plan required" })
+    let orgId: string | undefined
 
-    // All properties in org
+    if (ctx.isAdmin) {
+      // Admin can view the founder overview without plan restriction
+      // (returns all properties across all orgs)
+    } else {
+      const org = await db.query.organisations.findFirst({
+        where: eq(organisations.ownerId, ctx.session.user.id),
+        columns: { id: true, plan: true },
+      })
+      if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+      if (org.plan !== "founder") throw new TRPCError({ code: "FORBIDDEN", message: "Founder plan required" })
+      orgId = org.id
+    }
+
+    // All properties in org (or all properties for admin)
     const orgProperties = await db
       .select({
         id: properties.id,
@@ -1493,7 +1586,7 @@ export const propertiesRouter = router({
         status: properties.status,
       })
       .from(properties)
-      .where(eq(properties.organisationId, org.id))
+      .where(orgId ? eq(properties.organisationId, orgId) : undefined)
 
     if (orgProperties.length === 0) {
       return { aggregateGcs: null, totalSubmissions: 0, bestProperty: null, worstProperty: null, properties: [] }
@@ -1973,6 +2066,8 @@ export const propertiesRouter = router({
    * Called when the owner dismisses or finishes the onboarding walkthrough.
    */
   markOnboardingComplete: protectedProcedure.mutation(async ({ ctx }) => {
+    if (ctx.isAdmin) return { ok: true }
+
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, ctx.session.user.id),
       columns: { id: true },
