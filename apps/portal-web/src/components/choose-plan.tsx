@@ -76,7 +76,7 @@ const PLAN_URLS: Record<"host" | "partner" | "founder", string> = {
   founder: env.VITE_WIX_PLAN_URL_FOUNDER,
 }
 
-export function ChoosePlan() {
+export function ChoosePlan({ ownerEmail = "" }: { ownerEmail?: string }) {
   const trpcClient = useTRPCClient()
 
   const [name, setName] = useState("")
@@ -155,7 +155,7 @@ export function ChoosePlan() {
             </ul>
 
             <a
-              href={PLAN_URLS[plan.urlKey]}
+              href={ownerEmail ? `${PLAN_URLS[plan.urlKey]}?prefilled_email=${encodeURIComponent(ownerEmail)}` : PLAN_URLS[plan.urlKey]}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => localStorage.setItem("pendingPayment", "1")}
