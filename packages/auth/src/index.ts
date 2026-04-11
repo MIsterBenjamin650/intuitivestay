@@ -2,7 +2,7 @@ import { expo } from "@better-auth/expo";
 import { db } from "@intuitive-stay/db";
 import * as schema from "@intuitive-stay/db/schema/auth";
 import { env } from "@intuitive-stay/env/server";
-import { sendMagicLinkEmail, sendPasswordResetEmail } from "@intuitive-stay/api/lib/email";
+import { sendMagicLinkEmail, sendPasswordResetEmail } from "./email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";

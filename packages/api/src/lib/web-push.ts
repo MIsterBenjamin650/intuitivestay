@@ -2,11 +2,13 @@ import webpush from "web-push"
 
 import { env } from "@intuitive-stay/env/server"
 
-webpush.setVapidDetails(
-  env.VAPID_SUBJECT,
-  env.VAPID_PUBLIC_KEY,
-  env.VAPID_PRIVATE_KEY,
-)
+if (env.VAPID_SUBJECT && env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    env.VAPID_SUBJECT,
+    env.VAPID_PUBLIC_KEY,
+    env.VAPID_PRIVATE_KEY,
+  )
+}
 
 export type PushSubscriptionRecord = {
   endpoint: string

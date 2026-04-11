@@ -83,9 +83,7 @@ function PortalActionButton({
           {isLoading ? (
             <Button size="sm" variant="outline" disabled>Loading…</Button>
           ) : url ? (
-            <Button size="sm" variant="outline" asChild>
-              <a href={url} target="_blank" rel="noreferrer">Open</a>
-            </Button>
+            <Button size="sm" variant="outline" render={<a href={url} target="_blank" rel="noreferrer" />}>Open</Button>
           ) : (
             <Button size="sm" variant="outline" disabled>Unavailable</Button>
           )}
@@ -186,9 +184,7 @@ function RouteComponent() {
                   <p className="text-sm font-medium">Add a property</p>
                   <p className="text-xs text-muted-foreground">Submit a new property to your account</p>
                 </div>
-                <Button size="sm" variant="outline" asChild>
-                  <Link to="/properties">Go to Properties</Link>
-                </Button>
+                <Button size="sm" variant="outline" render={<Link to="/properties" />}>Go to Properties</Button>
               </div>
             </CardContent>
           </Card>
@@ -240,15 +236,17 @@ function RouteComponent() {
 
                       {property.paymentStatus === "paid" && (
                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive border-destructive/30 hover:bg-destructive/5"
-                              disabled={isCancelling}
-                            >
-                              Remove
-                            </Button>
+                          <AlertDialogTrigger
+                            render={
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive border-destructive/30 hover:bg-destructive/5"
+                                disabled={isCancelling}
+                              />
+                            }
+                          >
+                            Remove
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>

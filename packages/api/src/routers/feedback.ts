@@ -391,7 +391,7 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Feedback not found" })
       }
 
-      if (row.gcs > 5) {
+      if (Number(row.gcs) > 5) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Vent text only available for low scores" })
       }
 

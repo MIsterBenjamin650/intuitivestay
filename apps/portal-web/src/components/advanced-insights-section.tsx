@@ -82,7 +82,7 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
               <XAxis dataKey="week" tick={{ fontSize: 9 }} />
               <YAxis domain={[0, 10]} tick={{ fontSize: 9 }} />
               <Tooltip
-                formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : v, "Avg GCS"]}
+                formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(1) : String(v), "Avg GCS"] as [string, string]}
                 labelFormatter={(label) => `w/c ${label}`}
               />
               <Area

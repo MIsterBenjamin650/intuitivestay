@@ -92,7 +92,7 @@ export function ChoosePlan({ ownerEmail = "" }: { ownerEmail?: string }) {
     setSending(true)
     setSendError(false)
     try {
-      await trpcClient.contact.sendMessage.mutate({ name, email, message })
+      await trpcClient.contact.sendMessage.mutate({ name, message })
       setSent(true)
       setName("")
       setEmail("")

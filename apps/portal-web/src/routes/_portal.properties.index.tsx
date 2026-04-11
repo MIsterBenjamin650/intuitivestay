@@ -305,11 +305,11 @@ function RouteComponent() {
   const updateSearch = React.useCallback(
     (nextPartial: Partial<ResolvedPropertiesSearch>) => {
       void navigate({
-        to: "/properties/",
-        search: {
-          ...search,
+        to: "/properties",
+        search: (prev) => ({
+          ...prev,
           ...nextPartial,
-        },
+        }),
       })
     },
     [navigate, search]

@@ -277,7 +277,7 @@ export const staffRouter = router({
         .set({
           removedAt: new Date(),
           emailVerificationToken: null,
-          emailVerificationTokenExpires: null,
+          emailVerificationTokenExpiresAt: null,
         })
         .where(eq(staffProfiles.id, input.staffProfileId))
 
@@ -344,7 +344,7 @@ export const staffRouter = router({
         const displayName =
           parts.length === 1
             ? parts[0]
-            : `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`
+            : `${parts[0]} ${parts[parts.length - 1]?.charAt(0).toUpperCase()}.`
         return { id: s.id, displayName }
       })
     }),
@@ -463,6 +463,7 @@ export const staffRouter = router({
         topAdjectives,
         nominationsPerMonth,
         last30Nominations,
+        emailVerifiedAt: staff.emailVerifiedAt ?? null,
       }
     }),
 

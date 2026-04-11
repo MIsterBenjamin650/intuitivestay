@@ -418,7 +418,7 @@ function FeedbackPage() {
         mealTime,
         guestEmail: guestEmail.trim() || undefined,
         adjectives: selectedAdjectives.length > 0 ? selectedAdjectives.join(',') : undefined,
-        fingerprint: fingerprint || undefined,
+        fingerprint: fingerprint ?? "",
         staffProfileId: selectedStaffProfileId ?? undefined,
       })
 

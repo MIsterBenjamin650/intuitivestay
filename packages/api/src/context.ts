@@ -6,7 +6,15 @@ export type CreateContextOptions = {
   context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+type Session = Awaited<ReturnType<typeof auth.api.getSession>>;
+
+export type Context = {
+  session: Session;
+  isAdmin: boolean;
+  headers: globalThis.Headers;
+};
+
+export async function createContext({ context }: CreateContextOptions): Promise<Context> {
   const session = await auth.api.getSession({
     headers: context.req.raw.headers,
   });
@@ -16,8 +24,6 @@ export async function createContext({ context }: CreateContextOptions) {
   return {
     session,
     isAdmin,
-    headers: context.req.raw.headers,
+    headers: context.req.raw.headers as globalThis.Headers,
   };
 }
-
-export type Context = Awaited<ReturnType<typeof createContext>>;

@@ -2212,7 +2212,7 @@ export const propertiesRouter = router({
 
       // ── Slice context window around own property ───────────────────────────
       const ownIdx = payload.rows.findIndex((r) => r.propertyId === input.propertyId)
-      const ownRank = ownIdx >= 0 ? payload.rows[ownIdx].rank : null
+      const ownRank = ownIdx >= 0 ? (payload.rows[ownIdx]?.rank ?? null) : null
 
       const start = Math.max(0, (ownIdx >= 0 ? ownIdx : 0) - CONTEXT_WINDOW)
       const end   = Math.min(payload.rows.length, (ownIdx >= 0 ? ownIdx : 0) + CONTEXT_WINDOW + 1)

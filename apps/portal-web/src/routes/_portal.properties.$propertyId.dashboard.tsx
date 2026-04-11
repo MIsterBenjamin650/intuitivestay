@@ -143,20 +143,11 @@ function RouteComponent() {
   const { data: leaderboard } = useQuery(trpc.properties.getCityLeaderboardLive.queryOptions(opts))
   const { data: trend } = useQuery(trpc.properties.getGcsTrend.queryOptions(opts))
   const { data: mealTimes } = useQuery(trpc.properties.getMealTimeBreakdown.queryOptions(opts))
-  const { data: tierStatus } = useQuery(trpc.properties.getTierStatus.queryOptions({ propertyId }))
   const { data: aiSummary } = useQuery(trpc.properties.getAiSummary.queryOptions({ propertyId }))
 
   const tierScore = stats?.avgGcs != null ? stats.avgGcs * 10 : 0
   const displayTier: Tier = getTierFromScore(tierScore)
 
-  const radarData = history?.length
-    ? [
-        { subject: "Resilience", score: history.reduce((s, r) => s + (r.resilience ?? 0), 0) / history.length },
-        { subject: "Empathy", score: history.reduce((s, r) => s + (r.empathy ?? 0), 0) / history.length },
-        { subject: "Anticipation", score: history.reduce((s, r) => s + (r.anticipation ?? 0), 0) / history.length },
-        { subject: "Recognition", score: history.reduce((s, r) => s + (r.recognition ?? 0), 0) / history.length },
-      ]
-    : []
 
   const avgPillars = history?.length
     ? {
@@ -361,25 +352,6 @@ function RouteComponent() {
               return x > 115 ? "start" : x < 85 ? "end" : "middle"
             }
 
-            // Countdown logic
-            const REVIEW_CYCLE_DAYS = 60
-            const GRACE_DAYS = 30
-            let countdownLabel: string | null = null
-            let countdownDays: number | null = null
-            let countdownUrgent = false
-            if (tierStatus?.pendingTier && tierStatus.pendingFrom) {
-              const since = Math.floor((Date.now() - new Date(tierStatus.pendingFrom).getTime()) / 86400000)
-              countdownDays = Math.max(0, GRACE_DAYS - since)
-              countdownLabel = countdownDays === 0
-                ? `${tierStatus.pendingTier} tier confirms today`
-                : `${countdownDays}d until ${tierStatus.pendingTier} tier confirmed`
-              countdownUrgent = countdownDays <= 7
-            } else if (tierStatus?.lastEvaluatedAt) {
-              const nextReview = new Date(tierStatus.lastEvaluatedAt).getTime() + REVIEW_CYCLE_DAYS * 86400000
-              countdownDays = Math.max(0, Math.ceil((nextReview - Date.now()) / 86400000))
-              countdownLabel = countdownDays === 0 ? "Tier review due today" : `${countdownDays}d until tier review`
-            }
-
             return (
               <div className="relative flex justify-center items-center py-2">
                 <svg viewBox="-28 -28 256 256" className="w-full max-w-[320px]">
@@ -567,7 +539,7 @@ function RouteComponent() {
                       typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
                       "Avg GCS",
                     ]}
-                    labelFormatter={(l: string) => l.charAt(0).toUpperCase() + l.slice(1)}
+                    labelFormatter={(l: unknown) => typeof l === "string" ? l.charAt(0).toUpperCase() + l.slice(1) : String(l)}
                   />
                   <Bar dataKey="avgGcs" radius={[6, 6, 0, 0]} name="Avg GCS">
                     {(() => {
@@ -771,7 +743,7 @@ function RouteComponent() {
                       return (
                         <text
                           x={x}
-                          y={y + 10}
+                          y={Number(y) + 10}
                           textAnchor="middle"
                           fontSize={10}
                           fontWeight={d?.isOwn ? 700 : 400}

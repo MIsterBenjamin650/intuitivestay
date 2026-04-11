@@ -343,7 +343,7 @@ export function AdminDashboard() {
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 w-full max-w-xs"
         />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "")}>
           <SelectTrigger className="h-9 w-40">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
@@ -354,7 +354,7 @@ export function AdminDashboard() {
             <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={cityFilter} onValueChange={setCityFilter}>
+        <Select value={cityFilter} onValueChange={(v) => setCityFilter(v ?? "")}>
           <SelectTrigger className="h-9 w-40">
             <SelectValue placeholder="All Cities" />
           </SelectTrigger>
@@ -365,7 +365,7 @@ export function AdminDashboard() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={countryFilter} onValueChange={setCountryFilter}>
+        <Select value={countryFilter} onValueChange={(v) => setCountryFilter(v ?? "")}>
           <SelectTrigger className="h-9 w-40">
             <SelectValue placeholder="All Countries" />
           </SelectTrigger>

@@ -5,15 +5,12 @@ import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
 
-import { useNavigate } from "@tanstack/react-router";
-
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
 export default function SignInForm({ onSwitchToSignUp, onForgotPassword }: { onSwitchToSignUp: () => void; onForgotPassword: () => void }) {
   const { isPending } = authClient.useSession();
-  const navigate = useNavigate();
 
   const form = useForm({
     defaultValues: {

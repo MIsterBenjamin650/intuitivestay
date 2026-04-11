@@ -22,6 +22,7 @@ function StaffVerifyPage() {
         void navigate({
           to: "/staff-profile/$staffProfileId",
           params: { staffProfileId: result.staffProfileId },
+          search: { activated: false },
         })
       })
       .catch(() => {
