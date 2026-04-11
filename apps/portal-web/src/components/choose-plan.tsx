@@ -24,7 +24,7 @@ const PLANS = [
       "City Leaderboard",
     ],
     buttonText: "Start free trial",
-    buttonStyle: "border border-indigo-500 text-indigo-600 hover:bg-indigo-50",
+    buttonStyle: "border border-orange-500 text-orange-600 hover:bg-orange-50",
     urlKey: "host" as const,
   },
   {
@@ -47,7 +47,7 @@ const PLANS = [
       "Multi-property overview",
     ],
     buttonText: "Start free trial",
-    buttonStyle: "bg-indigo-500 text-white hover:bg-indigo-600",
+    buttonStyle: "bg-orange-500 text-white hover:bg-orange-600",
     urlKey: "partner" as const,
   },
   {
@@ -118,11 +118,11 @@ export function ChoosePlan() {
           <div
             key={plan.key}
             className={`relative flex flex-col rounded-xl border bg-card p-6 shadow-sm ${
-              plan.popular ? "border-indigo-500 ring-1 ring-indigo-500" : "border-border"
+              plan.popular ? "border-orange-500 ring-1 ring-orange-500" : "border-border"
             }`}
           >
             {plan.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-500 px-3 py-0.5 text-[11px] font-semibold text-white">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-orange-500 px-3 py-0.5 text-[11px] font-semibold text-white">
                 Most popular
               </div>
             )}
@@ -142,7 +142,7 @@ export function ChoosePlan() {
             <ul className="mb-6 flex-1 space-y-2">
               {plan.features.map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="font-bold text-indigo-500">✓</span>
+                  <span className="font-bold text-orange-500">✓</span>
                   {f}
                 </li>
               ))}
@@ -173,7 +173,7 @@ export function ChoosePlan() {
           href="https://www.intuitivestay.com/how-it-works"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-indigo-600 hover:underline"
+          className="text-sm text-orange-600 hover:underline"
         >
           How does IntuitiveStay work? →
         </a>
@@ -226,7 +226,7 @@ export function ChoosePlan() {
             <button
               type="submit"
               disabled={sending}
-              className="w-full rounded-lg bg-indigo-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-600 disabled:opacity-50"
+              className="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
             >
               {sending ? "Sending…" : "Send Message"}
             </button>
