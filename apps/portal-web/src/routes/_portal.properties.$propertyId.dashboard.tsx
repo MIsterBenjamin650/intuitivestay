@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/dashboard"
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-type Days = 1 | 7 | 30 | 90
+type Days = 1 | 7 | 30 | 365
 
 const TIER_CONFIG = {
   member:   { label: "Member",   color: "#9ca3af", bg: "#f3f4f6" },
@@ -78,13 +78,14 @@ function LockedSection({ title, description }: { title: string; description: str
 
 // ─── Date range tab bar ─────────────────────────────────────────────────────
 
-function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => void }) {
-  const options: { label: string; value: Days }[] = [
+function DateRangeTabs({ days, onChange, maxDays }: { days: Days; onChange: (d: Days) => void; maxDays: Days }) {
+  const allOptions: { label: string; value: Days }[] = [
     { label: "24h", value: 1 },
     { label: "7 days", value: 7 },
     { label: "30 days", value: 30 },
-    { label: "90 days", value: 90 },
+    { label: "365 days", value: 365 },
   ]
+  const options = allOptions.filter((o) => o.value === 1 || o.value <= maxDays)
   return (
     <div className="flex gap-1 rounded-lg bg-[#e8e3dc] p-1">
       {options.map((o) => (
@@ -114,11 +115,17 @@ function RouteComponent() {
   const plan = (session as { plan?: string | null } | null)?.plan ?? null
   const PLAN_RANK: Record<string, number> = { member: 0, host: 1, partner: 2, founder: 3 }
   const planRank = PLAN_RANK[plan ?? ""] ?? -1
-  const canSeeLeaderboard = planRank >= 1       // host, partner, founder
-  const canSeeAdvancedInsights = planRank >= 2  // partner, founder
-  const canSeeLocalMarket = planRank >= 2       // partner, founder
+  const maxDays: Days = planRank >= 3 ? 365 : planRank >= 2 ? 30 : 7
+  const canSeeStaffBubbles = planRank >= 1      // Host, Partner, Founder
+  const canSeeAiSummary = planRank >= 2         // Partner, Founder
+  const canSeeMealTime = planRank >= 2          // Partner, Founder
+  const canSeeLeaderboard = planRank >= 2       // Partner, Founder (was incorrectly >= 1)
+  const canSeeOnlineReputation = !isStaff && planRank >= 2  // Partner, Founder — owners only
+  const canSeeWordCloud = planRank >= 3         // Founder only
+  const canSeeAdvancedInsights = planRank >= 2  // Partner, Founder
+  const canSeeLocalMarket = planRank >= 2       // Partner, Founder
 
-  const [days, setDays] = React.useState<Days>(1)
+  const [days, setDays] = React.useState<Days>(7)
   const trpc = useTRPC()
 
   const { data: myProperties = [] } = useQuery(trpc.properties.getMyProperties.queryOptions())
@@ -279,7 +286,7 @@ function RouteComponent() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
         <div className="flex items-center gap-2 flex-wrap">
-          <DateRangeTabs days={days} onChange={setDays} />
+          <DateRangeTabs days={days} onChange={setDays} maxDays={maxDays} />
           {(() => {
             const sessionProperties = (session as { user?: { properties?: Array<{ id: string; name: string }> } } | null)?.user?.properties ?? []
             const propertyName = sessionProperties.find((p) => p.id === propertyId)?.name ?? "Property"
@@ -472,34 +479,41 @@ function RouteComponent() {
           </div>
         </div>
 
-        {/* AI summary — dark card */}
-        <div className="rounded-2xl bg-white shadow-sm p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">AI Daily Summary</p>
+        {/* AI summary */}
+        {canSeeAiSummary ? (
+          <div className="rounded-2xl bg-white shadow-sm p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">AI Daily Summary</p>
+            </div>
+            {aiSummary ? (
+              <>
+                <p className="mb-3 text-xs text-[#78716c]">{aiSummary.date}</p>
+                <p className="mb-4 text-sm leading-relaxed text-[#44403c]">{aiSummary.narrative}</p>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Today's Focus</p>
+                <ul className="space-y-2">
+                  {aiSummary.focusPoints.map((f, i) => {
+                    const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
+                    const color = PILLAR_COLORS[pillarKey] ?? "#f97316"
+                    return (
+                      <li key={i} className="grid text-xs text-[#78716c]" style={{ gridTemplateColumns: "90px 1fr" }}>
+                        <span className="font-semibold shrink-0" style={{ color }}>{f.pillar}:</span>
+                        <span className="leading-relaxed">{f.action}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </>
+            ) : (
+              <p className="text-sm text-[#78716c]">Your first summary will appear tomorrow morning.</p>
+            )}
           </div>
-          {aiSummary ? (
-            <>
-              <p className="mb-3 text-xs text-[#78716c]">{aiSummary.date}</p>
-              <p className="mb-4 text-sm leading-relaxed text-[#44403c]">{aiSummary.narrative}</p>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Today's Focus</p>
-              <ul className="space-y-2">
-                {aiSummary.focusPoints.map((f, i) => {
-                  const pillarKey = f.pillar.toLowerCase() as keyof typeof PILLAR_COLORS
-                  const color = PILLAR_COLORS[pillarKey] ?? "#f97316"
-                  return (
-                    <li key={i} className="grid text-xs text-[#78716c]" style={{ gridTemplateColumns: "90px 1fr" }}>
-                      <span className="font-semibold shrink-0" style={{ color }}>{f.pillar}:</span>
-                      <span className="leading-relaxed">{f.action}</span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </>
-          ) : (
-            <p className="text-sm text-[#78716c]">Your first summary will appear tomorrow morning.</p>
-          )}
-        </div>
+        ) : (
+          <LockedSection
+            title="AI Daily Summary"
+            description="Daily AI-powered insights and recommended actions. Available on Partner and Founder plans."
+          />
+        )}
       </div>
 
       {/* Row 3: A2 Line chart + B1 Grouped bar chart */}
@@ -529,47 +543,54 @@ function RouteComponent() {
         </div>
 
         {/* B1 — GCS by service period */}
-        <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">GCS by Service Period</p>
-          <p className="mb-4 text-[10px] text-[#78716c]">Average score per time of day</p>
-          {mealTimes?.length ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={mealTimes} barCategoryGap="35%">
-                <CartesianGrid strokeDasharray="0" stroke="#f0ede8" vertical={false} />
-                <XAxis
-                  dataKey="mealTime"
-                  tick={{ fontSize: 10, fill: "#78716c" }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
-                />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#78716c" }} axisLine={false} tickLine={false} width={20} />
-                <Tooltip
-                  cursor={false}
-                  contentStyle={{ borderRadius: 12, border: "1px solid #e8e3dc", fontSize: 11, background: "white" }}
-                  formatter={(v: unknown, _: unknown, props: { payload?: { count?: number } }) => [
-                    typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
-                    "Avg GCS",
-                  ]}
-                  labelFormatter={(l: string) => l.charAt(0).toUpperCase() + l.slice(1)}
-                />
-                <Bar dataKey="avgGcs" radius={[6, 6, 0, 0]} name="Avg GCS">
-                  {(() => {
-                    const maxGcs = Math.max(...(mealTimes ?? []).filter(e => e.avgGcs != null).map(e => e.avgGcs!))
-                    return (mealTimes ?? []).map((entry) => (
-                      <Cell
-                        key={entry.mealTime}
-                        fill={entry.avgGcs == null ? "#e8e3dc" : entry.avgGcs === maxGcs ? "#f97316" : "#1c1917"}
-                      />
-                    ))
-                  })()}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-sm text-[#78716c]">No service period data yet.</p>
-          )}
-        </div>
+        {canSeeMealTime ? (
+          <div className="rounded-2xl bg-white shadow-sm p-5">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">GCS by Service Period</p>
+            <p className="mb-4 text-[10px] text-[#78716c]">Average score per time of day</p>
+            {mealTimes?.length ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={mealTimes} barCategoryGap="35%">
+                  <CartesianGrid strokeDasharray="0" stroke="#f0ede8" vertical={false} />
+                  <XAxis
+                    dataKey="mealTime"
+                    tick={{ fontSize: 10, fill: "#78716c" }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
+                  />
+                  <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: "#78716c" }} axisLine={false} tickLine={false} width={20} />
+                  <Tooltip
+                    cursor={false}
+                    contentStyle={{ borderRadius: 12, border: "1px solid #e8e3dc", fontSize: 11, background: "white" }}
+                    formatter={(v: unknown, _: unknown, props: { payload?: { count?: number } }) => [
+                      typeof v === "number" ? `${v.toFixed(1)} GCS (${props.payload?.count ?? 0} responses)` : String(v),
+                      "Avg GCS",
+                    ]}
+                    labelFormatter={(l: string) => l.charAt(0).toUpperCase() + l.slice(1)}
+                  />
+                  <Bar dataKey="avgGcs" radius={[6, 6, 0, 0]} name="Avg GCS">
+                    {(() => {
+                      const maxGcs = Math.max(...(mealTimes ?? []).filter(e => e.avgGcs != null).map(e => e.avgGcs!))
+                      return (mealTimes ?? []).map((entry) => (
+                        <Cell
+                          key={entry.mealTime}
+                          fill={entry.avgGcs == null ? "#e8e3dc" : entry.avgGcs === maxGcs ? "#f97316" : "#1c1917"}
+                        />
+                      ))
+                    })()}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-[#78716c]">No service period data yet.</p>
+            )}
+          </div>
+        ) : (
+          <LockedSection
+            title="GCS by Service Period"
+            description="See how guest scores vary across meal periods. Available on Partner and Founder plans."
+          />
+        )}
       </div>
 
       {/* Row 4: D1 — gradient horizontal bars for all pillars */}
@@ -605,59 +626,73 @@ function RouteComponent() {
 
       {/* Row 5: Word cloud + Staff bubbles */}
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Guest Adjectives</p>
-          {wordCloud?.length ? (
-            <div className="flex flex-wrap gap-2">
-              {wordCloud.map(({ word, count }) => {
-                const scale = 0.75 + (count / maxWordCount) * 0.75
-                return (
-                  <span
-                    key={word}
-                    className="rounded-full px-3 py-1 font-semibold text-white"
-                    style={{
-                      fontSize: `${Math.round(scale * 12)}px`,
-                      background: PILL_PALETTE[word.charCodeAt(0) % PILL_PALETTE.length],
-                    }}
-                  >
-                    {word}
-                  </span>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-[#78716c]">No descriptive words collected yet.</p>
-          )}
-        </div>
-        <div className="rounded-2xl bg-white shadow-sm p-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Staff Mentions</p>
-          {staffBubbles?.length ? (
-            <div className="flex flex-wrap gap-3">
-              {staffBubbles.map(({ name, count, sentiment }) => {
-                const size = Math.round(28 + (count / maxStaffCount) * (MAX_BUBBLE - 28))
-                return (
-                  <div key={name} className="flex flex-col items-center gap-1">
-                    <div
-                      className="flex items-center justify-center rounded-full font-bold text-white"
+        {canSeeWordCloud ? (
+          <div className="rounded-2xl bg-white shadow-sm p-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Guest Adjectives</p>
+            {wordCloud?.length ? (
+              <div className="flex flex-wrap gap-2">
+                {wordCloud.map(({ word, count }) => {
+                  const scale = 0.75 + (count / maxWordCount) * 0.75
+                  return (
+                    <span
+                      key={word}
+                      className="rounded-full px-3 py-1 font-semibold text-white"
                       style={{
-                        width: size,
-                        height: size,
-                        background: SENTIMENT_COLORS[sentiment],
-                        fontSize: Math.max(size * 0.3, 10),
+                        fontSize: `${Math.round(scale * 12)}px`,
+                        background: PILL_PALETTE[word.charCodeAt(0) % PILL_PALETTE.length],
                       }}
-                      title={`${name} — ${count} mention${count !== 1 ? "s" : ""}`}
                     >
-                      {name.charAt(0).toUpperCase()}
+                      {word}
+                    </span>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[#78716c]">No descriptive words collected yet.</p>
+            )}
+          </div>
+        ) : (
+          <LockedSection
+            title="Vent Keyword Cloud"
+            description="Discover the most common words in guest feedback. Available on Founder plan."
+          />
+        )}
+        {canSeeStaffBubbles ? (
+          <div className="rounded-2xl bg-white shadow-sm p-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Staff Mentions</p>
+            {staffBubbles?.length ? (
+              <div className="flex flex-wrap gap-3">
+                {staffBubbles.map(({ name, count, sentiment }) => {
+                  const size = Math.round(28 + (count / maxStaffCount) * (MAX_BUBBLE - 28))
+                  return (
+                    <div key={name} className="flex flex-col items-center gap-1">
+                      <div
+                        className="flex items-center justify-center rounded-full font-bold text-white"
+                        style={{
+                          width: size,
+                          height: size,
+                          background: SENTIMENT_COLORS[sentiment],
+                          fontSize: Math.max(size * 0.3, 10),
+                        }}
+                        title={`${name} — ${count} mention${count !== 1 ? "s" : ""}`}
+                      >
+                        {name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-[9px] font-medium text-[#78716c]">{name.split(" ")[0]}</span>
                     </div>
-                    <span className="text-[9px] font-medium text-[#78716c]">{name.split(" ")[0]}</span>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-[#78716c]">No staff mentions yet.</p>
-          )}
-        </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[#78716c]">No staff mentions yet.</p>
+            )}
+          </div>
+        ) : (
+          <LockedSection
+            title="Staff Tag Cloud"
+            description="See which team members are being mentioned by guests. Available on Host and above."
+          />
+        )}
       </div>
 
       {/* Row 6: Recent feedback */}
@@ -799,12 +834,19 @@ function RouteComponent() {
       ) : (
         <LockedSection
           title="City Leaderboard"
-          description="See how you rank against other properties in your city. Available on Host and Partner plans."
+          description="See how you rank against other properties in your city. Available on Partner and Founder plans."
         />
       )}
 
-      {/* Row 8: Online Reputation — owners only */}
-      {!isStaff && <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />}
+      {/* Row 8: Online Reputation — Partner and Founder, owners only */}
+      {canSeeOnlineReputation ? (
+        <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />
+      ) : !isStaff ? (
+        <LockedSection
+          title="Online Reputation"
+          description="Compare your in-house GCS against your TripAdvisor and Google reviews. Available on Partner and Founder plans."
+        />
+      ) : null}
 
       {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
