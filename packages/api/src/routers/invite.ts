@@ -44,6 +44,7 @@ export const inviteRouter = router({
 
       return {
         valid: true as const,
+        email: m.invitedEmail,
         propertyName: prop[0]?.name ?? "your property",
         propertyId: m.propertyId,
       }

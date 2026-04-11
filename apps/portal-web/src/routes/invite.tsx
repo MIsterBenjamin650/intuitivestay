@@ -154,9 +154,13 @@ function RouteComponent() {
               <p className="text-sm text-muted-foreground text-center">
                 Signed in as <strong>{session.user.email}</strong>
               </p>
-              <Button className="w-full" onClick={handleAccept} disabled={submitting}>
+              <button
+                onClick={handleAccept}
+                disabled={submitting}
+                className="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
+              >
                 {submitting ? "Accepting…" : "Accept Invitation"}
-              </Button>
+              </button>
             </div>
           ) : (
             <div className="space-y-4 text-center">
@@ -167,13 +171,12 @@ function RouteComponent() {
               <p className="text-sm text-muted-foreground">
                 Please sign out and use the invited email address.
               </p>
-              <Button
-                variant="outline"
-                className="w-full"
+              <button
                 onClick={() => void authClient.signOut()}
+                className="w-full rounded-lg border border-orange-500 py-3 text-sm font-semibold text-orange-600 transition-colors hover:bg-orange-50"
               >
                 Sign Out
-              </Button>
+              </button>
             </div>
           )
         ) : (
@@ -202,9 +205,13 @@ function RouteComponent() {
                 placeholder="Repeat your password"
               />
             </div>
-            <Button className="w-full" onClick={handleSignUpAndAccept} disabled={submitting}>
+            <button
+              onClick={handleSignUpAndAccept}
+              disabled={submitting}
+              className="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
+            >
               {submitting ? "Setting up…" : "Create account & accept"}
-            </Button>
+            </button>
           </div>
         )}
       </div>
