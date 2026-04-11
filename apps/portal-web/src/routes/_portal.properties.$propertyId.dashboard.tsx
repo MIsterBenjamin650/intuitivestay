@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useRouteContext, useRouter } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
 
+import { AdvancedInsightsSection } from "@/components/advanced-insights-section"
 import { CompletePaymentButton } from "@/components/complete-payment-button"
 import { ExportPdfButton } from "@/components/export-pdf-button"
 import { OnlineReputationSection } from "@/components/online-reputation-section"
@@ -851,13 +852,7 @@ function RouteComponent() {
       {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
         {canSeeAdvancedInsights ? (
-          <div className="rounded-2xl bg-white shadow-sm p-5 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">Advanced Insights</p>
-              <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-semibold text-orange-500">Coming Soon</span>
-            </div>
-            <p className="text-sm text-[#44403c] leading-relaxed">Sentiment trend analysis, day-of-week consistency patterns, and reputation gap analysis will appear here once your property has sufficient data history.</p>
-          </div>
+          <AdvancedInsightsSection propertyId={propertyId} days={days} />
         ) : (
           <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Available on Partner and Founder plans." />
         )}
