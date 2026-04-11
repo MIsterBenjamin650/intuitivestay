@@ -24,7 +24,7 @@ export const getUser = createServerFn({ method: "GET" })
     // Check if this user is a property owner
     const org = await db.query.organisations.findFirst({
       where: eq(organisations.ownerId, userId),
-      columns: { id: true, subscriptionStatus: true, plan: true },
+      columns: { id: true, subscriptionStatus: true, plan: true, onboardingCompletedAt: true },
     })
 
     if (org) {
@@ -45,6 +45,7 @@ export const getUser = createServerFn({ method: "GET" })
         staffPermissions: null,
         subscriptionStatus: org.subscriptionStatus ?? "none",
         plan: org.plan ?? null,
+        needsOnboarding: org.onboardingCompletedAt === null,
       }
     }
 
