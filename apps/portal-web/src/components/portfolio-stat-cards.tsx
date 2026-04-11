@@ -1,5 +1,7 @@
 // apps/portal-web/src/components/portfolio-stat-cards.tsx
 
+import { type ReactNode } from "react"
+
 interface Props {
   portfolioGcs: number | null
   activeCount: number
@@ -28,7 +30,7 @@ function StatCard({
 }: {
   label: string
   value: string
-  children?: React.ReactNode
+  children?: ReactNode
 }) {
   return (
     <div
