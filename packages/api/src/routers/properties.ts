@@ -1318,15 +1318,54 @@ export const propertiesRouter = router({
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-    const monthlyRows = await db
-      .select({
-        propertyId: feedback.propertyId,
-        month: sql<string>`DATE_TRUNC('month', ${feedback.submittedAt})::text`,
-        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
-      })
-      .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, lastMonthStart)))
-      .groupBy(feedback.propertyId, sql`DATE_TRUNC('month', ${feedback.submittedAt})`)
+    // 2–5. Run monthly delta, top staff, vents, and last feedback in parallel
+    const [monthlyRows, topStaffRows, ventRowsPerProp, lastFeedbackRows] = await Promise.all([
+      // 2. Monthly GCS delta
+      db
+        .select({
+          propertyId: feedback.propertyId,
+          month: sql<string>`DATE_TRUNC('month', ${feedback.submittedAt})::text`,
+          avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+        })
+        .from(feedback)
+        .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, lastMonthStart)))
+        .groupBy(feedback.propertyId, sql`DATE_TRUNC('month', ${feedback.submittedAt})`),
+      // 3. Top staff per property (this calendar month)
+      db
+        .select({
+          propertyId: feedback.propertyId,
+          name: feedback.namedStaffMember,
+          mentions: count(),
+        })
+        .from(feedback)
+        .where(
+          and(
+            inArray(feedback.propertyId, propertyIds),
+            isNotNull(feedback.namedStaffMember),
+            gte(feedback.submittedAt, thisMonthStart),
+          ),
+        )
+        .groupBy(feedback.propertyId, feedback.namedStaffMember)
+        .orderBy(desc(count())),
+      // 4. Vent count per property (this calendar month)
+      db
+        .select({ propertyId: feedback.propertyId, vents: count() })
+        .from(feedback)
+        .where(
+          and(
+            inArray(feedback.propertyId, propertyIds),
+            isNotNull(feedback.ventText),
+            gte(feedback.submittedAt, thisMonthStart),
+          ),
+        )
+        .groupBy(feedback.propertyId),
+      // 5. Last feedback timestamp per property
+      db
+        .select({ propertyId: feedback.propertyId, lastAt: max(feedback.submittedAt) })
+        .from(feedback)
+        .where(inArray(feedback.propertyId, propertyIds))
+        .groupBy(feedback.propertyId),
+    ])
 
     const thisMonthKey = thisMonthStart.toISOString().substring(0, 10) // "YYYY-MM-01"
     const lastMonthKey = lastMonthStart.toISOString().substring(0, 10)
@@ -1341,24 +1380,6 @@ export const propertiesRouter = router({
       else if (mk === lastMonthKey) entry.lastMonth = Number(row.avgGcs)
     }
 
-    // 3. Top staff per property (highest mention count, this calendar month)
-    const topStaffRows = await db
-      .select({
-        propertyId: feedback.propertyId,
-        name: feedback.namedStaffMember,
-        mentions: count(),
-      })
-      .from(feedback)
-      .where(
-        and(
-          inArray(feedback.propertyId, propertyIds),
-          isNotNull(feedback.namedStaffMember),
-          gte(feedback.submittedAt, thisMonthStart),
-        ),
-      )
-      .groupBy(feedback.propertyId, feedback.namedStaffMember)
-      .orderBy(desc(count()))
-
     const topStaffByProperty = new Map<string, { name: string; mentions: number }>()
     for (const row of topStaffRows) {
       if (row.name == null) continue
@@ -1368,27 +1389,7 @@ export const propertiesRouter = router({
       }
     }
 
-    // 4. Vent count per property (this calendar month)
-    const ventRowsPerProp = await db
-      .select({ propertyId: feedback.propertyId, vents: count() })
-      .from(feedback)
-      .where(
-        and(
-          inArray(feedback.propertyId, propertyIds),
-          isNotNull(feedback.ventText),
-          gte(feedback.submittedAt, thisMonthStart),
-        ),
-      )
-      .groupBy(feedback.propertyId)
-
     const ventsByProperty = new Map(ventRowsPerProp.map((r) => [r.propertyId, r.vents]))
-
-    // 5. Last feedback timestamp per property
-    const lastFeedbackRows = await db
-      .select({ propertyId: feedback.propertyId, lastAt: max(feedback.submittedAt) })
-      .from(feedback)
-      .where(inArray(feedback.propertyId, propertyIds))
-      .groupBy(feedback.propertyId)
 
     const lastFeedbackByProperty = new Map(
       lastFeedbackRows.map((r) => [r.propertyId, r.lastAt ? r.lastAt.toISOString() : null]),
@@ -1399,19 +1400,19 @@ export const propertiesRouter = router({
     type CityRankData = { rank: number; total: number }
     const cityRankByProperty = new Map<string, CityRankData>()
 
-    const ONE_DAY_MS_LC = 24 * 60 * 60 * 1000
-    for (const city of distinctCities) {
-      const cached = await db.query.leaderboardCache.findFirst({
-        where: eq(leaderboardCache.city, city),
-      })
-      if (!cached || Date.now() - new Date(cached.cachedAt).getTime() >= ONE_DAY_MS_LC) continue
-
+    const LEADERBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+    const propertyIdSet = new Set(propertyIds)
+    const cachedCityRows = await db.query.leaderboardCache.findMany({
+      where: inArray(leaderboardCache.city, distinctCities),
+    })
+    for (const cached of cachedCityRows) {
+      if (Date.now() - new Date(cached.cachedAt).getTime() >= LEADERBOARD_CACHE_TTL_MS) continue
       const payload = cached.data as {
         rows: Array<{ propertyId: string; rank: number }>
         totalCount: number
       }
       for (const row of payload.rows) {
-        if (propertyIds.includes(row.propertyId)) {
+        if (propertyIdSet.has(row.propertyId)) {
           cityRankByProperty.set(row.propertyId, { rank: row.rank, total: payload.totalCount })
         }
       }
