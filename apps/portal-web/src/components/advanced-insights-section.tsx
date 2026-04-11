@@ -29,7 +29,7 @@ function gcsColor(gcs: number | null): string {
 export function AdvancedInsightsSection({ propertyId, days }: Props) {
   const trpc = useTRPC()
 
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isError } = useQuery(
     trpc.reviews.getAdvancedInsights.queryOptions({ propertyId, days }),
   )
 
@@ -41,6 +41,14 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
     )
   }
 
+  if (isError || !data) {
+    return (
+      <div className="rounded-2xl bg-white shadow-sm p-5 flex items-center justify-center min-h-[220px]">
+        <p className="text-sm text-destructive">Failed to load advanced insights.</p>
+      </div>
+    )
+  }
+
   const hasTrendData = (data?.sentimentTrend?.length ?? 0) > 0
   const hasDowData = (data?.dayOfWeek?.filter((d) => d.count > 0).length ?? 0) > 0
 
@@ -48,7 +56,7 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
     <div className="rounded-2xl bg-white shadow-sm p-5 flex flex-col gap-6">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#a8a29e]">
           Advanced Insights
         </p>
@@ -63,9 +71,9 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={140}>
-            <AreaChart data={data!.sentimentTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <AreaChart data={data.sentimentTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <defs>
-                <linearGradient id="sentGrad" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`sentGrad-${propertyId}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%"  stopColor="#f97316" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                 </linearGradient>
@@ -82,7 +90,7 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
                 dataKey="avgGcs"
                 stroke="#f97316"
                 strokeWidth={2}
-                fill="url(#sentGrad)"
+                fill={`url(#sentGrad-${propertyId})`}
                 dot={{ fill: "white", stroke: "#f97316", strokeWidth: 2, r: 3 }}
                 activeDot={{ r: 4 }}
                 name="Avg GCS"
@@ -101,7 +109,7 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={140}>
-            <BarChart data={data!.dayOfWeek} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <BarChart data={data.dayOfWeek} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f4" />
               <XAxis dataKey="day" tick={{ fontSize: 9 }} />
               <YAxis domain={[0, 10]} tick={{ fontSize: 9 }} />
@@ -112,8 +120,8 @@ export function AdvancedInsightsSection({ propertyId, days }: Props) {
                 ]}
               />
               <Bar dataKey="avgGcs" radius={[4, 4, 0, 0]} name="Avg GCS">
-                {(data!.dayOfWeek).map((entry, idx) => (
-                  <Cell key={idx} fill={gcsColor(entry.avgGcs)} />
+                {data.dayOfWeek.map((entry) => (
+                  <Cell key={entry.day} fill={gcsColor(entry.avgGcs)} />
                 ))}
               </Bar>
             </BarChart>
