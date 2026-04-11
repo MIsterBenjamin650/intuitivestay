@@ -325,7 +325,7 @@ export const reviewsRouter = router({
     }),
 
   getAdvancedInsights: protectedProcedure
-    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive().max(3650) }))
     .query(async ({ ctx, input }) => {
       if (!ctx.isAdmin) await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
@@ -335,7 +335,7 @@ export const reviewsRouter = router({
       // DOW: 0 = Sunday, 1 = Monday, … 6 = Saturday
       const dowRows = await db
         .select({
-          dow: sql<string>`EXTRACT(DOW FROM ${feedback.submittedAt})::int`,
+          dow: sql<number>`EXTRACT(DOW FROM ${feedback.submittedAt})::int`,
           avgGcs: sql<string>`COALESCE(AVG(${feedback.gcs}::numeric), 0)`,
           count: count(),
         })
@@ -347,7 +347,7 @@ export const reviewsRouter = router({
       const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
       // Build a full 7-day array so days with no data show as null
-      const dowMap = new Map(dowRows.map((r) => [Number(r.dow), { avgGcs: Number(r.avgGcs), count: r.count }]))
+      const dowMap = new Map(dowRows.map((r) => [r.dow, { avgGcs: Number(r.avgGcs), count: r.count }]))
       const dayOfWeek = DOW_LABELS.map((label, idx) => ({
         day: label,
         avgGcs: dowMap.get(idx)?.avgGcs ?? null,
@@ -365,6 +365,7 @@ export const reviewsRouter = router({
         .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
         .groupBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
         .orderBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
+        .limit(104)
 
       const sentimentTrend = trendRows.map((r) => ({
         week: r.week,
