@@ -1967,4 +1967,23 @@ export const propertiesRouter = router({
 
     return { url: session.url }
   }),
+
+  /**
+   * Protected — marks the owner's organisation onboarding as complete.
+   * Called when the owner dismisses or finishes the onboarding walkthrough.
+   */
+  markOnboardingComplete: protectedProcedure.mutation(async ({ ctx }) => {
+    const org = await db.query.organisations.findFirst({
+      where: eq(organisations.ownerId, ctx.session.user.id),
+      columns: { id: true },
+    })
+    if (!org) throw new TRPCError({ code: "FORBIDDEN" })
+
+    await db
+      .update(organisations)
+      .set({ onboardingCompletedAt: new Date() })
+      .where(eq(organisations.id, org.id))
+
+    return { ok: true }
+  }),
 })
