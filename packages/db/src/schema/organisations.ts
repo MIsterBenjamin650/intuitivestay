@@ -13,6 +13,7 @@ export const organisations = pgTable("organisations", {
   subscriptionEndsAt: timestamp("subscription_ends_at"),
   stripeCustomerId: text("stripe_customer_id"),
   ownerId: text("owner_id").references(() => user.id, { onDelete: "set null" }),
+  onboardingCompletedAt: timestamp("onboarding_completed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

@@ -15,6 +15,13 @@
       "when": 1775497716548,
       "tag": "0001_smart_paper_doll",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775879611314,
+      "tag": "0002_dazzling_beast",
+      "breakpoints": true
     }
   ]
 }
