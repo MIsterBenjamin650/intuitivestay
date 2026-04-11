@@ -1,8 +1,8 @@
 import { db } from "@intuitive-stay/db"
-import { onlineReviewsCache, organisations, properties } from "@intuitive-stay/db/schema"
+import { feedback, onlineReviewsCache, organisations, properties } from "@intuitive-stay/db/schema"
 import { env } from "@intuitive-stay/env/server"
 import { TRPCError } from "@trpc/server"
-import { and, eq } from "drizzle-orm"
+import { and, count, eq, gte, sql } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, router } from "../index"
@@ -322,5 +322,56 @@ export const reviewsRouter = router({
         .where(eq(properties.id, input.propertyId))
 
       return { ok: true }
+    }),
+
+  getAdvancedInsights: protectedProcedure
+    .input(z.object({ propertyId: z.string(), days: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.isAdmin) await assertPropertyAccess(ctx.session.user.id, input.propertyId)
+
+      const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1000)
+
+      // ── Day-of-week breakdown ────────────────────────────────────────────────
+      // DOW: 0 = Sunday, 1 = Monday, … 6 = Saturday
+      const dowRows = await db
+        .select({
+          dow: sql<string>`EXTRACT(DOW FROM ${feedback.submittedAt})::int`,
+          avgGcs: sql<string>`COALESCE(AVG(${feedback.gcs}::numeric), 0)`,
+          count: count(),
+        })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
+        .groupBy(sql`EXTRACT(DOW FROM ${feedback.submittedAt})`)
+        .orderBy(sql`EXTRACT(DOW FROM ${feedback.submittedAt})`)
+
+      const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+      // Build a full 7-day array so days with no data show as null
+      const dowMap = new Map(dowRows.map((r) => [Number(r.dow), { avgGcs: Number(r.avgGcs), count: r.count }]))
+      const dayOfWeek = DOW_LABELS.map((label, idx) => ({
+        day: label,
+        avgGcs: dowMap.get(idx)?.avgGcs ?? null,
+        count: dowMap.get(idx)?.count ?? 0,
+      }))
+
+      // ── Weekly sentiment trend ───────────────────────────────────────────────
+      const trendRows = await db
+        .select({
+          week: sql<string>`TO_CHAR(DATE_TRUNC('week', ${feedback.submittedAt}), 'DD Mon')`,
+          avgGcs: sql<string>`COALESCE(AVG(${feedback.gcs}::numeric), 0)`,
+          count: count(),
+        })
+        .from(feedback)
+        .where(and(eq(feedback.propertyId, input.propertyId), gte(feedback.submittedAt, since)))
+        .groupBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
+        .orderBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
+
+      const sentimentTrend = trendRows.map((r) => ({
+        week: r.week,
+        avgGcs: Number(r.avgGcs),
+        count: r.count,
+      }))
+
+      return { dayOfWeek, sentimentTrend }
     }),
 })
