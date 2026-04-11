@@ -49,7 +49,7 @@ function StaffProfilePage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const isActivated = !!data?.activatedAt
+  const isActivated = !!data?.activatedAt || !!data?.propertyIsVip
   const tierScore = data ? Math.round(data.avgGcs * 10) : 0
   const passportUrl = `${window.location.origin}/passport/${staffProfileId}`
 
@@ -148,7 +148,7 @@ function StaffProfilePage() {
             {/* GCS score */}
             <div className="text-center">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                Guest Connection Score
+                Your Service Signature Score
               </p>
               <p className="text-5xl font-black text-orange-500">
                 {data.nominations > 0 ? tierScore : "—"}
