@@ -15,6 +15,14 @@ export const auth = betterAuth({
 
     schema: schema,
   }),
+  session: {
+    expiresIn: 60 * 60 * 24 * 30,      // 30 days before a session fully expires
+    updateAge: 60 * 60 * 24,            // refresh the session token once per day if user is active
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5,                   // cache session in cookie for 5 minutes to reduce DB lookups
+    },
+  },
   trustedOrigins: [
     env.CORS_ORIGIN,
     "intuitive-stay://",

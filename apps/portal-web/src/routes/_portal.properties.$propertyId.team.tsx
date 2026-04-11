@@ -49,14 +49,15 @@ function PermissionToggles({
   return (
     <div className="space-y-3">
       {(Object.keys(DEFAULT_PERMISSIONS) as Array<keyof typeof DEFAULT_PERMISSIONS>).map((key) => (
-        <div key={key} className="flex items-center justify-between">
-          <Label htmlFor={key} className="text-sm font-normal">
+        <div key={key} className="flex items-center justify-between gap-4">
+          <Label htmlFor={key} className="text-sm font-normal leading-snug">
             {PERMISSION_LABELS[key]}
           </Label>
           <Switch
             id={key}
             checked={permissions[key]}
             onCheckedChange={(checked: boolean) => onChange(key, checked)}
+            className="shrink-0 data-[state=checked]:bg-orange-500"
           />
         </div>
       ))}
@@ -108,15 +109,15 @@ function InviteModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button size="sm">
+          <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white shrink-0">
             <UserPlusIcon className="mr-2 h-4 w-4" />
             Invite Staff Member
           </Button>
         }
       />
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-xl p-6">
         <DialogHeader>
-          <DialogTitle>Invite Staff Member</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Invite Staff Member</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           {error && (
@@ -124,7 +125,7 @@ function InviteModal({
               {error}
             </p>
           )}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <Label htmlFor="invite-email">Email address</Label>
             <Input
               id="invite-email"
@@ -132,15 +133,17 @@ function InviteModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="staff@example.com"
+              className="focus-visible:ring-orange-500"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <Label htmlFor="invite-name">Display name (optional)</Label>
             <Input
               id="invite-name"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Jane Smith"
+              className="focus-visible:ring-orange-500"
             />
           </div>
           <div className="space-y-2">
@@ -152,13 +155,13 @@ function InviteModal({
               }
             />
           </div>
-          <Button
-            className="w-full"
+          <button
             onClick={handleSubmit}
             disabled={inviteMutation.isPending}
+            className="mt-2 w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-50"
           >
             {inviteMutation.isPending ? "Sending…" : "Send Invite"}
-          </Button>
+          </button>
         </div>
       </DialogContent>
     </Dialog>
@@ -199,8 +202,8 @@ function RouteComponent() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Team</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -220,7 +223,7 @@ function RouteComponent() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
@@ -254,6 +257,7 @@ function RouteComponent() {
                   <td className="px-4 py-3">
                     <Badge
                       variant={member.status === "active" ? "default" : "secondary"}
+                      className={member.status === "active" ? "bg-orange-500 hover:bg-orange-500 text-white" : ""}
                     >
                       {member.status === "active" ? "Active" : "Pending"}
                     </Badge>
@@ -276,6 +280,7 @@ function RouteComponent() {
                             refetch()
                           }}
                           disabled={resendMutation.isPending}
+                          className="border-orange-500 text-orange-600 hover:bg-orange-50"
                         >
                           Resend
                         </Button>

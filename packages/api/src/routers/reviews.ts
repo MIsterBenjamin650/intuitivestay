@@ -125,7 +125,6 @@ export const reviewsRouter = router({
   getComparison: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      console.log("[getComparison] session.user.id:", ctx.session.user.id, "| email:", ctx.session.user.email, "| isAdmin:", ctx.isAdmin)
       await assertPropertyOwner(ctx.session.user.id, input.propertyId, ctx.isAdmin)
 
       const prop = await db
