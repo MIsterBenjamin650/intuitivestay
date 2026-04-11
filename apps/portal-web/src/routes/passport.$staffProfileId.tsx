@@ -66,7 +66,7 @@ function PassportPage() {
     )
   }
 
-  if (!data.activatedAt) {
+  if (!data.activatedAt && !data.propertyIsVip) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="text-center space-y-3">
@@ -227,13 +227,17 @@ function PassportPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
-          Active since{" "}
-          {new Date(data.activatedAt).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-          {" · "}
+          {data.activatedAt ? (
+            <>
+              Active since{" "}
+              {new Date(data.activatedAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+              {" · "}
+            </>
+          ) : null}
           Powered by IntuitiveStay
         </p>
 
