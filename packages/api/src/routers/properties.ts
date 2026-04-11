@@ -1183,14 +1183,14 @@ export const propertiesRouter = router({
       db
         .select({
           total: count(),
-          vents: sql<number>`COUNT(*) FILTER (WHERE ${feedback.ventText} IS NOT NULL)`,
+          vents: sql<number>`COUNT(*) FILTER (WHERE ${feedback.ventText} IS NOT NULL)::int`,
         })
         .from(feedback)
         .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, oneWeekAgo))),
       db
         .select({
           total: count(),
-          vents: sql<number>`COUNT(*) FILTER (WHERE ${feedback.ventText} IS NOT NULL)`,
+          vents: sql<number>`COUNT(*) FILTER (WHERE ${feedback.ventText} IS NOT NULL)::int`,
         })
         .from(feedback)
         .where(
