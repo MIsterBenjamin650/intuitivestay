@@ -25,9 +25,11 @@ function RouteComponent() {
       <div className="relative w-full max-w-md">
         {/* Brand header */}
         <div className="mb-8 text-center">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 shadow-lg shadow-orange-200 mb-4">
-            <span className="text-xl font-bold text-white tracking-tight">IS</span>
-          </div>
+          <img
+            src="/logo.svg"
+            alt="Intuitive Stay"
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-lg shadow-orange-200"
+          />
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Intuitive Stay</h1>
           <p className="mt-1 text-sm text-gray-500">Guest experience, measured and improved</p>
         </div>

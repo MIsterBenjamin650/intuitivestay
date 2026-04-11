@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Orange background -->
+  <rect width="200" height="200" fill="#D4721A"/>
+
+  <!-- Shadow layer (dot) -->
+  <circle cx="105" cy="75" r="19" fill="#A85510" opacity="0.55"/>
+  <!-- Shadow layer (body) -->
+  <rect x="83" y="99" width="40" height="70" rx="15" fill="#A85510" opacity="0.55"/>
+
+  <!-- White dot -->
+  <circle cx="100" cy="70" r="19" fill="white"/>
+  <!-- White body -->
+  <rect x="78" y="94" width="40" height="70" rx="15" fill="white"/>
+</svg>
