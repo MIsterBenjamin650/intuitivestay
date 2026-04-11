@@ -69,7 +69,7 @@ export function PortfolioSpotlight({ rows }: Props) {
           <span className="text-[24px] font-black text-orange-600 leading-none">{worst.avgGcs.toFixed(1)}</span>
           {(() => {
             const worstDetail = [
-              worst.gcsDelta != null && worst.gcsDelta < 0 ? `↓ ${worst.gcsDelta.toFixed(1)}` : null,
+              worst.gcsDelta != null && worst.gcsDelta < 0 ? `↓ ${Math.abs(worst.gcsDelta).toFixed(1)}` : null,
               worst.alertCount > 0 ? `${worst.alertCount} alert${worst.alertCount !== 1 ? "s" : ""}` : null,
               worst.ventCount > 0 ? `${worst.ventCount} vent${worst.ventCount !== 1 ? "s" : ""}` : null,
             ]
