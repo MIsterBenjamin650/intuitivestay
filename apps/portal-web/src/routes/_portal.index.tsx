@@ -87,7 +87,7 @@ function PortfolioDashboard() {
         <PortfolioMostImproved mostImproved={data.mostImproved} />
       )}
 
-      <PortfolioTrendChart monthlyTrend={data?.monthlyTrend ?? []} />
+      <PortfolioTrendChart monthlyTrend={data?.monthlyTrend ?? []} isLoading={isLoading} />
     </div>
   )
 }

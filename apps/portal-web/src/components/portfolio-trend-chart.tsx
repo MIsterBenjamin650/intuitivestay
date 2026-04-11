@@ -12,15 +12,18 @@ import {
 
 interface Props {
   monthlyTrend: Array<{ month: string; score: number }>
+  isLoading?: boolean
 }
 
-export function PortfolioTrendChart({ monthlyTrend }: Props) {
+export function PortfolioTrendChart({ monthlyTrend, isLoading = false }: Props) {
   return (
     <div className="rounded-xl bg-white shadow-sm p-5">
       <p className="text-[14px] font-bold text-gray-900">Portfolio Satisfaction Trend</p>
       <p className="mt-0.5 mb-4 text-[11px] text-gray-400">Average GCS across all properties</p>
 
-      {monthlyTrend.length === 0 ? (
+      {isLoading ? (
+        <div className="h-[200px] animate-pulse rounded bg-gray-100" />
+      ) : monthlyTrend.length === 0 ? (
         <p className="text-sm text-gray-400">No feedback yet. Scores will appear once guests start submitting.</p>
       ) : (
         <ResponsiveContainer width="100%" height={200}>
@@ -36,7 +39,7 @@ export function PortfolioTrendChart({ monthlyTrend }: Props) {
             <YAxis domain={[0, 10]} tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12 }}
-              formatter={(v) => (typeof v === "number" ? v.toFixed(2) : v)}
+              formatter={(v) => (typeof v === "number" ? v.toFixed(2) : String(v ?? ""))}
             />
             <Area
               type="monotone"
