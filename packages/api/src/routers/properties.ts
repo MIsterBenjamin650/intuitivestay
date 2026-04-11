@@ -1112,7 +1112,20 @@ export const propertiesRouter = router({
         })
 
     if (!ctx.isAdmin && !org) {
-      return { portfolioGcs: null, activeCount: 0, alertCount: 0, monthlyTrend: [] }
+      return {
+        portfolioGcs: null,
+        activeCount: 0,
+        alertCount: 0,
+        monthlyTrend: [],
+        propertyCards: [],
+        thisWeekCount: 0,
+        thisWeekDelta: null,
+        ventCount: 0,
+        ventCountDelta: null,
+        enrichedPropertyRows: [],
+        staffLeaderboard: [],
+        mostImproved: null,
+      }
     }
 
     const orgProperties = await db
@@ -1124,7 +1137,20 @@ export const propertiesRouter = router({
     const propertyIds = orgProperties.map((p) => p.id)
 
     if (propertyIds.length === 0) {
-      return { portfolioGcs: null, activeCount, alertCount: 0, monthlyTrend: [] }
+      return {
+        portfolioGcs: null,
+        activeCount,
+        alertCount: 0,
+        monthlyTrend: [],
+        propertyCards: [],
+        thisWeekCount: 0,
+        thisWeekDelta: null,
+        ventCount: 0,
+        ventCountDelta: null,
+        enrichedPropertyRows: [],
+        staffLeaderboard: [],
+        mostImproved: null,
+      }
     }
 
     // Portfolio GCS = average of all properties' avgGcs
@@ -1147,6 +1173,47 @@ export const propertiesRouter = router({
       .from(feedback)
       .where(and(inArray(feedback.propertyId, propertyIds), sql`${feedback.gcs}::numeric <= 5`))
     const alertCount = alertResult?.total ?? 0
+
+    // ── Portfolio-level weekly & vent stats ──────────────────────────────────
+    const now = new Date()
+    const oneWeekAgo  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000)
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+
+    const [thisWeekAgg, lastWeekAgg] = await Promise.all([
+      db
+        .select({
+          total: count(),
+          vents: sql<number>`COUNT(*) FILTER (WHERE ${feedback.ventText} IS NOT NULL)`,
+        })
+        .from(feedback)
+        .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, oneWeekAgo))),
+      db
+        .select({
+          total: count(),
+          vents: sql<number>`COUNT(*) FILTER (WHERE ${feedback.ventText} IS NOT NULL)`,
+        })
+        .from(feedback)
+        .where(
+          and(
+            inArray(feedback.propertyId, propertyIds),
+            gte(feedback.submittedAt, twoWeeksAgo),
+            lt(feedback.submittedAt, oneWeekAgo),
+          ),
+        ),
+    ])
+
+    const thisWeekCount  = thisWeekAgg[0]?.total ?? 0
+    const thisWeekVents  = thisWeekAgg[0]?.vents ?? 0
+    const lastWeekCount  = lastWeekAgg[0]?.total ?? 0
+    const lastWeekVents  = lastWeekAgg[0]?.vents ?? 0
+
+    const thisWeekDelta = lastWeekCount > 0
+      ? Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100)
+      : null
+    const ventCount = thisWeekVents
+    const ventCountDelta = lastWeekVents > 0
+      ? Math.round(((thisWeekVents - lastWeekVents) / lastWeekVents) * 100)
+      : null
 
     // Monthly trend: avg GCS per month (last 6 months)
     const trendRows = await db
@@ -1207,7 +1274,55 @@ export const propertiesRouter = router({
       alertCount: alertsByProperty.get(p.id) ?? 0,
     }))
 
-    return { portfolioGcs, activeCount, alertCount, monthlyTrend, propertyCards }
+    return {
+      portfolioGcs,
+      activeCount,
+      alertCount,
+      monthlyTrend,
+      propertyCards,
+      thisWeekCount,
+      thisWeekDelta,
+      ventCount,
+      ventCountDelta,
+      enrichedPropertyRows: [] as {
+        id: string
+        name: string
+        type: string | null
+        city: string
+        country: string
+        status: string
+        avgGcs: number | null
+        gcsDelta: number | null
+        sparkline: Array<number | null>
+        thisWeekCount: number
+        thisWeekDelta: number | null
+        topStaffName: string | null
+        topStaffMentions: number
+        ventCount: number
+        alertCount: number
+        lastFeedbackAt: string | null
+        cityRank: number | null
+        cityTotal: number | null
+      }[],
+      staffLeaderboard: [] as {
+        name: string
+        propertyName: string
+        city: string
+        mentionCount: number
+        avgGcs: number | null
+      }[],
+      mostImproved: null as {
+        propertyId: string
+        name: string
+        city: string
+        type: string | null
+        previousGcs: number
+        currentGcs: number
+        delta: number
+        cityRank: number | null
+        cityTotal: number | null
+      } | null,
+    }
   }),
 
   getPropertyDashboard: protectedProcedure
