@@ -4,6 +4,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { SearchIcon } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { OnboardingModal } from "@/components/onboarding-modal";
 import { TopbarNotifications } from "@/components/topbar-notifications";
 import { TopbarThemeSwitcher } from "@/components/topbar-theme-switcher";
 import { TopbarUserMenu } from "@/components/topbar-user-menu";
@@ -79,6 +80,11 @@ function RouteComponent() {
   const { session } = Route.useRouteContext();
   const sessionProperties = resolveSessionProperties(session);
   const isStaff = (session as { isStaff?: boolean } | null)?.isStaff === true
+  const isAdmin = (session as { isAdmin?: boolean } | null)?.isAdmin === true
+  const needsOnboarding =
+    !isStaff &&
+    !isAdmin &&
+    (session as { needsOnboarding?: boolean } | null)?.needsOnboarding === true
   const staffPermissions = (session as {
     staffPermissions?: {
       viewFeedback: boolean
@@ -92,10 +98,11 @@ function RouteComponent() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-[#fdf8f3] to-[#fef0d9] dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+      {needsOnboarding && <OnboardingModal />}
       <SidebarProvider>
         <ActivePropertyProvider initialProperties={sessionProperties}>
           <AppSidebar
-            isAdmin={(session as { isAdmin?: boolean } | null)?.isAdmin === true}
+            isAdmin={isAdmin}
             plan={(session as { plan?: string | null } | null)?.plan ?? null}
             subscriptionStatus={(session as { subscriptionStatus?: string } | null)?.subscriptionStatus ?? "none"}
             isStaff={isStaff}
