@@ -76,7 +76,7 @@ export function PortfolioSpotlight({ rows }: Props) {
               worst.ventCount > 0 ? `${worst.ventCount} vent${worst.ventCount !== 1 ? "s" : ""}` : null,
             ]
               .filter(Boolean)
-              .join(" · ") || "Lowest score"}
+              .join(" · ") || ""}
           </span>
         </div>
       </div>
