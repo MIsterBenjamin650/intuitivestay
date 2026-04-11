@@ -1274,6 +1274,191 @@ export const propertiesRouter = router({
       alertCount: alertsByProperty.get(p.id) ?? 0,
     }))
 
+    // ── Per-property enrichment ──────────────────────────────────────────────
+    // 1. Weekly feedback data (sparklines + per-property velocity)
+    const sevenWeeksAgo = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000)
+    const weeklyRows = await db
+      .select({
+        propertyId: feedback.propertyId,
+        week: sql<string>`DATE_TRUNC('week', ${feedback.submittedAt})::text`,
+        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+        feedbackCount: count(),
+      })
+      .from(feedback)
+      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, sevenWeeksAgo)))
+      .groupBy(feedback.propertyId, sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
+      .orderBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
+
+    // Build 7 Monday-keyed week buckets (oldest → newest)
+    const dayOfWeek = now.getDay() // 0=Sun, 1=Mon ... 6=Sat
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+    const currentMonday = new Date(now)
+    currentMonday.setDate(now.getDate() + daysToMonday)
+    currentMonday.setHours(0, 0, 0, 0)
+
+    const weekKeys: string[] = []
+    for (let i = 6; i >= 0; i--) {
+      const monday = new Date(currentMonday.getTime() - i * 7 * 24 * 60 * 60 * 1000)
+      weekKeys.push(monday.toISOString().substring(0, 10)) // "YYYY-MM-DD"
+    }
+    // weekKeys[0] = 6 weeks ago Monday, weekKeys[6] = this week's Monday
+
+    type WeekData = { avgGcs: number | null; count: number }
+    const weeklyMap = new Map<string, Map<string, WeekData>>()
+    for (const row of weeklyRows) {
+      if (!weeklyMap.has(row.propertyId)) weeklyMap.set(row.propertyId, new Map())
+      const key = row.week.substring(0, 10) // "YYYY-MM-DD"
+      weeklyMap.get(row.propertyId)!.set(key, {
+        avgGcs: row.avgGcs != null ? Number(row.avgGcs) : null,
+        count: row.feedbackCount,
+      })
+    }
+
+    // 2. Monthly GCS delta (this month vs last month)
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+    const monthlyRows = await db
+      .select({
+        propertyId: feedback.propertyId,
+        month: sql<string>`DATE_TRUNC('month', ${feedback.submittedAt})::text`,
+        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+      })
+      .from(feedback)
+      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, lastMonthStart)))
+      .groupBy(feedback.propertyId, sql`DATE_TRUNC('month', ${feedback.submittedAt})`)
+
+    const thisMonthKey = thisMonthStart.toISOString().substring(0, 10) // "YYYY-MM-01"
+    const lastMonthKey = lastMonthStart.toISOString().substring(0, 10)
+
+    type MonthData = { thisMonth: number | null; lastMonth: number | null }
+    const monthlyMap = new Map<string, MonthData>()
+    for (const row of monthlyRows) {
+      if (!monthlyMap.has(row.propertyId)) monthlyMap.set(row.propertyId, { thisMonth: null, lastMonth: null })
+      const entry = monthlyMap.get(row.propertyId)!
+      const mk = row.month.substring(0, 10)
+      if (mk === thisMonthKey) entry.thisMonth = Number(row.avgGcs)
+      else if (mk === lastMonthKey) entry.lastMonth = Number(row.avgGcs)
+    }
+
+    // 3. Top staff per property (highest mention count, this calendar month)
+    const topStaffRows = await db
+      .select({
+        propertyId: feedback.propertyId,
+        name: feedback.namedStaffMember,
+        mentions: count(),
+      })
+      .from(feedback)
+      .where(
+        and(
+          inArray(feedback.propertyId, propertyIds),
+          isNotNull(feedback.namedStaffMember),
+          gte(feedback.submittedAt, thisMonthStart),
+        ),
+      )
+      .groupBy(feedback.propertyId, feedback.namedStaffMember)
+      .orderBy(desc(count()))
+
+    const topStaffByProperty = new Map<string, { name: string; mentions: number }>()
+    for (const row of topStaffRows) {
+      if (row.name == null) continue
+      // First row per property = highest mentions (ordered desc)
+      if (!topStaffByProperty.has(row.propertyId)) {
+        topStaffByProperty.set(row.propertyId, { name: row.name, mentions: row.mentions })
+      }
+    }
+
+    // 4. Vent count per property (this calendar month)
+    const ventRowsPerProp = await db
+      .select({ propertyId: feedback.propertyId, vents: count() })
+      .from(feedback)
+      .where(
+        and(
+          inArray(feedback.propertyId, propertyIds),
+          isNotNull(feedback.ventText),
+          gte(feedback.submittedAt, thisMonthStart),
+        ),
+      )
+      .groupBy(feedback.propertyId)
+
+    const ventsByProperty = new Map(ventRowsPerProp.map((r) => [r.propertyId, r.vents]))
+
+    // 5. Last feedback timestamp per property
+    const lastFeedbackRows = await db
+      .select({ propertyId: feedback.propertyId, lastAt: max(feedback.submittedAt) })
+      .from(feedback)
+      .where(inArray(feedback.propertyId, propertyIds))
+      .groupBy(feedback.propertyId)
+
+    const lastFeedbackByProperty = new Map(
+      lastFeedbackRows.map((r) => [r.propertyId, r.lastAt ? r.lastAt.toISOString() : null]),
+    )
+
+    // 6. City ranks — read from leaderboardCache (24 h TTL, same as getCityLeaderboard)
+    const distinctCities = [...new Set(propertyRows.map((p) => p.city))]
+    type CityRankData = { rank: number; total: number }
+    const cityRankByProperty = new Map<string, CityRankData>()
+
+    const ONE_DAY_MS_LC = 24 * 60 * 60 * 1000
+    for (const city of distinctCities) {
+      const cached = await db.query.leaderboardCache.findFirst({
+        where: eq(leaderboardCache.city, city),
+      })
+      if (!cached || Date.now() - new Date(cached.cachedAt).getTime() >= ONE_DAY_MS_LC) continue
+
+      const payload = cached.data as {
+        rows: Array<{ propertyId: string; rank: number }>
+        totalCount: number
+      }
+      for (const row of payload.rows) {
+        if (propertyIds.includes(row.propertyId)) {
+          cityRankByProperty.set(row.propertyId, { rank: row.rank, total: payload.totalCount })
+        }
+      }
+    }
+
+    // 7. Assemble enrichedPropertyRows
+    const enrichedPropertyRows = propertyRows.map((p) => {
+      const weekly = weeklyMap.get(p.id) ?? new Map<string, WeekData>()
+      const sparkline = weekKeys.map((k) => weekly.get(k)?.avgGcs ?? null)
+      const propThisWeekCount = weekly.get(weekKeys[6]!)?.count ?? 0
+      const propLastWeekCount = weekly.get(weekKeys[5]!)?.count ?? 0
+      const propThisWeekDelta =
+        propLastWeekCount > 0
+          ? Math.round(((propThisWeekCount - propLastWeekCount) / propLastWeekCount) * 100)
+          : null
+
+      const monthly = monthlyMap.get(p.id)
+      const gcsDelta =
+        monthly?.thisMonth != null && monthly?.lastMonth != null
+          ? Math.round((monthly.thisMonth - monthly.lastMonth) * 10) / 10
+          : null
+
+      const topStaff = topStaffByProperty.get(p.id) ?? null
+      const rankData = cityRankByProperty.get(p.id) ?? null
+
+      return {
+        id: p.id,
+        name: p.name,
+        type: p.type,
+        city: p.city,
+        country: p.country,
+        status: p.status,
+        avgGcs: p.avgGcs != null ? Number(p.avgGcs) : null,
+        gcsDelta,
+        sparkline,
+        thisWeekCount: propThisWeekCount,
+        thisWeekDelta: propThisWeekDelta,
+        topStaffName: topStaff?.name ?? null,
+        topStaffMentions: topStaff?.mentions ?? 0,
+        ventCount: ventsByProperty.get(p.id) ?? 0,
+        alertCount: alertsByProperty.get(p.id) ?? 0,
+        lastFeedbackAt: lastFeedbackByProperty.get(p.id) ?? null,
+        cityRank: rankData?.rank ?? null,
+        cityTotal: rankData?.total ?? null,
+      }
+    })
+
     return {
       portfolioGcs,
       activeCount,
@@ -1284,26 +1469,7 @@ export const propertiesRouter = router({
       thisWeekDelta,
       ventCount,
       ventCountDelta,
-      enrichedPropertyRows: [] as {
-        id: string
-        name: string
-        type: string | null
-        city: string
-        country: string
-        status: string
-        avgGcs: number | null
-        gcsDelta: number | null
-        sparkline: Array<number | null>
-        thisWeekCount: number
-        thisWeekDelta: number | null
-        topStaffName: string | null
-        topStaffMentions: number
-        ventCount: number
-        alertCount: number
-        lastFeedbackAt: string | null
-        cityRank: number | null
-        cityTotal: number | null
-      }[],
+      enrichedPropertyRows,
       staffLeaderboard: [] as {
         name: string
         propertyName: string
