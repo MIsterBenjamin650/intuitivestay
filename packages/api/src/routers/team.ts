@@ -4,6 +4,8 @@ import { TRPCError } from "@trpc/server"
 import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 
+import { env } from "@intuitive-stay/env/server"
+
 import { protectedProcedure, router } from "../index"
 import { sendStaffInviteEmail } from "../lib/email"
 
@@ -16,7 +18,10 @@ const permissionsSchema = z.object({
   viewAlerts: z.boolean(),
 })
 
-async function assertOwner(userId: string, propertyId: string) {
+async function assertOwner(userId: string, propertyId: string, userEmail: string) {
+  // Admins can manage teams for any property
+  if (userEmail.toLowerCase().trim() === env.ADMIN_EMAIL.toLowerCase().trim()) return
+
   const row = await db
     .select({ orgId: organisations.id })
     .from(organisations)
@@ -40,7 +45,7 @@ export const teamRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertOwner(ctx.session.user.id, input.propertyId)
+      await assertOwner(ctx.session.user.id, input.propertyId, ctx.session.user.email)
 
       const existing = await db
         .select({ id: propertyMembers.id, status: propertyMembers.status })
@@ -99,7 +104,7 @@ export const teamRouter = router({
   listMembers: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      await assertOwner(ctx.session.user.id, input.propertyId)
+      await assertOwner(ctx.session.user.id, input.propertyId, ctx.session.user.email)
 
       return db
         .select()
@@ -121,7 +126,7 @@ export const teamRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Member not found" })
       }
 
-      await assertOwner(ctx.session.user.id, member[0].propertyId)
+      await assertOwner(ctx.session.user.id, member[0].propertyId, ctx.session.user.email)
 
       const [updated] = await db
         .update(propertyMembers)
@@ -145,7 +150,7 @@ export const teamRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Member not found" })
       }
 
-      await assertOwner(ctx.session.user.id, member[0].propertyId)
+      await assertOwner(ctx.session.user.id, member[0].propertyId, ctx.session.user.email)
 
       await db.delete(propertyMembers).where(eq(propertyMembers.id, input.memberId))
 
@@ -165,7 +170,7 @@ export const teamRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Member not found" })
       }
 
-      await assertOwner(ctx.session.user.id, member[0].propertyId)
+      await assertOwner(ctx.session.user.id, member[0].propertyId, ctx.session.user.email)
 
       if (member[0].status === "active") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Member has already accepted" })
