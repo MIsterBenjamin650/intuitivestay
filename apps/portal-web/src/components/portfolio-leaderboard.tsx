@@ -61,7 +61,7 @@ export function PortfolioLeaderboard({ rows }: Props) {
       {sorted.map((row, idx) => {
         const quiet = isGoneQuiet(row.lastFeedbackAt)
         const color = gcsColor(row.avgGcs)
-        const barWidth = row.avgGcs != null ? Math.round((row.avgGcs / 10) * 100) : 0
+        const barWidth = row.avgGcs != null ? Math.min(100, Math.round((row.avgGcs / 10) * 100)) : 0
         const cityRankIsHigh = row.cityRank != null && row.cityRank <= 3
 
         return (

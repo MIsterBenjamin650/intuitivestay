@@ -58,7 +58,7 @@ export function PortfolioStaffBoard({ entries }: Props) {
       ) : (
         entries.map((entry, idx) => (
           <div
-            key={`${entry.name}-${entry.propertyName}`}
+            key={`${entry.name}-${entry.propertyName}-${idx}`}
             className="flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-50 last:border-0"
           >
             {/* Medal / rank */}
