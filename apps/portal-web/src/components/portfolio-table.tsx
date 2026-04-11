@@ -176,9 +176,9 @@ export function PortfolioTable({ rows }: Props) {
 
         <div className="w-px h-3.5 bg-gray-200" />
 
+        <Pill label="All trends"  active={trendFilter === "all"}  onClick={() => setTrendFilter("all")} />
         <Pill label="↑ Improving" active={trendFilter === "up"}   onClick={() => setTrendFilter("up")}   color="#16a34a" />
         <Pill label="↓ Declining" active={trendFilter === "down"} onClick={() => setTrendFilter("down")} color="#dc2626" />
-        <Pill label="All trends"  active={trendFilter === "all"}  onClick={() => setTrendFilter("all")} />
 
         <div className="w-px h-3.5 bg-gray-200" />
 
@@ -230,12 +230,12 @@ export function PortfolioTable({ rows }: Props) {
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[11px] font-bold text-gray-900">{row.name}</span>
-                  {quiet && (
+                  {quiet && row.lastFeedbackAt && (
                     <span
                       className="text-[7px] font-bold px-1.5 py-0.5 rounded-full border"
                       style={{ background: "#fef3c7", color: "#b45309", borderColor: "#fde68a" }}
                     >
-                      Gone quiet · {Math.floor((Date.now() - new Date(row.lastFeedbackAt!).getTime()) / (1000 * 60 * 60 * 24))}d
+                      Gone quiet · {Math.floor((Date.now() - new Date(row.lastFeedbackAt).getTime()) / (1000 * 60 * 60 * 24))}d
                     </span>
                   )}
                 </div>
@@ -254,7 +254,7 @@ export function PortfolioTable({ rows }: Props) {
                     className="text-[8px] font-bold"
                     style={{ color: gcsDeltaDir === "up" ? "#16a34a" : gcsDeltaDir === "down" ? "#dc2626" : "#9ca3af" }}
                   >
-                    {gcsDeltaDir === "up" ? "↑" : "↓"} {gcsDeltaDir !== "flat" ? `${row.gcsDelta > 0 ? "+" : ""}${row.gcsDelta.toFixed(1)}` : "→"}
+                    {gcsDeltaDir === "up" ? `↑ +${row.gcsDelta.toFixed(1)}` : gcsDeltaDir === "down" ? `↓ ${row.gcsDelta.toFixed(1)}` : "→"}
                   </p>
                 )}
               </div>
