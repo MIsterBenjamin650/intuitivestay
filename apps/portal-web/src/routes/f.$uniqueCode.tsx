@@ -431,8 +431,8 @@ function FeedbackPage() {
       // feedbackId is guaranteed non-null when blocked === false
       const feedbackId = result.feedbackId as string
 
-      // 2. Submit any staff name recognitions (high score path, free-text only when gcs < 8)
-      if (!isLowScore && gcs < 8) {
+      // 2. Submit any staff name recognitions (all non-low scores, gcs >= 6)
+      if (!isLowScore) {
         const names = [staffName1, staffName2, staffName3].filter((n) => n.trim())
         for (const staffName of names) {
           await trpcClient.feedback.submitNameDrop.mutate({
