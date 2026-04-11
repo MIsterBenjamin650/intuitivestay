@@ -1460,6 +1460,75 @@ export const propertiesRouter = router({
       }
     })
 
+    // ── Staff leaderboard (last 30 days, cross-property) ─────────────────────
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const staffLeaderboardRows = await db
+      .select({
+        name: feedback.namedStaffMember,
+        propertyId: feedback.propertyId,
+        mentions: count(),
+        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+      })
+      .from(feedback)
+      .where(
+        and(
+          inArray(feedback.propertyId, propertyIds),
+          isNotNull(feedback.namedStaffMember),
+          gte(feedback.submittedAt, thirtyDaysAgo),
+        ),
+      )
+      .groupBy(feedback.namedStaffMember, feedback.propertyId)
+      .orderBy(desc(count()))
+      .limit(10)
+
+    const propNameMap = new Map(propertyRows.map((p) => [p.id, { name: p.name, city: p.city }]))
+
+    const staffLeaderboard = staffLeaderboardRows
+      .filter((r) => r.name != null)
+      .slice(0, 5)
+      .map((r) => {
+        const prop = propNameMap.get(r.propertyId) ?? { name: "Unknown", city: "" }
+        return {
+          name: r.name!,
+          propertyName: prop.name,
+          city: prop.city,
+          mentionCount: r.mentions,
+          avgGcs: r.avgGcs != null ? Number(r.avgGcs) : null,
+        }
+      })
+
+    // ── Most improved (biggest positive GCS delta this month vs last) ─────────
+    let mostImproved: {
+      propertyId: string
+      name: string
+      city: string
+      type: string | null
+      previousGcs: number
+      currentGcs: number
+      delta: number
+      cityRank: number | null
+      cityTotal: number | null
+    } | null = null
+
+    for (const p of enrichedPropertyRows) {
+      if (p.gcsDelta == null || p.gcsDelta <= 0) continue
+      const monthly = monthlyMap.get(p.id)
+      if (!monthly?.thisMonth || !monthly?.lastMonth) continue
+      if (mostImproved == null || p.gcsDelta > mostImproved.delta) {
+        mostImproved = {
+          propertyId: p.id,
+          name: p.name,
+          city: p.city,
+          type: p.type,
+          previousGcs: monthly.lastMonth,
+          currentGcs: monthly.thisMonth,
+          delta: p.gcsDelta,
+          cityRank: p.cityRank,
+          cityTotal: p.cityTotal,
+        }
+      }
+    }
+
     return {
       portfolioGcs,
       activeCount,
@@ -1471,24 +1540,8 @@ export const propertiesRouter = router({
       ventCount,
       ventCountDelta,
       enrichedPropertyRows,
-      staffLeaderboard: [] as {
-        name: string
-        propertyName: string
-        city: string
-        mentionCount: number
-        avgGcs: number | null
-      }[],
-      mostImproved: null as {
-        propertyId: string
-        name: string
-        city: string
-        type: string | null
-        previousGcs: number
-        currentGcs: number
-        delta: number
-        cityRank: number | null
-        cityTotal: number | null
-      } | null,
+      staffLeaderboard,
+      mostImproved,
     }
   }),
 
