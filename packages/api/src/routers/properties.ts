@@ -1898,7 +1898,8 @@ export const propertiesRouter = router({
 
   getTierStatus: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      if (!ctx.isAdmin) await assertPropertyAccess(ctx.session.user.id, input.propertyId)
       const tier = await db.query.propertyTiers.findFirst({
         where: eq(propertyTiers.propertyId, input.propertyId),
       })
@@ -1916,7 +1917,8 @@ export const propertiesRouter = router({
 
   getAiSummary: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      if (!ctx.isAdmin) await assertPropertyAccess(ctx.session.user.id, input.propertyId)
       const summary = await db.query.aiDailySummaries.findFirst({
         where: eq(aiDailySummaries.propertyId, input.propertyId),
         orderBy: [desc(aiDailySummaries.date)],

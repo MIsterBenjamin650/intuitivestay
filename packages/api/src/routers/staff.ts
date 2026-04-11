@@ -274,7 +274,11 @@ export const staffRouter = router({
 
       await db
         .update(staffProfiles)
-        .set({ removedAt: new Date() })
+        .set({
+          removedAt: new Date(),
+          emailVerificationToken: null,
+          emailVerificationTokenExpires: null,
+        })
         .where(eq(staffProfiles.id, input.staffProfileId))
 
       return { ok: true }
