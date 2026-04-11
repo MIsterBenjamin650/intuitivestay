@@ -15,6 +15,10 @@ import { TRPCProvider } from "./utils/trpc";
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
+      // Don't surface FORBIDDEN/UNAUTHORIZED errors as toasts — these are
+      // handled inline per-page (e.g. access checks for staff vs owner).
+      const code = (error as { data?: { code?: string } })?.data?.code
+      if (code === "FORBIDDEN" || code === "UNAUTHORIZED") return
       toast.error(error.message, {
         action: {
           label: "retry",

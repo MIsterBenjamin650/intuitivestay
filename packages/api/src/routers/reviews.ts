@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { protectedProcedure, router } from "../index"
+import { assertPropertyAccess } from "../lib/access"
 import { analyseReviewsForPillars } from "../lib/ai"
 
 const ALLOWED_REVIEW_HOSTNAMES = [
@@ -125,7 +126,7 @@ export const reviewsRouter = router({
   getComparison: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      await assertPropertyOwner(ctx.session.user.id, input.propertyId, ctx.isAdmin)
+      if (!ctx.isAdmin) await assertPropertyAccess(ctx.session.user.id, input.propertyId)
 
       const prop = await db
         .select({

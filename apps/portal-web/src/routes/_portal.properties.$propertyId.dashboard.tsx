@@ -110,6 +110,7 @@ function DateRangeTabs({ days, onChange }: { days: Days; onChange: (d: Days) => 
 function RouteComponent() {
   const { propertyId } = Route.useParams()
   const { session } = useRouteContext({ from: "/_portal" })
+  const isStaff = (session as { isStaff?: boolean } | null)?.isStaff === true
   const plan = (session as { plan?: string | null } | null)?.plan ?? null
   const PLAN_RANK: Record<string, number> = { member: 0, host: 1, partner: 2, founder: 3 }
   const planRank = PLAN_RANK[plan ?? ""] ?? -1
@@ -802,8 +803,8 @@ function RouteComponent() {
         />
       )}
 
-      {/* Row 8: Online Reputation */}
-      <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />
+      {/* Row 8: Online Reputation — owners only */}
+      {!isStaff && <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />}
 
       {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
