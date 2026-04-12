@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
-import { createFileRoute, useRouteContext, useRouter } from "@tanstack/react-router"
+import { Link, createFileRoute, useRouteContext, useRouter } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
 
 import { AdvancedInsightsSection } from "@/components/advanced-insights-section"
@@ -274,6 +274,13 @@ function RouteComponent() {
           <a href="/organisation/billing" className="underline font-medium">Billing settings</a>.
         </div>
       )}
+      {/* Back to portfolio link — only shown when user has multiple properties */}
+      {((session as { user?: { properties?: Array<{ id: string }> } } | null)?.user?.properties?.length ?? 0) > 1 && (
+        <Link to="/" className="flex items-center gap-1 text-[11px] font-semibold text-[#f97316] hover:underline w-fit">
+          ← Portfolio Overview
+        </Link>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-[#1c1917]">Dashboard</h1>
