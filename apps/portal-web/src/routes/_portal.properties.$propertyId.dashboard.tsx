@@ -3,10 +3,8 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useRouteContext, useRouter } from "@tanstack/react-router"
 import { LockIcon } from "lucide-react"
 
-import { AdvancedInsightsSection } from "@/components/advanced-insights-section"
 import { CompletePaymentButton } from "@/components/complete-payment-button"
 import { ExportPdfButton } from "@/components/export-pdf-button"
-import { OnlineReputationSection } from "@/components/online-reputation-section"
 import type { PdfDashboardData } from "@/components/property-pdf-document"
 import {
   Bar,
@@ -25,6 +23,13 @@ import {
 } from "recharts"
 
 import { useTRPC } from "@/utils/trpc"
+
+const AdvancedInsightsSection = React.lazy(() =>
+  import("@/components/advanced-insights-section").then((m) => ({ default: m.AdvancedInsightsSection }))
+)
+const OnlineReputationSection = React.lazy(() =>
+  import("@/components/online-reputation-section").then((m) => ({ default: m.OnlineReputationSection }))
+)
 
 export const Route = createFileRoute("/_portal/properties/$propertyId/dashboard")({
   component: RouteComponent,
@@ -820,7 +825,9 @@ function RouteComponent() {
 
       {/* Row 8: Online Reputation — Partner and Founder, owners only */}
       {canSeeOnlineReputation ? (
-        <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />
+        <React.Suspense fallback={<div className="rounded-2xl bg-white shadow-sm p-5 animate-pulse min-h-[180px]" />}>
+          <OnlineReputationSection propertyId={propertyId} gcs={avgPillars} />
+        </React.Suspense>
       ) : !isStaff ? (
         <LockedSection
           title="Online Reputation"
@@ -831,7 +838,9 @@ function RouteComponent() {
       {/* Row 9: Advanced Insights + Local Market */}
       <div className="grid gap-4 md:grid-cols-2">
         {canSeeAdvancedInsights ? (
-          <AdvancedInsightsSection propertyId={propertyId} days={days} />
+          <React.Suspense fallback={<div className="rounded-2xl bg-white shadow-sm p-5 animate-pulse min-h-[220px]" />}>
+            <AdvancedInsightsSection propertyId={propertyId} days={days} />
+          </React.Suspense>
         ) : (
           <LockedSection title="Advanced Insights" description="Sentiment trend analysis, day-of-week consistency, reputation gap analysis. Available on Partner and Founder plans." />
         )}

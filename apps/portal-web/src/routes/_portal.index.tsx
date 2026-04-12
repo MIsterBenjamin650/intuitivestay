@@ -1,3 +1,4 @@
+import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, redirect, useRouteContext } from "@tanstack/react-router"
 
@@ -8,9 +9,12 @@ import { PortfolioSpotlight } from "@/components/portfolio-spotlight"
 import { PortfolioStaffBoard } from "@/components/portfolio-staff-board"
 import { PortfolioStatCards } from "@/components/portfolio-stat-cards"
 import { PortfolioTable } from "@/components/portfolio-table"
-import { PortfolioTrendChart } from "@/components/portfolio-trend-chart"
 import { PushNotificationPrompt } from "@/components/push-notification-prompt"
 import { useTRPC } from "@/utils/trpc"
+
+const PortfolioTrendChart = React.lazy(() =>
+  import("@/components/portfolio-trend-chart").then((m) => ({ default: m.PortfolioTrendChart }))
+)
 
 export const Route = createFileRoute("/_portal/")({
   beforeLoad: ({ context }) => {
@@ -87,7 +91,9 @@ function PortfolioDashboard() {
         <PortfolioMostImproved mostImproved={data.mostImproved} />
       )}
 
-      <PortfolioTrendChart monthlyTrend={data?.monthlyTrend ?? []} isLoading={isLoading} />
+      <React.Suspense fallback={<div className="rounded-xl bg-white shadow-sm p-5 animate-pulse min-h-[240px]" />}>
+        <PortfolioTrendChart monthlyTrend={data?.monthlyTrend ?? []} isLoading={isLoading} />
+      </React.Suspense>
     </div>
   )
 }
