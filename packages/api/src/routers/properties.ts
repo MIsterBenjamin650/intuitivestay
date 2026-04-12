@@ -1104,7 +1104,9 @@ export const propertiesRouter = router({
       return updated
     }),
 
-  getPortfolioDashboard: protectedProcedure.query(async ({ ctx }) => {
+  getPortfolioDashboard: protectedProcedure
+    .input(z.object({ days: z.number().int().min(1).max(365) }))
+    .query(async ({ ctx, input }) => {
     const org = ctx.isAdmin
       ? null
       : await db.query.organisations.findFirst({
@@ -1127,6 +1129,12 @@ export const propertiesRouter = router({
         mostImproved: null,
       }
     }
+
+    // Clamp requested days to plan maximum
+    const PLAN_MAX_DAYS: Record<string, number> = { member: 7, host: 7, partner: 30, founder: 365 }
+    const maxAllowedDays = ctx.isAdmin ? 365 : (PLAN_MAX_DAYS[org?.plan ?? ""] ?? 7)
+    const days = Math.min(input.days, maxAllowedDays)
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
     const orgProperties = await db
       .select({ id: properties.id, status: properties.status })
@@ -1153,26 +1161,38 @@ export const propertiesRouter = router({
       }
     }
 
-    // Portfolio GCS = average of all properties' avgGcs
-    const scoreRows = await db
-      .select({ avgGcs: propertyScores.avgGcs })
-      .from(propertyScores)
-      .where(inArray(propertyScores.propertyId, propertyIds))
+    // Portfolio GCS — period-filtered average across all properties
+    const [portfolioGcsRow] = await db
+      .select({ avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)` })
+      .from(feedback)
+      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since)))
 
-    const validScores = scoreRows
-      .map((r) => Number(r.avgGcs))
-      .filter((n) => !isNaN(n) && n > 0)
     const portfolioGcs =
-      validScores.length > 0
-        ? Math.round((validScores.reduce((a, b) => a + b, 0) / validScores.length) * 10) / 10
-        : null
+      portfolioGcsRow?.avgGcs != null ? Math.round(Number(portfolioGcsRow.avgGcs) * 10) / 10 : null
 
     // Alert count = feedback where GCS <= 5
     const [alertResult] = await db
       .select({ total: count() })
       .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), sql`${feedback.gcs}::numeric <= 5`))
+      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since), sql`${feedback.gcs}::numeric <= 5`))
     const alertCount = alertResult?.total ?? 0
+
+    // Per-property period-filtered GCS
+    const periodGcsRows = await db
+      .select({
+        propertyId: feedback.propertyId,
+        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+      })
+      .from(feedback)
+      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since)))
+      .groupBy(feedback.propertyId)
+
+    const periodGcsByProperty = new Map(
+      periodGcsRows.map((r) => [
+        r.propertyId,
+        r.avgGcs != null ? Math.round(Number(r.avgGcs) * 10) / 10 : null,
+      ])
+    )
 
     // ── Portfolio-level weekly & vent stats ──────────────────────────────────
     const now = new Date()
@@ -1247,11 +1267,8 @@ export const propertiesRouter = router({
         city: properties.city,
         country: properties.country,
         status: properties.status,
-        avgGcs: propertyScores.avgGcs,
-        totalFeedback: propertyScores.totalFeedback,
       })
       .from(properties)
-      .leftJoin(propertyScores, eq(propertyScores.propertyId, properties.id))
       .where(org ? eq(properties.organisationId, org.id) : undefined)
       .orderBy(properties.name)
 
@@ -1259,7 +1276,7 @@ export const propertiesRouter = router({
     const alertRows = await db
       .select({ propertyId: feedback.propertyId, total: count() })
       .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), sql`${feedback.gcs}::numeric <= 5`))
+      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since), sql`${feedback.gcs}::numeric <= 5`))
       .groupBy(feedback.propertyId)
 
     const alertsByProperty = new Map(alertRows.map((r) => [r.propertyId, r.total]))
@@ -1271,8 +1288,7 @@ export const propertiesRouter = router({
       city: p.city,
       country: p.country,
       status: p.status,
-      avgGcs: p.avgGcs != null ? Number(p.avgGcs) : null,
-      totalFeedback: p.totalFeedback ?? 0,
+      avgGcs: periodGcsByProperty.get(p.id) ?? null,
       alertCount: alertsByProperty.get(p.id) ?? 0,
     }))
 
@@ -1449,7 +1465,7 @@ export const propertiesRouter = router({
         city: p.city,
         country: p.country,
         status: p.status,
-        avgGcs: p.avgGcs != null ? Number(p.avgGcs) : null,
+        avgGcs: periodGcsByProperty.get(p.id) ?? null,
         gcsDelta,
         sparkline,
         thisWeekCount: propThisWeekCount,
