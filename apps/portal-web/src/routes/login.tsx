@@ -26,7 +26,7 @@ function RouteComponent() {
         {/* Brand header */}
         <div className="mb-8 text-center">
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="Intuitive Stay"
             className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-lg shadow-orange-200"
           />
