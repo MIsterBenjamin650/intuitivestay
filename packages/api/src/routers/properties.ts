@@ -1231,10 +1231,12 @@ export const propertiesRouter = router({
       .groupBy(sql`date_trunc('month', ${feedback.submittedAt})`)
       .orderBy(sql`date_trunc('month', ${feedback.submittedAt})`)
 
-    const monthlyTrend = trendRows.map((r) => ({
-      month: r.month,
-      score: Number(r.avgGcs),
-    }))
+    const monthlyTrend = trendRows
+      .map((r) => ({
+        month: r.month,
+        score: Number(r.avgGcs),
+      }))
+      .filter((r) => !isNaN(r.score))
 
     // Per-property cards
     const propertyRows = await db

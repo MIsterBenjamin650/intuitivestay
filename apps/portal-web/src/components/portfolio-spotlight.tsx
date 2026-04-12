@@ -39,7 +39,7 @@ export function PortfolioSpotlight({ rows }: Props) {
   const best  = sorted[0]!
   const worst = sorted[sorted.length - 1]!
 
-  if (best.id === worst.id) return null
+  if (best.id === worst.id || best.avgGcs === worst.avgGcs) return null
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

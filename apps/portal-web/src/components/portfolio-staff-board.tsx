@@ -1,5 +1,7 @@
 // apps/portal-web/src/components/portfolio-staff-board.tsx
 
+import { gcsColor } from "@/utils/gcs"
+
 type Entry = {
   name: string
   propertyName: string
@@ -21,13 +23,6 @@ const AVATAR_GRADIENTS = [
 ]
 
 const MEDALS = ["🥇", "🥈", "🥉"]
-
-function gcsColor(gcs: number | null): string {
-  if (gcs == null) return "#9ca3af"
-  if (gcs >= 8.5) return "#16a34a"
-  if (gcs >= 7) return "#f97316"
-  return "#dc2626"
-}
 
 export function PortfolioStaffBoard({ entries }: Props) {
   return (

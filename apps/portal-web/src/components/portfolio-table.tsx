@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Link } from "@tanstack/react-router"
+import { gcsColor, isGoneQuiet } from "@/utils/gcs"
 
 type Row = {
   id: string
@@ -26,13 +27,6 @@ interface Props {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function gcsColor(gcs: number | null): string {
-  if (gcs == null) return "#9ca3af"
-  if (gcs >= 8.5) return "#16a34a"
-  if (gcs >= 7) return "#f97316"
-  return "#dc2626"
-}
-
 function sparklinePoints(values: Array<number | null>, width = 54, height = 24): string {
   const n = values.length
   if (n < 2) return ""
@@ -54,11 +48,6 @@ function timeAgo(iso: string | null): string {
   if (h < 1) return "just now"
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
-}
-
-function isGoneQuiet(iso: string | null): boolean {
-  if (!iso) return false
-  return Date.now() - new Date(iso).getTime() > 7 * 24 * 60 * 60 * 1000
 }
 
 // ── sub-components ───────────────────────────────────────────────────────────

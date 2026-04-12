@@ -1,5 +1,7 @@
 // apps/portal-web/src/components/portfolio-leaderboard.tsx
 
+import { gcsColor, isGoneQuiet } from "@/utils/gcs"
+
 type Row = {
   id: string
   name: string
@@ -15,21 +17,10 @@ interface Props {
   rows: Row[]
 }
 
-function gcsColor(gcs: number | null): string {
-  if (gcs == null) return "#9ca3af"
-  if (gcs >= 8.5) return "#16a34a"
-  if (gcs >= 7) return "#f97316"
-  return "#dc2626"
-}
-
-function isGoneQuiet(iso: string | null): boolean {
-  if (!iso) return false
-  return Date.now() - new Date(iso).getTime() > 7 * 24 * 60 * 60 * 1000
-}
-
 export function PortfolioLeaderboard({ rows }: Props) {
   const sorted = [...rows]
     .sort((a, b) => (b.avgGcs ?? -1) - (a.avgGcs ?? -1))
+    .slice(0, 10)
 
   const medals = ["🥇", "🥈", "🥉"]
 
