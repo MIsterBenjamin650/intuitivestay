@@ -115,7 +115,7 @@ function RouteComponent() {
               <Card key={row.id} className="overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <GcsChip gcs={row.gcs} />
                       {row.gcs <= 5 && (
                         <Badge variant="destructive" className="text-[10px]">Low Score</Badge>
@@ -129,6 +129,11 @@ function RouteComponent() {
                         <Badge variant="outline" className="text-[10px] text-green-700 border-green-300 bg-green-50">
                           ★ {row.namedStaffMember}
                         </Badge>
+                      )}
+                      {row.label && (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                          📍 {row.label}
+                        </span>
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground tabular-nums">

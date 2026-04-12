@@ -563,6 +563,9 @@ function FeedbackPage() {
             IntuitiveStay
           </p>
           <h1 className="text-xl font-bold">{data?.propertyName}</h1>
+          {data?.label && (
+            <p className="text-sm text-gray-500 mt-1">📍 {data.label}</p>
+          )}
         </div>
 
         <p className="text-sm text-muted-foreground text-center">

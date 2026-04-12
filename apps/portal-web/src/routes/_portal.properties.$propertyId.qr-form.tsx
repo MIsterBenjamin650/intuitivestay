@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { QRCodeCanvas } from "qrcode.react"
 
@@ -12,129 +12,178 @@ export const Route = createFileRoute("/_portal/properties/$propertyId/qr-form")(
 function QrFormPage() {
   const { propertyId } = Route.useParams()
   const trpc = useTRPC()
-  const { data, isLoading, isError } = useQuery(
+  const queryClient = useQueryClient()
+  const [newLabel, setNewLabel] = React.useState("")
+  const [creating, setCreating] = React.useState(false)
+
+  const { data } = useQuery(
     trpc.properties.getPropertyQrData.queryOptions({ propertyId }),
   )
-  const qrWrapRef = React.useRef<HTMLDivElement>(null)
 
-  if (isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading QR data…</div>
-  if (isError) return <div className="p-6"><p className="text-sm text-destructive">Failed to load QR data.</p></div>
-
-  if (!data?.qrCode) {
-    return (
-      <div className="p-6 space-y-4">
-        <h1 className="text-2xl font-bold">QR Code</h1>
-        <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          <p className="font-medium">No QR Code Yet</p>
-          <p className="text-sm mt-1">
-            Your property is pending approval. Once approved, a QR code will be generated and emailed to you.
-          </p>
-        </div>
-      </div>
-    )
+  function refetch() {
+    queryClient.invalidateQueries({ queryKey: trpc.properties.getPropertyQrData.queryKey({ propertyId }) })
   }
 
-  const { feedbackUrl, createdAt } = data.qrCode
-  const totalSubmissions = data.totalSubmissions
+  const createMutation = useMutation({
+    ...trpc.properties.createQrCode.mutationOptions(),
+    onSuccess: () => {
+      refetch()
+      setNewLabel("")
+      setCreating(false)
+    },
+  })
 
-  function downloadPng() {
-    const canvas = qrWrapRef.current?.querySelector("canvas")
+  const deleteMutation = useMutation({
+    ...trpc.properties.deleteQrCode.mutationOptions(),
+    onSuccess: () => refetch(),
+  })
+
+  if (!data) {
+    return <div className="p-6 animate-pulse text-gray-400">Loading...</div>
+  }
+
+  return (
+    <div className="p-6 max-w-2xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">QR Codes</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {data.totalSubmissions} total submission{data.totalSubmissions !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <button
+          onClick={() => setCreating(true)}
+          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
+        >
+          + Add QR Code
+        </button>
+      </div>
+
+      {creating && (
+        <div className="rounded-xl border border-orange-100 bg-orange-50 p-4 space-y-3">
+          <p className="text-sm font-semibold text-gray-800">New QR Code Label</p>
+          <p className="text-xs text-gray-500">e.g. "Table 7", "Room 12", "Bar Area", "Terrace"</p>
+          <input
+            type="text"
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Enter a label..."
+            maxLength={60}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => createMutation.mutate({ propertyId, label: newLabel })}
+              disabled={!newLabel.trim() || createMutation.isPending}
+              className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
+            >
+              {createMutation.isPending ? "Creating..." : "Create"}
+            </button>
+            <button
+              onClick={() => { setCreating(false); setNewLabel(""); }}
+              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {data.codes.map((code) => (
+          <QrCodeCard
+            key={code.id}
+            code={code}
+            canDelete={data.codes.length > 1}
+            onDelete={() => deleteMutation.mutate({ propertyId, qrCodeId: code.id })}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+type QrCode = {
+  id: string;
+  label: string | null;
+  uniqueCode: string;
+  feedbackUrl: string;
+  createdAt: Date | string;
+};
+
+function QrCodeCard({
+  code,
+  canDelete,
+  onDelete,
+}: {
+  code: QrCode;
+  canDelete: boolean;
+  onDelete: () => void;
+}) {
+  const displayLabel = code.label ?? "General"
+
+  function downloadQr() {
+    const canvas = document.getElementById(`qr-${code.id}`) as HTMLCanvasElement
     if (!canvas) return
-
-    // Create a padded version for printing
-    const pad = 32
-    const out = document.createElement("canvas")
-    out.width = canvas.width + pad * 2
-    out.height = canvas.height + pad * 2
-    const ctx = out.getContext("2d")!
+    const padded = document.createElement("canvas")
+    padded.width = canvas.width + 40
+    padded.height = canvas.height + 40
+    const ctx = padded.getContext("2d")!
     ctx.fillStyle = "#ffffff"
-    ctx.fillRect(0, 0, out.width, out.height)
-    ctx.drawImage(canvas, pad, pad)
-
+    ctx.fillRect(0, 0, padded.width, padded.height)
+    ctx.drawImage(canvas, 20, 20)
     const link = document.createElement("a")
-    link.download = "intuitivestay-qr-code.png"
-    link.href = out.toDataURL("image/png")
+    link.download = `qr-${displayLabel.replace(/\s+/g, "-").toLowerCase()}.png`
+    link.href = padded.toDataURL("image/png")
     link.click()
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">QR Code</h1>
-
-      {/* Stat */}
-      <div className="rounded-lg border p-4 flex items-center gap-4 w-fit">
+    <div className="rounded-xl border border-gray-100 bg-white shadow-sm p-5 space-y-4">
+      <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">Total Submissions</p>
-          <p className="text-3xl font-bold">{totalSubmissions}</p>
-        </div>
-      </div>
-
-      {/* QR code display + download */}
-      <div className="rounded-lg border p-6 flex flex-col items-center gap-5">
-        <p className="text-sm text-muted-foreground self-start">Your QR Code</p>
-
-        {/* Rendered QR */}
-        <div ref={qrWrapRef} className="rounded-xl bg-white p-4 shadow-sm border">
-          <QRCodeCanvas
-            value={feedbackUrl}
-            size={220}
-            level="H"
-            marginSize={1}
-            imageSettings={{
-              src: "/logo-icon.png",
-              width: 40,
-              height: 40,
-              excavate: true,
-            }}
-          />
-        </div>
-
-        <p className="text-xs text-muted-foreground text-center max-w-xs">
-          Print at a minimum of 5 × 5 cm for reliable scanning. Use quality paper or card stock.
-        </p>
-
-        <button
-          onClick={downloadPng}
-          className="flex items-center gap-2 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Download PNG
-        </button>
-      </div>
-
-      {/* Details */}
-      <div className="rounded-lg border p-6 space-y-4">
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Feedback URL</p>
-          <a
-            href={feedbackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline break-all font-mono text-sm"
-          >
-            {feedbackUrl}
-          </a>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground mb-1">Generated</p>
-          <p className="text-sm">
-            {new Date(createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+          <p className="font-semibold text-gray-900">{displayLabel}</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Added{" "}
+            {new Date(code.createdAt).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
           </p>
         </div>
+        {canDelete && (
+          <button
+            onClick={onDelete}
+            className="text-xs text-red-400 hover:text-red-600 transition-colors"
+          >
+            Remove
+          </button>
+        )}
       </div>
 
-      {/* Placement tips */}
-      <div className="rounded-lg border p-6 space-y-2">
-        <h2 className="font-semibold">Placement Tips</h2>
-        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-          <li>Place in a prominent location guests will see on departure.</li>
-          <li>Reception desks, checkout counters, and room key sleeves work well.</li>
-          <li>Print at a minimum of 5 × 5 cm for reliable scanning.</li>
-          <li>Test the scan on your own phone before displaying.</li>
-        </ul>
+      <div className="flex justify-center">
+        <QRCodeCanvas
+          id={`qr-${code.id}`}
+          value={code.feedbackUrl}
+          size={180}
+          level="M"
+        />
       </div>
+
+      <div className="space-y-2">
+        <button
+          onClick={downloadQr}
+          className="w-full rounded-lg bg-orange-500 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+        >
+          ↓ Download PNG
+        </button>
+        <p className="text-center text-xs text-gray-400 break-all">{code.feedbackUrl}</p>
+      </div>
+
+      <p className="text-center text-xs text-gray-400">
+        Print at a minimum of 5 × 5 cm for reliable scanning. Use quality paper or card stock.
+      </p>
     </div>
   )
 }

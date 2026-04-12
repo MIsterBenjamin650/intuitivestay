@@ -687,8 +687,23 @@ export const feedbackRouter = router({
 
       const [rows, totalResult] = await Promise.all([
         db
-          .select()
+          .select({
+            id: feedback.id,
+            gcs: feedback.gcs,
+            resilience: feedback.resilience,
+            empathy: feedback.empathy,
+            anticipation: feedback.anticipation,
+            recognition: feedback.recognition,
+            ventText: feedback.ventText,
+            guestEmail: feedback.guestEmail,
+            namedStaffMember: feedback.namedStaffMember,
+            mealTime: feedback.mealTime,
+            isUniformScore: feedback.isUniformScore,
+            submittedAt: feedback.submittedAt,
+            label: qrCodes.label,
+          })
           .from(feedback)
+          .leftJoin(qrCodes, eq(feedback.qrCodeId, qrCodes.id))
           .where(eq(feedback.propertyId, input.propertyId))
           .orderBy(desc(feedback.submittedAt))
           .limit(PAGE_SIZE)
@@ -713,6 +728,7 @@ export const feedbackRouter = router({
           mealTime: row.mealTime,
           isUniformScore: row.isUniformScore,
           submittedAt: row.submittedAt,
+          label: row.label ?? null,
         })),
         total: totalResult[0]?.total ?? 0,
         pageSize: PAGE_SIZE,
