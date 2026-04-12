@@ -1,4 +1,5 @@
 // apps/portal-web/src/components/portfolio-spotlight.tsx
+import { Link } from "@tanstack/react-router"
 
 type Row = {
   id: string
@@ -44,8 +45,10 @@ export function PortfolioSpotlight({ rows }: Props) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {/* Best performer */}
-      <div
-        className="rounded-xl p-4"
+      <Link
+        to="/properties/$propertyId/dashboard"
+        params={{ propertyId: best.id }}
+        className="rounded-xl p-4 block hover:opacity-90 transition-opacity"
         style={{ background: "linear-gradient(135deg,#f0fdf4,#dcfce7)", border: "1px solid #bbf7d0" }}
       >
         <p className="text-[9px] font-bold uppercase tracking-[0.07em] text-green-600 mb-1.5">⭐ Best Performer</p>
@@ -55,11 +58,13 @@ export function PortfolioSpotlight({ rows }: Props) {
           <span className="text-[24px] font-black text-green-600 leading-none">{best.avgGcs?.toFixed(1)}</span>
           <DeltaBadge delta={best.gcsDelta} color="green" />
         </div>
-      </div>
+      </Link>
 
       {/* Needs attention */}
-      <div
-        className="rounded-xl p-4"
+      <Link
+        to="/properties/$propertyId/dashboard"
+        params={{ propertyId: worst.id }}
+        className="rounded-xl p-4 block hover:opacity-90 transition-opacity"
         style={{ background: "linear-gradient(135deg,#fff7ed,#ffedd5)", border: "1px solid #fed7aa" }}
       >
         <p className="text-[9px] font-bold uppercase tracking-[0.07em] text-orange-600 mb-1.5">⚠️ Needs Attention</p>
@@ -86,7 +91,7 @@ export function PortfolioSpotlight({ rows }: Props) {
             )
           })()}
         </div>
-      </div>
+      </Link>
     </div>
   )
 }

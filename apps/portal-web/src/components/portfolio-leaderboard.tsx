@@ -1,5 +1,7 @@
 // apps/portal-web/src/components/portfolio-leaderboard.tsx
 
+import { Link } from "@tanstack/react-router"
+
 import { gcsColor, isGoneQuiet } from "@/utils/gcs"
 
 type Row = {
@@ -56,9 +58,11 @@ export function PortfolioLeaderboard({ rows }: Props) {
         const cityRankIsHigh = row.cityRank != null && row.cityRank <= 3
 
         return (
-          <div
+          <Link
             key={row.id}
-            className="flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-50 last:border-0"
+            to="/properties/$propertyId/dashboard"
+            params={{ propertyId: row.id }}
+            className="flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-[#fafaf9] transition-colors"
             style={{ background: quiet ? "#fffbeb" : undefined }}
           >
             {/* Medal / rank */}
@@ -116,7 +120,7 @@ export function PortfolioLeaderboard({ rows }: Props) {
             >
               <div style={{ width: `${barWidth}%`, height: "100%", background: color, borderRadius: 3 }} />
             </div>
-          </div>
+          </Link>
         )
       })}
 
