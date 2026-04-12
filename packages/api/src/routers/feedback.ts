@@ -123,6 +123,7 @@ export const feedbackRouter = router({
         googlePlaceId: property.googlePlaceId ?? null,
         reviewPromptThreshold: property.reviewPromptThreshold,
         reviewPromptPlatforms: property.reviewPromptPlatforms,
+        label: qrCode.label ?? null,
       }
     }),
 

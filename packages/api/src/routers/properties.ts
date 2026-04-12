@@ -10,7 +10,7 @@ import { adminProcedure, protectedProcedure, publicProcedure, router } from "../
 import { generateAndActivateProperty } from "../lib/activate-property"
 import { assertPropertyAccess } from "../lib/access"
 import { sendAdditionalPropertyPaymentEmail, sendApprovalEmail, sendBusinessEmailVerification, sendNewPropertyNotificationEmail, sendRejectionEmail } from "../lib/email"
-import { generateQrPdf } from "../lib/generate-qr"
+import { generateQrPdf, generateUniqueCode } from "../lib/generate-qr"
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
@@ -1601,38 +1601,85 @@ export const propertiesRouter = router({
   getPropertyQrData: protectedProcedure
     .input(z.object({ propertyId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, input.propertyId),
-      })
-      if (!property) throw new TRPCError({ code: "NOT_FOUND", message: "Property not found" })
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId);
 
-      if (!ctx.isAdmin) {
-        const org = await db.query.organisations.findFirst({
-          where: eq(organisations.ownerId, ctx.session.user.id),
-          columns: { id: true },
+      const codes = await db
+        .select({
+          id: qrCodes.id,
+          label: qrCodes.label,
+          uniqueCode: qrCodes.uniqueCode,
+          feedbackUrl: qrCodes.feedbackUrl,
+          createdAt: qrCodes.createdAt,
         })
-        if (!org) throw new TRPCError({ code: "FORBIDDEN" })
-        if (property.organisationId !== org.id) throw new TRPCError({ code: "FORBIDDEN" })
+        .from(qrCodes)
+        .where(eq(qrCodes.propertyId, input.propertyId))
+        .orderBy(qrCodes.createdAt);
+
+      const [countRow] = await db
+        .select({ count: sql<number>`cast(count(*) as int)` })
+        .from(feedback)
+        .where(eq(feedback.propertyId, input.propertyId));
+
+      return { codes, totalSubmissions: countRow?.count ?? 0 };
+    }),
+
+  createQrCode: protectedProcedure
+    .input(z.object({
+      propertyId: z.string(),
+      label: z.string().min(1).max(60),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId);
+
+      const uniqueCode = generateUniqueCode();
+      const feedbackUrl = `${env.PUBLIC_PORTAL_URL}/f/${uniqueCode}`;
+
+      const [newCode] = await db
+        .insert(qrCodes)
+        .values({
+          id: crypto.randomUUID(),
+          propertyId: input.propertyId,
+          label: input.label,
+          uniqueCode,
+          feedbackUrl,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      return newCode;
+    }),
+
+  deleteQrCode: protectedProcedure
+    .input(z.object({
+      propertyId: z.string(),
+      qrCodeId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await assertPropertyAccess(ctx.session.user.id, input.propertyId);
+
+      const [countRow] = await db
+        .select({ count: sql<number>`cast(count(*) as int)` })
+        .from(qrCodes)
+        .where(eq(qrCodes.propertyId, input.propertyId));
+
+      if ((countRow?.count ?? 0) <= 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot delete the last QR code for a property.",
+        });
       }
 
-      const qrCode = await db.query.qrCodes.findFirst({
-        where: eq(qrCodes.propertyId, input.propertyId),
-      })
+      await db
+        .delete(qrCodes)
+        .where(
+          and(
+            eq(qrCodes.id, input.qrCodeId),
+            eq(qrCodes.propertyId, input.propertyId)
+          )
+        );
 
-      const scores = await db.query.propertyScores.findFirst({
-        where: eq(propertyScores.propertyId, input.propertyId),
-      })
-
-      return {
-        qrCode: qrCode
-          ? {
-              uniqueCode: qrCode.uniqueCode,
-              feedbackUrl: qrCode.feedbackUrl,
-              createdAt: qrCode.createdAt,
-            }
-          : null,
-        totalSubmissions: scores?.totalFeedback ?? 0,
-      }
+      return { success: true };
     }),
 
   getPropertyInsights: protectedProcedure
