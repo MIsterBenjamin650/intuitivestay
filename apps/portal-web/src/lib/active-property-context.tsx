@@ -73,14 +73,11 @@ export function ActivePropertyProvider({
       }
 
       setActivePropertyIdState(nextPropertyId)
-
-      if (isPropertyPath(location.pathname)) {
-        navigate({
-          to: buildPropertyPath(nextPropertyId, "dashboard"),
-        })
-      }
+      navigate({
+        to: buildPropertyPath(nextPropertyId, "dashboard"),
+      })
     },
-    [hasProperty, location.pathname, navigate]
+    [hasProperty, navigate]
   )
 
   const activeProperty =
