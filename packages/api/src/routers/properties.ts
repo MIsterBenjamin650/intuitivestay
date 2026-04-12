@@ -1161,45 +1161,98 @@ export const propertiesRouter = router({
       }
     }
 
-    // Portfolio GCS — period-filtered average across all properties
-    const [portfolioGcsRow] = await db
-      .select({ avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)` })
-      .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since)))
-
-    const portfolioGcs =
-      portfolioGcsRow?.avgGcs != null ? Math.round(Number(portfolioGcsRow.avgGcs) * 10) / 10 : null
-
-    // Alert count = feedback where GCS <= 5
-    const [alertResult] = await db
-      .select({ total: count() })
-      .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since), sql`${feedback.gcs}::numeric <= 5`))
-    const alertCount = alertResult?.total ?? 0
-
-    // Per-property period-filtered GCS
-    const periodGcsRows = await db
-      .select({
-        propertyId: feedback.propertyId,
-        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
-      })
-      .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since)))
-      .groupBy(feedback.propertyId)
-
-    const periodGcsByProperty = new Map(
-      periodGcsRows.map((r) => [
-        r.propertyId,
-        r.avgGcs != null ? Math.round(Number(r.avgGcs) * 10) / 10 : null,
-      ])
-    )
-
     // ── Portfolio-level weekly & vent stats ──────────────────────────────────
     const now = new Date()
     const oneWeekAgo  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000)
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+    const sevenWeeksAgo = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000)
 
-    const [thisWeekAgg, lastWeekAgg] = await Promise.all([
+    // ── Group A: all queries that depend only on propertyIds + since ──────────
+    const [
+      periodGcsRows,
+      alertRows,
+      trendRows,
+      propertyRows,
+      weeklyRows,
+      staffLeaderboardRows,
+      thisWeekAgg,
+      lastWeekAgg,
+    ] = await Promise.all([
+      // Per-property period-filtered GCS
+      db
+        .select({
+          propertyId: feedback.propertyId,
+          avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+        })
+        .from(feedback)
+        .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since)))
+        .groupBy(feedback.propertyId),
+      // Alert flag per property: any feedback with GCS <= 5
+      db
+        .select({ propertyId: feedback.propertyId, total: count() })
+        .from(feedback)
+        .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since), sql`${feedback.gcs}::numeric <= 5`))
+        .groupBy(feedback.propertyId),
+      // Monthly trend: avg GCS per month (last 6 months)
+      db
+        .select({
+          month: sql<string>`to_char(date_trunc('month', ${feedback.submittedAt}), 'Mon YYYY')`,
+          avgGcs: sql<string>`round(avg(${feedback.gcs}::numeric), 2)`,
+        })
+        .from(feedback)
+        .where(
+          and(
+            inArray(feedback.propertyId, propertyIds),
+            sql`${feedback.submittedAt} >= now() - interval '6 months'`,
+          ),
+        )
+        .groupBy(sql`date_trunc('month', ${feedback.submittedAt})`)
+        .orderBy(sql`date_trunc('month', ${feedback.submittedAt})`),
+      // Per-property cards
+      db
+        .select({
+          id: properties.id,
+          name: properties.name,
+          type: properties.type,
+          city: properties.city,
+          country: properties.country,
+          status: properties.status,
+        })
+        .from(properties)
+        .where(org ? eq(properties.organisationId, org.id) : undefined)
+        .orderBy(properties.name),
+      // Weekly feedback data (sparklines + per-property velocity)
+      db
+        .select({
+          propertyId: feedback.propertyId,
+          week: sql<string>`DATE_TRUNC('week', ${feedback.submittedAt})::text`,
+          avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+          feedbackCount: count(),
+        })
+        .from(feedback)
+        .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, sevenWeeksAgo)))
+        .groupBy(feedback.propertyId, sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
+        .orderBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`),
+      // Staff leaderboard (last 30 days, cross-property)
+      db
+        .select({
+          name: feedback.namedStaffMember,
+          propertyId: feedback.propertyId,
+          mentions: count(),
+          avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
+        })
+        .from(feedback)
+        .where(
+          and(
+            inArray(feedback.propertyId, propertyIds),
+            isNotNull(feedback.namedStaffMember),
+            gte(feedback.submittedAt, new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)),
+          ),
+        )
+        .groupBy(feedback.namedStaffMember, feedback.propertyId)
+        .orderBy(desc(count()))
+        .limit(10),
+      // This week aggregate
       db
         .select({
           total: count(),
@@ -1207,6 +1260,7 @@ export const propertiesRouter = router({
         })
         .from(feedback)
         .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, oneWeekAgo))),
+      // Last week aggregate
       db
         .select({
           total: count(),
@@ -1222,6 +1276,28 @@ export const propertiesRouter = router({
         ),
     ])
 
+    // Compute portfolioGcs from periodGcsRows instead of a separate DB query
+    const validPeriodScores = periodGcsRows
+      .map((r) => r.avgGcs)
+      .filter((v): v is string => v != null)
+      .map(Number)
+    const portfolioGcs =
+      validPeriodScores.length > 0
+        ? Math.round((validPeriodScores.reduce((a, b) => a + b, 0) / validPeriodScores.length) * 10) / 10
+        : null
+
+    // Compute alertCount from alertRows instead of a separate DB query
+    const alertCount = alertRows.reduce((sum, r) => sum + r.total, 0)
+
+    const periodGcsByProperty = new Map(
+      periodGcsRows.map((r) => [
+        r.propertyId,
+        r.avgGcs != null ? Math.round(Number(r.avgGcs) * 10) / 10 : null,
+      ])
+    )
+
+    const alertsByProperty = new Map(alertRows.map((r) => [r.propertyId, r.total]))
+
     const thisWeekCount  = thisWeekAgg[0]?.total ?? 0
     const thisWeekVents  = thisWeekAgg[0]?.vents ?? 0
     const lastWeekCount  = lastWeekAgg[0]?.total ?? 0
@@ -1235,51 +1311,12 @@ export const propertiesRouter = router({
       ? Math.round(((thisWeekVents - lastWeekVents) / lastWeekVents) * 100)
       : null
 
-    // Monthly trend: avg GCS per month (last 6 months)
-    const trendRows = await db
-      .select({
-        month: sql<string>`to_char(date_trunc('month', ${feedback.submittedAt}), 'Mon YYYY')`,
-        avgGcs: sql<string>`round(avg(${feedback.gcs}::numeric), 2)`,
-      })
-      .from(feedback)
-      .where(
-        and(
-          inArray(feedback.propertyId, propertyIds),
-          sql`${feedback.submittedAt} >= now() - interval '6 months'`,
-        ),
-      )
-      .groupBy(sql`date_trunc('month', ${feedback.submittedAt})`)
-      .orderBy(sql`date_trunc('month', ${feedback.submittedAt})`)
-
     const monthlyTrend = trendRows
       .map((r) => ({
         month: r.month,
         score: Number(r.avgGcs),
       }))
       .filter((r) => !isNaN(r.score))
-
-    // Per-property cards
-    const propertyRows = await db
-      .select({
-        id: properties.id,
-        name: properties.name,
-        type: properties.type,
-        city: properties.city,
-        country: properties.country,
-        status: properties.status,
-      })
-      .from(properties)
-      .where(org ? eq(properties.organisationId, org.id) : undefined)
-      .orderBy(properties.name)
-
-    // Alert flag per property: any feedback with GCS <= 5
-    const alertRows = await db
-      .select({ propertyId: feedback.propertyId, total: count() })
-      .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, since), sql`${feedback.gcs}::numeric <= 5`))
-      .groupBy(feedback.propertyId)
-
-    const alertsByProperty = new Map(alertRows.map((r) => [r.propertyId, r.total]))
 
     const propertyCards = propertyRows.map((p) => ({
       id: p.id,
@@ -1293,20 +1330,6 @@ export const propertiesRouter = router({
     }))
 
     // ── Per-property enrichment ──────────────────────────────────────────────
-    // 1. Weekly feedback data (sparklines + per-property velocity)
-    const sevenWeeksAgo = new Date(now.getTime() - 49 * 24 * 60 * 60 * 1000)
-    const weeklyRows = await db
-      .select({
-        propertyId: feedback.propertyId,
-        week: sql<string>`DATE_TRUNC('week', ${feedback.submittedAt})::text`,
-        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
-        feedbackCount: count(),
-      })
-      .from(feedback)
-      .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, sevenWeeksAgo)))
-      .groupBy(feedback.propertyId, sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
-      .orderBy(sql`DATE_TRUNC('week', ${feedback.submittedAt})`)
-
     // Build 7 Monday-keyed week buckets (oldest → newest)
     const dayOfWeek = now.getDay() // 0=Sun, 1=Mon ... 6=Sat
     const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
@@ -1332,13 +1355,13 @@ export const propertiesRouter = router({
       })
     }
 
-    // 2. Monthly GCS delta (this month vs last month)
+    // ── Group B: queries that depend on propertyRows (distinctCities) ────────
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const distinctCities = [...new Set(propertyRows.map((p) => p.city))]
 
-    // 2–5. Run monthly delta, top staff, vents, and last feedback in parallel
-    const [monthlyRows, topStaffRows, ventRowsPerProp, lastFeedbackRows] = await Promise.all([
-      // 2. Monthly GCS delta
+    const [monthlyRows, topStaffRows, ventRowsPerProp, lastFeedbackRows, cachedCityRows] = await Promise.all([
+      // Monthly GCS delta (this month vs last month)
       db
         .select({
           propertyId: feedback.propertyId,
@@ -1348,7 +1371,7 @@ export const propertiesRouter = router({
         .from(feedback)
         .where(and(inArray(feedback.propertyId, propertyIds), gte(feedback.submittedAt, lastMonthStart)))
         .groupBy(feedback.propertyId, sql`DATE_TRUNC('month', ${feedback.submittedAt})`),
-      // 3. Top staff per property (this calendar month)
+      // Top staff per property (this calendar month)
       db
         .select({
           propertyId: feedback.propertyId,
@@ -1365,7 +1388,7 @@ export const propertiesRouter = router({
         )
         .groupBy(feedback.propertyId, feedback.namedStaffMember)
         .orderBy(desc(count())),
-      // 4. Vent count per property (this calendar month)
+      // Vent count per property (this calendar month)
       db
         .select({ propertyId: feedback.propertyId, vents: count() })
         .from(feedback)
@@ -1377,12 +1400,18 @@ export const propertiesRouter = router({
           ),
         )
         .groupBy(feedback.propertyId),
-      // 5. Last feedback timestamp per property
+      // Last feedback timestamp per property
       db
         .select({ propertyId: feedback.propertyId, lastAt: max(feedback.submittedAt) })
         .from(feedback)
         .where(inArray(feedback.propertyId, propertyIds))
         .groupBy(feedback.propertyId),
+      // City ranks — read from leaderboardCache (24 h TTL, same as getCityLeaderboard)
+      distinctCities.length > 0
+        ? db.query.leaderboardCache.findMany({
+            where: inArray(leaderboardCache.city, distinctCities),
+          })
+        : Promise.resolve([]),
     ])
 
     const thisMonthKey = thisMonthStart.toISOString().substring(0, 10) // "YYYY-MM-01"
@@ -1413,27 +1442,21 @@ export const propertiesRouter = router({
       lastFeedbackRows.map((r) => [r.propertyId, r.lastAt ? r.lastAt.toISOString() : null]),
     )
 
-    // 6. City ranks — read from leaderboardCache (24 h TTL, same as getCityLeaderboard)
-    const distinctCities = [...new Set(propertyRows.map((p) => p.city))]
+    // 6. City ranks — process leaderboardCache results
     type CityRankData = { rank: number; total: number }
     const cityRankByProperty = new Map<string, CityRankData>()
 
     const LEADERBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000
     const propertyIdSet = new Set(propertyIds)
-    if (distinctCities.length > 0) {
-      const cachedCityRows = await db.query.leaderboardCache.findMany({
-        where: inArray(leaderboardCache.city, distinctCities),
-      })
-      for (const cached of cachedCityRows) {
-        if (Date.now() - new Date(cached.cachedAt).getTime() >= LEADERBOARD_CACHE_TTL_MS) continue
-        const payload = cached.data as {
-          rows: Array<{ propertyId: string; rank: number }>
-          totalCount: number
-        }
-        for (const row of payload.rows) {
-          if (propertyIdSet.has(row.propertyId)) {
-            cityRankByProperty.set(row.propertyId, { rank: row.rank, total: payload.totalCount })
-          }
+    for (const cached of cachedCityRows) {
+      if (Date.now() - new Date(cached.cachedAt).getTime() >= LEADERBOARD_CACHE_TTL_MS) continue
+      const payload = cached.data as {
+        rows: Array<{ propertyId: string; rank: number }>
+        totalCount: number
+      }
+      for (const row of payload.rows) {
+        if (propertyIdSet.has(row.propertyId)) {
+          cityRankByProperty.set(row.propertyId, { rank: row.rank, total: payload.totalCount })
         }
       }
     }
@@ -1479,27 +1502,6 @@ export const propertiesRouter = router({
         cityTotal: rankData?.total ?? null,
       }
     })
-
-    // ── Staff leaderboard (last 30 days, cross-property) ─────────────────────
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-    const staffLeaderboardRows = await db
-      .select({
-        name: feedback.namedStaffMember,
-        propertyId: feedback.propertyId,
-        mentions: count(),
-        avgGcs: sql<string>`ROUND(AVG(${feedback.gcs}::numeric), 2)`,
-      })
-      .from(feedback)
-      .where(
-        and(
-          inArray(feedback.propertyId, propertyIds),
-          isNotNull(feedback.namedStaffMember),
-          gte(feedback.submittedAt, thirtyDaysAgo),
-        ),
-      )
-      .groupBy(feedback.namedStaffMember, feedback.propertyId)
-      .orderBy(desc(count()))
-      .limit(10)
 
     const propNameMap = new Map(propertyRows.map((p) => [p.id, { name: p.name, city: p.city }]))
 
