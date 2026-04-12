@@ -1404,18 +1404,20 @@ export const propertiesRouter = router({
 
     const LEADERBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000
     const propertyIdSet = new Set(propertyIds)
-    const cachedCityRows = await db.query.leaderboardCache.findMany({
-      where: inArray(leaderboardCache.city, distinctCities),
-    })
-    for (const cached of cachedCityRows) {
-      if (Date.now() - new Date(cached.cachedAt).getTime() >= LEADERBOARD_CACHE_TTL_MS) continue
-      const payload = cached.data as {
-        rows: Array<{ propertyId: string; rank: number }>
-        totalCount: number
-      }
-      for (const row of payload.rows) {
-        if (propertyIdSet.has(row.propertyId)) {
-          cityRankByProperty.set(row.propertyId, { rank: row.rank, total: payload.totalCount })
+    if (distinctCities.length > 0) {
+      const cachedCityRows = await db.query.leaderboardCache.findMany({
+        where: inArray(leaderboardCache.city, distinctCities),
+      })
+      for (const cached of cachedCityRows) {
+        if (Date.now() - new Date(cached.cachedAt).getTime() >= LEADERBOARD_CACHE_TTL_MS) continue
+        const payload = cached.data as {
+          rows: Array<{ propertyId: string; rank: number }>
+          totalCount: number
+        }
+        for (const row of payload.rows) {
+          if (propertyIdSet.has(row.propertyId)) {
+            cityRankByProperty.set(row.propertyId, { rank: row.rank, total: payload.totalCount })
+          }
         }
       }
     }

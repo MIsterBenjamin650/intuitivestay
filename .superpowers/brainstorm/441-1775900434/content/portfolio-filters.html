@@ -1,0 +1,164 @@
+<h2>Property Table — With Filters</h2>
+<p class="subtitle">Click any column header to sort. Use the quick filter bar to narrow down properties.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Your Properties — filter & sort</div>
+  <div class="mockup-body" style="background:#fff;border-radius:10px;overflow:hidden;">
+
+    <!-- Filter bar -->
+    <div style="padding:10px 14px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fafaf9;">
+      <span style="font-size:9px;font-weight:700;color:#a8a29e;text-transform:uppercase;letter-spacing:.05em;">Filter:</span>
+
+      <!-- GCS filter -->
+      <div style="display:flex;gap:3px;">
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">All GCS</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #f97316;background:#fff7ed;color:#ea580c;cursor:pointer;">≥ 8.5</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">7–8.5</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">&lt; 7</button>
+      </div>
+
+      <div style="width:1px;height:16px;background:#e5e7eb;"></div>
+
+      <!-- Trend filter -->
+      <div style="display:flex;gap:3px;">
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">All trends</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#16a34a;cursor:pointer;">↑ Improving</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#dc2626;cursor:pointer;">↓ Declining</button>
+      </div>
+
+      <div style="width:1px;height:16px;background:#e5e7eb;"></div>
+
+      <!-- Activity filter -->
+      <div style="display:flex;gap:3px;">
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">All activity</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#b45309;cursor:pointer;">⚠ Gone quiet</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">Active this week</button>
+      </div>
+
+      <div style="width:1px;height:16px;background:#e5e7eb;"></div>
+
+      <!-- Vents / Alerts filter -->
+      <div style="display:flex;gap:3px;">
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;cursor:pointer;">Has alerts</button>
+        <button style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;">Has vents</button>
+      </div>
+    </div>
+
+    <!-- Column headers — sortable (click to sort) -->
+    <div style="display:grid;grid-template-columns:1.8fr 70px 62px 62px 90px 56px 52px;padding:7px 14px;background:#f9fafb;border-bottom:1px solid #e5e7eb;font-size:7.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;align-items:center;gap:4px;">
+      <div style="cursor:pointer;">Property</div>
+      <div style="text-align:center;cursor:pointer;color:#f97316;">GCS ↓</div>
+      <div style="text-align:center;cursor:pointer;">Trend</div>
+      <div style="text-align:center;cursor:pointer;">This week</div>
+      <div style="text-align:center;cursor:pointer;">Top staff</div>
+      <div style="text-align:center;cursor:pointer;">Vents</div>
+      <div style="text-align:right;cursor:pointer;">Alerts</div>
+    </div>
+
+    <!-- Row 1 -->
+    <div style="display:grid;grid-template-columns:1.8fr 70px 62px 62px 90px 56px 52px;padding:10px 14px;border-bottom:1px solid #f9fafb;align-items:center;gap:4px;cursor:pointer;" onmouseover="this.style.background='#fafaf9'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#111;">City View Spa</div>
+        <div style="font-size:8.5px;color:#9ca3af;">Birmingham · Spa · Last: 4h ago</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:16px;font-weight:900;color:#16a34a;">9.1</div>
+        <div style="font-size:8px;color:#16a34a;font-weight:700;">↑ +0.8</div>
+      </div>
+      <div style="display:flex;justify-content:center;">
+        <svg width="54" height="26" viewBox="0 0 54 26"><polyline points="0,22 9,17 18,13 27,9 36,7 45,5 54,3" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:700;color:#111;">8</div>
+        <div style="font-size:8px;color:#16a34a;font-weight:600;">↑ +60%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:9px;font-weight:700;color:#f97316;">Emma T.</div>
+        <div style="font-size:8px;color:#9ca3af;">12 mentions</div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#9ca3af;">0</div>
+      <div style="text-align:right;font-size:10px;color:#d1d5db;">—</div>
+    </div>
+
+    <!-- Row 2 -->
+    <div style="display:grid;grid-template-columns:1.8fr 70px 62px 62px 90px 56px 52px;padding:10px 14px;border-bottom:1px solid #f9fafb;align-items:center;gap:4px;cursor:pointer;" onmouseover="this.style.background='#fafaf9'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#111;">The Grand Hotel</div>
+        <div style="font-size:8.5px;color:#9ca3af;">London · Hotel · Last: 2h ago</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:16px;font-weight:900;color:#16a34a;">8.7</div>
+        <div style="font-size:8px;color:#16a34a;font-weight:700;">↑ +0.3</div>
+      </div>
+      <div style="display:flex;justify-content:center;">
+        <svg width="54" height="26" viewBox="0 0 54 26"><polyline points="0,22 9,18 18,15 27,16 36,11 45,8 54,6" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:700;color:#111;">14</div>
+        <div style="font-size:8px;color:#16a34a;font-weight:600;">↑ +40%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:9px;font-weight:700;color:#f97316;">James R.</div>
+        <div style="font-size:8px;color:#9ca3af;">8 mentions</div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#6b7280;font-weight:600;">1</div>
+      <div style="text-align:right;"><span style="background:#fef2f2;color:#dc2626;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:20px;">2</span></div>
+    </div>
+
+    <!-- Row 3 — declining + vents -->
+    <div style="display:grid;grid-template-columns:1.8fr 70px 62px 62px 90px 56px 52px;padding:10px 14px;border-bottom:1px solid #f9fafb;align-items:center;gap:4px;cursor:pointer;" onmouseover="this.style.background='#fafaf9'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#111;">Riverside Bistro</div>
+        <div style="font-size:8.5px;color:#9ca3af;">Manchester · Restaurant · Last: 1d ago</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:16px;font-weight:900;color:#f97316;">7.2</div>
+        <div style="font-size:8px;color:#dc2626;font-weight:700;">↓ -0.5</div>
+      </div>
+      <div style="display:flex;justify-content:center;">
+        <svg width="54" height="26" viewBox="0 0 54 26"><polyline points="0,6 9,9 18,11 27,14 36,17 45,20 54,23" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:700;color:#111;">12</div>
+        <div style="font-size:8px;color:#dc2626;font-weight:600;">↓ -8%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:9px;font-weight:700;color:#f97316;">Sarah M.</div>
+        <div style="font-size:8px;color:#9ca3af;">5 mentions</div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#dc2626;font-weight:700;">3</div>
+      <div style="text-align:right;font-size:10px;color:#d1d5db;">—</div>
+    </div>
+
+    <!-- Row 4 — gone quiet -->
+    <div style="display:grid;grid-template-columns:1.8fr 70px 62px 62px 90px 56px 52px;padding:10px 14px;align-items:center;gap:4px;background:#fffbeb;cursor:pointer;" onmouseover="this.style.background='#fef9c3'" onmouseout="this.style.background='#fffbeb'">
+      <div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <div style="font-size:11px;font-weight:700;color:#111;">Oak House B&amp;B</div>
+          <span style="background:#fef3c7;color:#b45309;font-size:7px;font-weight:700;padding:1px 5px;border-radius:20px;border:1px solid #fde68a;">Gone quiet · 9d</span>
+        </div>
+        <div style="font-size:8.5px;color:#9ca3af;">Leeds · B&amp;B · Last: 9d ago</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:16px;font-weight:900;color:#16a34a;">8.2</div>
+        <div style="font-size:8px;color:#9ca3af;">no new data</div>
+      </div>
+      <div style="display:flex;justify-content:center;">
+        <svg width="54" height="26" viewBox="0 0 54 26"><polyline points="0,20 9,16 18,12 27,10 36,10 45,10 54,10" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 2"/></svg>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:700;color:#b45309;">0</div>
+        <div style="font-size:8px;color:#b45309;font-weight:600;">9 days</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:9px;font-weight:700;color:#9ca3af;">—</div>
+        <div style="font-size:8px;color:#9ca3af;">no recent</div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#9ca3af;">0</div>
+      <div style="text-align:right;font-size:10px;color:#d1d5db;">—</div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Filters live above the table. Column headers are clickable to sort (orange = active sort). The "Gone quiet" filter would instantly isolate any property that's gone silent. Happy with this? I'll write the spec next.</p>

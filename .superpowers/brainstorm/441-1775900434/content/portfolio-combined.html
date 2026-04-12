@@ -1,0 +1,155 @@
+<h2>Combined Design — Full Portfolio Dashboard</h2>
+<p class="subtitle">All three ideas merged: orange theme, spotlight cards, richer property rows with sparklines. This is what the finished page would look like.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Portfolio Overview — combined mockup</div>
+  <div class="mockup-body" style="background:#faf9f8;padding:20px;display:flex;flex-direction:column;gap:16px;">
+
+    <!-- Page title -->
+    <div>
+      <div style="font-size:18px;font-weight:900;color:#1c1917;">Portfolio Overview</div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:2px;">All your properties at a glance</div>
+    </div>
+
+    <!-- Summary stats row — orange themed -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div style="background:#fff;border-radius:10px;border-left:4px solid #f97316;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#a8a29e;margin-bottom:4px;">Portfolio GCS</div>
+        <div style="font-size:26px;font-weight:900;color:#f97316;line-height:1;">8.4</div>
+        <div style="font-size:9px;color:#9ca3af;margin-top:2px;">avg across all properties</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border-left:4px solid #f97316;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#a8a29e;margin-bottom:4px;">Active Properties</div>
+        <div style="font-size:26px;font-weight:900;color:#f97316;line-height:1;">3</div>
+        <div style="font-size:9px;color:#9ca3af;margin-top:2px;">approved &amp; live</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border-left:4px solid #f97316;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);">
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#a8a29e;margin-bottom:4px;">Open Alerts</div>
+        <div style="font-size:26px;font-weight:900;color:#f97316;line-height:1;">2</div>
+        <div style="font-size:9px;color:#9ca3af;margin-top:2px;">scores at or below 5.0</div>
+      </div>
+    </div>
+
+    <!-- Spotlight row — Best + Needs Attention (from B) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #bbf7d0;border-radius:10px;padding:12px;">
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#16a34a;margin-bottom:6px;">⭐ Best Performer</div>
+        <div style="font-size:13px;font-weight:800;color:#111827;">The Grand Hotel</div>
+        <div style="font-size:9px;color:#6b7280;margin-bottom:6px;">London · Hotel</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:22px;font-weight:900;color:#16a34a;">8.7</span>
+          <span style="font-size:10px;font-weight:700;color:#16a34a;background:#dcfce7;padding:2px 6px;border-radius:20px;">↑ +0.3 this month</span>
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:10px;padding:12px;">
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#ea580c;margin-bottom:6px;">⚠️ Needs Attention</div>
+        <div style="font-size:13px;font-weight:800;color:#111827;">Riverside Bistro</div>
+        <div style="font-size:9px;color:#6b7280;margin-bottom:6px;">Manchester · Restaurant</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:22px;font-weight:900;color:#ea580c;">7.2</span>
+          <span style="font-size:10px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 6px;border-radius:20px;">↓ -0.5 · 2 alerts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property list with sparklines (from C) + trend arrows (from A) -->
+    <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;">
+      <div style="padding:10px 14px;border-bottom:1px solid #f3f4f6;">
+        <div style="font-size:11px;font-weight:700;color:#111;">Your Properties</div>
+      </div>
+
+      <!-- Header row -->
+      <div style="display:grid;grid-template-columns:2fr 80px 70px 64px 60px;padding:6px 14px;background:#f9fafb;border-bottom:1px solid #e5e7eb;font-size:8px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;align-items:center;">
+        <div>Property</div>
+        <div style="text-align:center;">GCS</div>
+        <div style="text-align:center;">30-day trend</div>
+        <div style="text-align:center;">Feedback</div>
+        <div style="text-align:right;">Alerts</div>
+      </div>
+
+      <!-- Row 1 -->
+      <div style="display:grid;grid-template-columns:2fr 80px 70px 64px 60px;padding:10px 14px;border-bottom:1px solid #f9fafb;align-items:center;cursor:pointer;" onmouseover="this.style.background='#fafaf9'" onmouseout="this.style.background=''">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#111;">The Grand Hotel</div>
+          <div style="font-size:9px;color:#9ca3af;">London · Hotel · Last: 2h ago</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:#16a34a;">8.7</div>
+          <div style="font-size:9px;color:#16a34a;font-weight:700;">↑ +0.3</div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+          <svg width="60" height="28" viewBox="0 0 60 28">
+            <polyline points="0,22 10,19 20,16 30,18 40,12 50,9 60,7" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div style="text-align:center;font-size:11px;color:#6b7280;font-weight:600;">142</div>
+        <div style="text-align:right;"><span style="background:#fef2f2;color:#dc2626;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;">2</span></div>
+      </div>
+
+      <!-- Row 2 -->
+      <div style="display:grid;grid-template-columns:2fr 80px 70px 64px 60px;padding:10px 14px;border-bottom:1px solid #f9fafb;align-items:center;cursor:pointer;" onmouseover="this.style.background='#fafaf9'" onmouseout="this.style.background=''">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#111;">Riverside Bistro</div>
+          <div style="font-size:9px;color:#9ca3af;">Manchester · Restaurant · Last: 1d ago</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:#f97316;">7.2</div>
+          <div style="font-size:9px;color:#dc2626;font-weight:700;">↓ -0.5</div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+          <svg width="60" height="28" viewBox="0 0 60 28">
+            <polyline points="0,8 10,10 20,11 30,14 40,17 50,20 60,22" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div style="text-align:center;font-size:11px;color:#6b7280;font-weight:600;">89</div>
+        <div style="text-align:right;font-size:10px;color:#d1d5db;">—</div>
+      </div>
+
+      <!-- Row 3 -->
+      <div style="display:grid;grid-template-columns:2fr 80px 70px 64px 60px;padding:10px 14px;align-items:center;cursor:pointer;" onmouseover="this.style.background='#fafaf9'" onmouseout="this.style.background=''">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#111;">City View Spa</div>
+          <div style="font-size:9px;color:#9ca3af;">Birmingham · Spa · Last: 4h ago</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:#16a34a;">9.1</div>
+          <div style="font-size:9px;color:#16a34a;font-weight:700;">↑ +0.8</div>
+        </div>
+        <div style="display:flex;justify-content:center;">
+          <svg width="60" height="28" viewBox="0 0 60 28">
+            <polyline points="0,22 10,18 20,14 30,10 40,7 50,5 60,3" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div style="text-align:center;font-size:11px;color:#6b7280;font-weight:600;">203</div>
+        <div style="text-align:right;font-size:10px;color:#d1d5db;">—</div>
+      </div>
+    </div>
+
+    <!-- Portfolio trend chart placeholder -->
+    <div style="background:#fff;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:#111;margin-bottom:2px;">Portfolio Satisfaction Trend</div>
+      <div style="font-size:9px;color:#9ca3af;margin-bottom:10px;">Average GCS across all properties — last 6 months</div>
+      <svg width="100%" height="80" viewBox="0 0 400 80" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="og" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f97316" stop-opacity=".15"/>
+            <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,60 C40,55 80,40 120,35 C160,30 200,38 240,28 C280,18 320,15 360,10 L400,8 L400,80 L0,80 Z" fill="url(#og)"/>
+        <path d="M0,60 C40,55 80,40 120,35 C160,30 200,38 240,28 C280,18 320,15 360,10 L400,8" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:8px;color:#d1d5db;">Nov</span>
+        <span style="font-size:8px;color:#d1d5db;">Dec</span>
+        <span style="font-size:8px;color:#d1d5db;">Jan</span>
+        <span style="font-size:8px;color:#d1d5db;">Feb</span>
+        <span style="font-size:8px;color:#d1d5db;">Mar</span>
+        <span style="font-size:8px;color:#d1d5db;">Apr</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Does this feel right? Let me know what to tweak — colours, layout, what to add or cut — before we write the plan.</p>

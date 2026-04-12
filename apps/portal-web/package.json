@@ -27,7 +27,7 @@
     "@trpc/tanstack-react-query": "catalog:",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
     "qrcode.react": "^4.2.0",
@@ -50,7 +50,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "jsdom": "^26.0.0",
     "typescript": "^5",
-    "vite": "^7.0.2",
+    "vite": "^7.3.2",
     "web-vitals": "^5.0.3"
   }
 }

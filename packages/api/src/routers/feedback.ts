@@ -14,6 +14,16 @@ const ipSubmissionTracker = new Map<string, { count: number; windowStart: number
 const IP_RATE_LIMIT = 5
 const IP_RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
+// Evict stale entries every 10 minutes to prevent unbounded memory growth
+setInterval(() => {
+  const now = Date.now()
+  for (const [ip, entry] of ipSubmissionTracker.entries()) {
+    if (now - entry.windowStart > IP_RATE_WINDOW_MS) {
+      ipSubmissionTracker.delete(ip)
+    }
+  }
+}, 10 * 60 * 1000).unref()
+
 function checkIpRateLimit(ip: string): void {
   const now = Date.now()
   const entry = ipSubmissionTracker.get(ip)
@@ -130,9 +140,9 @@ export const feedbackRouter = router({
         recognition: z.number().int().min(0).max(10),
         mealTime: z.enum(["morning", "lunch", "dinner", "none"]).nullable().optional(),
         guestEmail: z.string().email().optional(),
-        adjectives: z.string().optional(),
+        adjectives: z.string().max(500).optional(),
         /** Browser-derived device fingerprint for duplicate prevention */
-        fingerprint: z.string().min(1),
+        fingerprint: z.string().min(1).max(512),
         /** Verified staff profile to attribute this high-score feedback to (optional). */
         staffProfileId: z.string().optional(),
       }),

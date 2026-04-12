@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Dashboard — Branded</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f5f5f4;
+    color: #1c1917;
+    padding: 24px;
+    font-size: 13px;
+  }
+  .page-title { font-size: 20px; font-weight: 900; color: #1c1917; }
+  .page-sub   { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .section    { display: flex; flex-direction: column; gap: 14px; }
+  .card       { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.07); overflow: hidden; }
+  .grid-5     { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+  .grid-2     { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card  { background:#fff; border-radius:12px; border-left:4px solid #f97316; padding:12px 14px; box-shadow:0 1px 3px rgba(0,0,0,.07); }
+  .stat-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#a8a29e; margin-bottom:4px; }
+  .stat-value { font-size:26px; font-weight:900; color:#f97316; line-height:1; }
+  .stat-sub   { font-size:9px; margin-top:3px; }
+  .up         { color: #16a34a; font-weight:600; }
+  .down       { color: #dc2626; font-weight:600; }
+  .muted      { color: #9ca3af; }
+  .card-header { padding:11px 16px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; justify-content:space-between; }
+  .card-title  { font-size:12px; font-weight:700; color:#111; }
+  .card-sub    { font-size:9px; color:#9ca3af; margin-top:1px; }
+  .pill        { font-size:8px; font-weight:700; padding:2px 8px; border-radius:20px; cursor:pointer; border:1px solid; }
+  .pill-active { background:#fff7ed; color:#ea580c; border-color:#f97316; }
+  .pill-idle   { background:#fff; color:#6b7280; border-color:#e5e7eb; }
+  .pill-group  { display:flex; gap:4px; }
+  .row         { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid #f9fafb; transition: background .1s; }
+  .row:last-child { border-bottom: none; }
+  .row:hover   { background: #fafaf9; }
+  .avatar      { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#fff; flex-shrink:0; }
+  .badge       { font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .badge-red   { background:#fef2f2; color:#dc2626; }
+  .badge-amber { background:#fef3c7; color:#b45309; border:1px solid #fde68a; }
+  .badge-green { background:#dcfce7; color:#16a34a; }
+  .city-rank   { font-size:8px; font-weight:600; color:#9ca3af; margin-top:1px; }
+  .city-rank span { color:#f97316; font-weight:700; }
+  .bar-track   { width:80px; height:5px; border-radius:3px; background:#f3f4f6; overflow:hidden; }
+  .bar-fill    { height:100%; border-radius:3px; }
+  .medal       { font-size:18px; min-width:22px; text-align:center; }
+  .rank-num    { font-size:13px; font-weight:800; color:#d1d5db; min-width:22px; text-align:center; }
+  .most-improved {
+    background: linear-gradient(135deg,#1c1917,#292524);
+    border-radius:12px;
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .spotlight { border-radius:12px; padding:14px 16px; }
+  .filter-bar { padding:9px 16px; background:#fafaf9; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .filter-label { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#a8a29e; }
+  .divider { width:1px; height:14px; background:#e5e7eb; }
+  .note { text-align:center; font-size:11px; color:#9ca3af; padding:10px 16px; border-bottom:1px solid #f9fafb; font-style:italic; }
+  .trend-chart { padding:14px 16px; }
+</style>
+</head>
+<body>
+<div class="section">
+
+  <!-- Title -->
+  <div>
+    <div class="page-title">Portfolio Overview</div>
+    <div class="page-sub">All your properties at a glance</div>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="grid-5">
+    <div class="stat-card">
+      <div class="stat-label">Portfolio GCS</div>
+      <div class="stat-value">8.4</div>
+      <div class="stat-sub up">↑ +0.2 vs last month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Properties</div>
+      <div class="stat-value">4</div>
+      <div class="stat-sub muted">approved &amp; live</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">This Week</div>
+      <div class="stat-value">34</div>
+      <div class="stat-sub up">↑ +42% vs last week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Open Alerts</div>
+      <div class="stat-value">2</div>
+      <div class="stat-sub muted">scores ≤ 5.0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Vent Submissions</div>
+      <div class="stat-value">5</div>
+      <div class="stat-sub down">↑ +2 vs last week</div>
+    </div>
+  </div>
+
+  <!-- Spotlight -->
+  <div class="grid-2">
+    <div class="spotlight" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #bbf7d0;">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#16a34a;margin-bottom:6px;">⭐ Best Performer</div>
+      <div style="font-size:14px;font-weight:800;color:#111;">City View Spa</div>
+      <div style="font-size:9px;color:#6b7280;margin-bottom:8px;">Birmingham · Spa</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:24px;font-weight:900;color:#16a34a;">9.1</span>
+        <span class="badge badge-green">↑ +0.8 this month</span>
+      </div>
+    </div>
+    <div class="spotlight" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#ea580c;margin-bottom:6px;">⚠️ Needs Attention</div>
+      <div style="font-size:14px;font-weight:800;color:#111;">Riverside Bistro</div>
+      <div style="font-size:9px;color:#6b7280;margin-bottom:8px;">Manchester · Restaurant</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:24px;font-weight:900;color:#ea580c;">7.2</span>
+        <span class="badge" style="background:#fee2e2;color:#dc2626;">↓ -0.5 · 2 alerts · 3 vents</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Property table (abbreviated) -->
+  <div class="card">
+    <div class="filter-bar">
+      <span class="filter-label">Filter:</span>
+      <span class="pill pill-active">All GCS</span>
+      <span class="pill pill-idle" style="color:#16a34a;">↑ Improving</span>
+      <span class="pill pill-idle" style="color:#dc2626;">↓ Declining</span>
+      <div class="divider"></div>
+      <span class="pill pill-idle" style="color:#b45309;">⚠ Gone quiet</span>
+      <span class="pill pill-idle" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">Has alerts</span>
+      <span class="pill pill-idle">Has vents</span>
+    </div>
+    <div class="note">… property rows with sparklines, GCS, velocity, top staff, vents, alerts …</div>
+  </div>
+
+  <!-- Leaderboards -->
+  <div class="grid-2">
+
+    <!-- Property ranking -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🏆 Property Ranking</div>
+          <div class="card-sub">Internal rank + city position this month</div>
+        </div>
+        <div class="pill-group">
+          <span class="pill pill-active">GCS</span>
+          <span class="pill pill-idle">Most improved</span>
+          <span class="pill pill-idle">Volume</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="medal">🥇</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">City View Spa</div>
+          <div class="city-rank">Birmingham · <span>#1 in city</span> out of 11 properties</div>
+        </div>
+        <div style="text-align:right;margin-right:8px;">
+          <div style="font-size:17px;font-weight:900;color:#16a34a;">9.1</div>
+          <div style="font-size:9px;color:#16a34a;font-weight:600;">↑ +0.8</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:91%;background:#16a34a;"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="medal">🥈</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">The Grand Hotel</div>
+          <div class="city-rank">London · <span>#3 in city</span> out of 47 properties</div>
+        </div>
+        <div style="text-align:right;margin-right:8px;">
+          <div style="font-size:17px;font-weight:900;color:#16a34a;">8.7</div>
+          <div style="font-size:9px;color:#16a34a;font-weight:600;">↑ +0.3</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:87%;background:#f97316;"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="medal">🥉</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">Oak House B&amp;B</div>
+          <div class="city-rank">Leeds · <span>#2 in city</span> out of 14 properties</div>
+        </div>
+        <div style="text-align:right;margin-right:8px;">
+          <div style="font-size:17px;font-weight:900;color:#f97316;">8.2</div>
+          <div style="font-size:9px;color:#9ca3af;font-weight:600;">→ stable</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:82%;background:#f97316;"></div></div>
+      </div>
+
+      <div class="row" style="background:#fef9c3;">
+        <div class="rank-num">4</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">Riverside Bistro <span class="badge badge-amber" style="font-size:7.5px;margin-left:4px;">Gone quiet · 9d</span></div>
+          <div class="city-rank">Manchester · <span style="color:#b45309;">#9 in city</span> out of 23 properties</div>
+        </div>
+        <div style="text-align:right;margin-right:8px;">
+          <div style="font-size:17px;font-weight:900;color:#dc2626;">7.2</div>
+          <div style="font-size:9px;color:#dc2626;font-weight:600;">↓ -0.5</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:72%;background:#dc2626;"></div></div>
+      </div>
+    </div>
+
+    <!-- Staff leaderboard -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">⭐ Top Staff Across All Sites</div>
+          <div class="card-sub">Guest nominations this month</div>
+        </div>
+        <div class="pill-group">
+          <span class="pill pill-active">Mentions</span>
+          <span class="pill pill-idle">GCS</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="medal">🥇</div>
+        <div class="avatar" style="background:linear-gradient(135deg,#f97316,#fb923c);">E</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">Emma T.</div>
+          <div style="font-size:9px;color:#9ca3af;">City View Spa · Birmingham</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:800;color:#f97316;">12 <span style="font-size:9px;color:#9ca3af;font-weight:400;">mentions</span></div>
+          <div style="font-size:9px;color:#16a34a;font-weight:600;">GCS 9.3</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="medal">🥈</div>
+        <div class="avatar" style="background:linear-gradient(135deg,#6366f1,#818cf8);">J</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">James R.</div>
+          <div style="font-size:9px;color:#9ca3af;">The Grand Hotel · London</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:800;color:#f97316;">8 <span style="font-size:9px;color:#9ca3af;font-weight:400;">mentions</span></div>
+          <div style="font-size:9px;color:#16a34a;font-weight:600;">GCS 8.9</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="medal">🥉</div>
+        <div class="avatar" style="background:linear-gradient(135deg,#14b8a6,#5eead4);">S</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">Sarah M.</div>
+          <div style="font-size:9px;color:#9ca3af;">Riverside Bistro · Manchester</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:800;color:#f97316;">5 <span style="font-size:9px;color:#9ca3af;font-weight:400;">mentions</span></div>
+          <div style="font-size:9px;color:#f97316;font-weight:600;">GCS 7.8</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="rank-num">4</div>
+        <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);">M</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:700;">Maria K.</div>
+          <div style="font-size:9px;color:#9ca3af;">The Grand Hotel · London</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:800;color:#f97316;">4 <span style="font-size:9px;color:#9ca3af;font-weight:400;">mentions</span></div>
+          <div style="font-size:9px;color:#16a34a;font-weight:600;">GCS 9.0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Most improved banner -->
+  <div class="most-improved">
+    <div>
+      <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#f97316;margin-bottom:5px;">🚀 Most Improved This Month</div>
+      <div style="font-size:16px;font-weight:900;color:#fff;">City View Spa</div>
+      <div style="font-size:9px;color:#9ca3af;margin-top:2px;">Birmingham · GCS jumped from 8.3 → 9.1 · Now #1 in city</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:32px;font-weight:900;color:#f97316;">+0.8</div>
+      <div style="font-size:9px;color:#9ca3af;">vs last month</div>
+    </div>
+  </div>
+
+  <!-- Portfolio trend chart -->
+  <div class="card trend-chart">
+    <div style="font-size:12px;font-weight:700;margin-bottom:2px;">Portfolio Satisfaction Trend</div>
+    <div style="font-size:9px;color:#9ca3af;margin-bottom:12px;">Average GCS across all properties — last 6 months</div>
+    <svg width="100%" height="80" viewBox="0 0 400 80" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="og4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f97316" stop-opacity=".15"/>
+          <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,60 C40,55 80,42 120,36 C160,30 200,38 240,26 C280,16 320,13 360,9 L400,7 L400,80 L0,80 Z" fill="url(#og4)"/>
+      <path d="M0,60 C40,55 80,42 120,36 C160,30 200,38 240,26 C280,16 320,13 360,9 L400,7" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;margin-top:5px;">
+      <span style="font-size:9px;color:#d1d5db;">Nov</span>
+      <span style="font-size:9px;color:#d1d5db;">Dec</span>
+      <span style="font-size:9px;color:#d1d5db;">Jan</span>
+      <span style="font-size:9px;color:#d1d5db;">Feb</span>
+      <span style="font-size:9px;color:#d1d5db;">Mar</span>
+      <span style="font-size:9px;color:#d1d5db;">Apr</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
